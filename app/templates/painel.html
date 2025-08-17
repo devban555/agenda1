@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Área ADM</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root{
+      --bg:#0f172a;          /* slate-900 */
+      --card:#111827;        /* gray-900 */
+      --muted:#94a3b8;       /* slate-400 */
+      --text:#e5e7eb;        /* gray-200 */
+      --primary:#3b82f6;     /* blue-500 */
+      --primary-600:#2563eb; /* blue-600 */
+      --ring: rgba(59,130,246,.45);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
+      background: radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.12), transparent 60%),
+                  radial-gradient(1200px 800px at 0% 110%, rgba(34,197,94,.10), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100dvh;
+    }
+
+    header{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-bottom:1px solid rgba(148,163,184,.2);
+      text-align:center;
+      padding:24px;
+      font-size: clamp(22px, 2.6vw, 32px);
+      font-weight:800;
+      letter-spacing:.3px;
+    }
+
+    .container{
+      max-width:1100px;
+      margin:40px auto;
+      padding:0 16px;
+      display:grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap:20px;
+    }
+
+    .btn{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(148,163,184,.35);
+      color:var(--text);
+      padding:20px;
+      text-align:center;
+      border-radius:14px;
+      text-decoration:none;
+      font-size:16px;
+      font-weight:700;
+      letter-spacing:.3px;
+      box-shadow: 0 0 8px rgba(255,255,255,0.05);
+      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+    }
+
+    .btn:hover{
+      background: rgba(255,255,255,.07);
+      border-color: rgba(148,163,184,.6);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+
+    .btn i{
+      display:block;
+      font-size:28px;
+      margin-bottom:8px;
+    }
+
+    @media (max-width:600px){
+      .btn{
+        font-size:14px;
+        padding:16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>Área ADM</header>
+
+  <div class="container">
+    <a href="/admin" class="btn"><i class="fas fa-calendar-alt"></i>Agenda</a>
+    <a href="/servicos" class="btn"><i class="fas fa-cut"></i>Serviços</a>
+    <a href="/relatorio" class="btn"><i class="fas fa-chart-line"></i>Relatório</a>
+    <a href="/lista" class="btn"><i class="fas fa-list"></i>Lista</a>
+    <a href="/eventos" class="btn"><i class="fas fa-bullhorn"></i>Eventos</a>
+    <a href="/suporte" class="btn"><i class="fas fa-headset"></i>Suporte</a>
+  </div>
+
+</body>
+</html>

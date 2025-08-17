@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serviços</title>
+    <style>
+        :root{
+            --bg:#0f172a;          
+            --card:#111827;        
+            --muted:#94a3b8;       
+            --text:#e5e7eb;        
+            --primary:#3b82f6;     
+            --primary-600:#2563eb; 
+            --ring: rgba(59,130,246,.45);
+            --danger:#dc3545;
+            --danger-hover:#b02a37;
+            --warning:#ffc107;
+            --warning-hover:#e0a800;
+            --success:#28a745;
+            --success-hover:#218838;
+        }
+        *{box-sizing:border-box}
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
+            background: radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.12), transparent 60%),
+                        radial-gradient(1200px 800px at 0% 110%, rgba(34,197,94,.10), transparent 60%),
+                        var(--bg);
+            color: var(--text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: 800;
+            letter-spacing: .3px;
+        }
+
+        .form-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+            align-items: flex-end;
+            background: var(--card);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(148,163,184,.35);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 200px;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: var(--muted);
+        }
+
+        .form-group input {
+            padding: 8px;
+            border: 1px solid rgba(148,163,184,.35);
+            background: rgba(255,255,255,.03);
+            color: var(--text);
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--ring);
+        }
+
+        .form-container button {
+            padding: 10px 18px;
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            letter-spacing: .3px;
+            transition: background .2s ease;
+        }
+
+        .form-container button:hover {
+            background: var(--success-hover);
+        }
+
+        .lista-servicos {
+            margin-top: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(148,163,184,.35);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(148,163,184,.15);
+        }
+
+        th {
+            background: rgba(255,255,255,.04);
+            color: var(--text);
+            font-weight: 700;
+        }
+
+        td {
+            color: var(--text);
+        }
+
+        .acoes {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .acoes button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .editar {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .editar:hover {
+            background-color: var(--primary-600);
+        }
+
+        .excluir {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .excluir:hover {
+            background-color: var(--danger-hover);
+        }
+
+        .salvar {
+            background-color: var(--warning);
+            color: #000;
+        }
+
+        .salvar:hover {
+            background-color: var(--warning-hover);
+        }
+
+        input[type="text"][disabled] {
+            border: none;
+            background: transparent;
+            color: var(--text);
+            padding: 0;
+        }
+
+        input[type="text"] {
+            width: 100%;
+        }
+        .voltar{
+            text-align:center; margin-top:22px;
+        }
+        .voltar a{
+            display:inline-block; text-decoration:none; color:var(--text);
+            padding:10px 14px; border-radius:12px;
+            background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+            border:1px solid var(--border);
+            font-weight:800; letter-spacing:.3px;
+            transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+        }
+        .voltar a:hover{
+            background: rgba(255,255,255,.07);
+            border-color: rgba(148,163,184,.6);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0,0,0,.25);
+        }
+    </style>
+</head>
+<body>
+    <h1>Gerenciar Serviços</h1>
+
+    <form method="POST">
+        <div class="form-container">
+            <div class="form-group">
+                <label for="titulo">Título do Serviço</label>
+                <input type="text" id="titulo" name="titulo" required>
+            </div>
+            <div class="form-group">
+                <label for="valor">Valor</label>
+                <input type="text" id="valor" name="valor" required>
+            </div>
+            <div class="form-group">
+                <label for="tempo">Tempo de Execução</label>
+                <input type="text" id="tempo" name="tempo" required>
+            </div>
+            <button type="submit">Criar</button>
+        </div>
+    </form>
+
+    <div class="lista-servicos">
+        <table>
+            <thead>
+                <tr>
+                    <th>Serviço</th>
+                    <th>Valor</th>
+                    <th>Tempo</th>
+                    <th style="text-align:right;">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for servico in servicos %}
+                <tr id="linha-{{ servico.id }}">
+                    <td>
+                        <input type="text" id="titulo-{{ servico.id }}" value="{{ servico.titulo }}" disabled>
+                    </td>
+                    <td>
+                        <input type="text" id="valor-{{ servico.id }}" value="{{ servico.valor }}" disabled>
+                    </td>
+                    <td>
+                        <input type="text" id="tempo-{{ servico.id }}" value="{{ servico.tempo }}" disabled>
+                    </td>
+                    <td class="acoes">
+                        <button class="editar" onclick="habilitarEdicao({{ servico.id }})">Editar</button>
+                        <button class="salvar" id="salvar-{{ servico.id }}" onclick="salvarEdicao({{ servico.id }})" style="display:none;">Salvar</button>
+                        <button class="excluir" onclick="excluirServico({{ servico.id }})">Excluir</button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="text-align:center;">Nenhum serviço cadastrado ainda.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function habilitarEdicao(id) {
+            document.getElementById('titulo-' + id).disabled = false;
+            document.getElementById('valor-' + id).disabled = false;
+            document.getElementById('tempo-' + id).disabled = false;
+            document.getElementById('salvar-' + id).style.display = 'inline-block';
+        }
+
+        function salvarEdicao(id) {
+            const titulo = document.getElementById('titulo-' + id).value;
+            const valor = document.getElementById('valor-' + id).value;
+            const tempo = document.getElementById('tempo-' + id).value;
+
+            fetch('/editar_servico/' + id, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ titulo, valor, tempo })
+            }).then(response => {
+                if (response.ok) {
+                    alert("Serviço atualizado com sucesso!");
+                    location.reload();
+                } else {
+                    alert("Erro ao atualizar serviço.");
+                }
+            });
+        }
+
+        function excluirServico(id) {
+            if (confirm("Tem certeza que deseja excluir este serviço?")) {
+                fetch('/excluir_servico/' + id, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert("Erro ao excluir serviço.");
+                    }
+                });
+            }
+        }
+    </script>
+    <div class="voltar">
+    <a href="\painel">Voltar</a>
+</div>
+</body>
+</html>

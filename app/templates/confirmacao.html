@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <title>Confirmação</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Fallback META refresh (caso JS esteja desativado) -->
+  <meta http-equiv="refresh" content="5;url=/service" />
+
+  <script>
+    // Redireciona após 5 segundos
+    setTimeout(function () {
+      window.location.href = '/service';
+    }, 8000);
+  </script>
+
+  <style>
+    :root{
+      --bg:#0f172a;          /* slate-900 */
+      --card:#111827;        /* gray-900 */
+      --muted:#94a3b8;       /* slate-400 */
+      --text:#e5e7eb;        /* gray-200 */
+      --primary:#3b82f6;     /* blue-500 */
+      --primary-600:#2563eb; /* blue-600 */
+      --border: rgba(148,163,184,.35);
+      --row-sep: rgba(148,163,184,.15);
+      --ring: rgba(59,130,246,.45);
+      --ok:#22c55e;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
+      background:
+        radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.12), transparent 60%),
+        radial-gradient(1200px 800px at 0% 110%, rgba(34,197,94,.10), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      min-height:100dvh;
+      display:grid; place-items:center;
+      padding:20px;
+    }
+
+    .wrap{
+      width:100%; max-width:760px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:24px 28px;
+      text-align:center;
+      box-shadow: 0 16px 40px rgba(0,0,0,.28);
+    }
+
+    h3{
+      font-weight:900; letter-spacing:.3px;
+      font-size: clamp(18px, 3.2vw, 24px);
+      margin:0 0 10px;
+    }
+
+    .sub{
+      color:var(--muted);
+      margin-top:4px;
+      font-size: .98rem;
+    }
+
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      margin-top:16px; padding:10px 16px; border-radius:12px; text-decoration:none;
+      background: var(--primary); border:1px solid var(--primary);
+      color:#fff; font-weight:800; letter-spacing:.3px; cursor:pointer;
+      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+      box-shadow: 0 12px 28px rgba(59,130,246,.28);
+    }
+    .btn:hover{
+      background: var(--primary-600); border-color: var(--primary-600);
+      transform: translateY(-2px);
+      box-shadow: 0 14px 34px rgba(59,130,246,.35);
+    }
+
+    .pill{
+      display:inline-block; margin-top:10px;
+      padding:8px 12px; border-radius:999px; font-weight:800; font-size:.9rem;
+      color:#bbf7d0; background: rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.35);
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <h3>✅ Agendamento confirmado para {{ nome }} — {{ servico }} em {{ data_str }} às {{ hora_str }}</h3>
+    <div class="pill">Tudo pronto!</div>
+    <p class="sub">Você será redirecionado para a página de serviços em 5 segundos…</p>
+    <a class="btn" href="/service">Ir agora</a>
+  </main>
+</body>
+</html>

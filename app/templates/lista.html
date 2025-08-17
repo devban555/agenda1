@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lista de Contatos</title>
+  <style>
+    :root{
+      --bg:#0f172a;          /* slate-900 */
+      --card:#111827;        /* gray-900 */
+      --muted:#94a3b8;       /* slate-400 */
+      --text:#e5e7eb;        /* gray-200 */
+      --primary:#3b82f6;     /* blue-500 */
+      --primary-600:#2563eb; /* blue-600 */
+      --ring: rgba(59,130,246,.45);
+
+      --green:#22c55e;       /* green-500 */
+      --green-600:#16a34a;
+      --red:#ef4444;         /* red-500 */
+      --red-600:#dc2626;
+
+      --border: rgba(148,163,184,.35);
+      --border-soft: rgba(148,163,184,.2);
+      --row-sep: rgba(148,163,184,.15);
+      --table-bg:#0f172a;    /* mantém contraste sob thead sticky */
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
+      background: radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.12), transparent 60%),
+                  radial-gradient(1200px 800px at 0% 110%, rgba(34,197,94,.10), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100dvh;
+      padding:20px;
+    }
+
+    h1{
+      text-align:center;
+      margin:10px 0 20px;
+      font-weight:800;
+      letter-spacing:.3px;
+      font-size: clamp(22px, 2.6vw, 32px);
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:0 6px;
+    }
+
+    .botoes-container{
+      display:flex; justify-content:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;
+    }
+
+    /* Botão base do tema */
+    .btn{
+      padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:800; letter-spacing:.3px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      color:var(--text);
+      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+    }
+    .btn:hover{
+      background: rgba(255,255,255,.07);
+      border-color: rgba(148,163,184,.6);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+
+    /* Variações verdes/vermelhas mantendo o mesmo estilo base */
+    .btn-ativos{
+      border-color: rgba(34,197,94,.45);
+      box-shadow: 0 8px 22px rgba(34,197,94,.18);
+    }
+    .btn-ativos:hover{
+      box-shadow: 0 12px 30px rgba(34,197,94,.28);
+    }
+    .btn-inativos{
+      border-color: rgba(239,68,68,.45);
+      box-shadow: 0 8px 22px rgba(239,68,68,.18);
+    }
+    .btn-inativos:hover{
+      box-shadow: 0 12px 30px rgba(239,68,68,.28);
+    }
+
+    .pesquisa-container{
+      display:flex; justify-content:center; gap:10px; margin:0 auto 22px; flex-wrap:wrap;
+      max-width:700px;
+    }
+    .input{
+      flex:1 1 260px;
+      padding:12px; border:1px solid var(--border); background: rgba(255,255,255,.03); color:var(--text); border-radius:10px;
+      outline:none;
+      transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .input:focus{
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px var(--ring);
+    }
+    .btn-primary{
+      padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:800; letter-spacing:.3px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      color:var(--text);
+      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+    }
+    .btn-primary:hover{
+      background: rgba(255,255,255,.07);
+      border-color: rgba(148,163,184,.6);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.2);
+    }
+
+    .header-results{
+      display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+    .header-results .info{
+      color:var(--muted); font-size:14px;
+    }
+
+    .table-wrap{
+      width:100%;
+      overflow:auto;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background: var(--table-bg);
+    }
+    table{
+      width:100%; border-collapse:collapse; min-width:750px;
+    }
+    thead th{
+      text-align:left; padding:12px; background: rgba(255,255,255,.04);
+      border-bottom:1px solid var(--border-soft); color:var(--text);
+      position:sticky; top:0; z-index:1;
+    }
+    tbody td{
+      padding:12px; border-bottom:1px solid var(--row-sep); color:var(--text);
+    }
+    tbody tr:hover{ background: rgba(255,255,255,.03) }
+
+    .status{
+      display:inline-block; padding:6px 10px; border-radius:999px; font-size:12px; font-weight:800; letter-spacing:.3px;
+      border:1px solid transparent;
+    }
+    .status-ativo{ background:rgba(34,197,94,.15); color:#bbf7d0; border-color: rgba(34,197,94,.35)}
+    .status-inativo{ background:rgba(239,68,68,.15); color:#fecaca; border-color: rgba(239,68,68,.35)}
+
+    .empty{
+      text-align:center; color:var(--muted); padding:28px 10px;
+      border:1px dashed var(--border); border-radius:12px; background: rgba(255,255,255,.02); margin-top:8px;
+    }
+
+    .paginacao{
+      display:flex; justify-content:flex-end; gap:8px; margin-top:12px; flex-wrap:wrap;
+    }
+    .paginacao .page-btn{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      color:var(--text); border:1px solid var(--border); border-radius:12px; padding:8px 12px; cursor:pointer;
+      font-weight:700; letter-spacing:.3px;
+      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+    }
+    .paginacao .page-btn:hover{
+      background: rgba(255,255,255,.07);
+      border-color: rgba(148,163,184,.6);
+      box-shadow: 0 8px 22px rgba(0,0,0,.2);
+      transform: translateY(-2px);
+    }
+    .voltar{
+      text-align:center; margin-top:22px;
+    }
+    .voltar a{
+      display:inline-block; text-decoration:none; color:var(--text);
+      padding:10px 14px; border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      font-weight:800; letter-spacing:.3px;
+      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+    }
+    .voltar a:hover{
+      background: rgba(255,255,255,.07);
+      border-color: rgba(148,163,184,.6);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Lista de Contatos</h1>
+
+  <div class="wrap">
+    <div class="botoes-container">
+      <button class="btn btn-ativos" type="button">Contatos Ativos</button>
+      <button class="btn btn-inativos" type="button">Contatos Inativos</button>
+    </div>
+
+    <div class="pesquisa-container">
+      <input class="input" type="text" placeholder="Pesquisar contato..." aria-label="Pesquisar contato">
+      <button class="btn-primary" type="button">Pesquisar</button>
+    </div>
+
+    <div class="card">
+      <div class="header-results">
+        <div class="info">Resultados</div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nome</th>
+              <th>Número</th>
+              <th>Nº de Agendamentos</th>
+              <th>Último Agendamento</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Exemplo estático -->
+            <tr>
+              <td>1</td>
+              <td>João Silva</td>
+              <td>(11) 99999-0000</td>
+              <td>5</td>
+              <td>12/08/2025 14:00</td>
+              <td><span class="status status-ativo">ATIVO</span></td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Maria Souza</td>
+              <td>(11) 98888-1111</td>
+              <td>2</td>
+              <td>05/07/2025 10:30</td>
+              <td><span class="status status-inativo">INATIVO</span></td>
+            </tr>
+            <!-- Fim exemplo -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Exemplo de estado vazio -->
+      <!--
+      <div class="empty">
+        Nenhum contato encontrado.
+      </div>
+      -->
+
+      <div class="paginacao">
+        <button class="page-btn" type="button">«</button>
+        <button class="page-btn" type="button">1</button>
+        <button class="page-btn" type="button">2</button>
+        <button class="page-btn" type="button">»</button>
+      </div>
+    </div>
+  </div>
+  <div class="voltar">
+    <a href="\painel">Voltar</a>
+</div>
+</body>
+</html>

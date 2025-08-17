@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Suporte • Planos</title>
+  <style>
+    :root{
+      --bg:#0f172a;          /* slate-900 */
+      --card:#111827;        /* gray-900 */
+      --muted:#94a3b8;       /* slate-400 */
+      --text:#e5e7eb;        /* gray-200 */
+      --primary:#3b82f6;     /* blue-500 */
+      --primary-600:#2563eb; /* blue-600 */
+      --ring: rgba(59,130,246,.45);
+      --success:#22c55e;
+      --warning:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
+      background: radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.12), transparent 60%),
+                  radial-gradient(1200px 800px at 0% 110%, rgba(34,197,94,.10), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100dvh;
+    }
+    header{
+      padding:28px 20px 10px;
+      text-align:center;
+    }
+    h1{
+      margin:0 0 6px;
+      font-size: clamp(22px, 2.6vw, 32px);
+      letter-spacing:.3px;
+    }
+    .subtitle{
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:22px auto 40px;
+      padding:0 16px;
+    }
+
+    /* Status (Plano aderido | Vencimento) */
+    .status{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(148,163,184,.2);
+      border-radius:16px;
+      padding:16px;
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:12px;
+      align-items:center;
+      margin-bottom:18px;
+    }
+    .status .row{
+      display:flex; gap:20px; flex-wrap:wrap; align-items:center;
+      font-size:14px;
+    }
+    .status .label{ color:var(--muted); margin-right:6px; }
+    .status .value{ font-weight:600; letter-spacing:.2px; }
+    .btn-chat{
+      appearance:none; border:0; cursor:pointer;
+      padding:10px 16px; border-radius:12px;
+      background:var(--primary);
+      color:white; font-weight:600; font-size:14px;
+      box-shadow: 0 6px 20px rgba(59,130,246,.25);
+      transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn-chat:hover{ background:var(--primary-600); }
+    .btn-chat:active{ transform: translateY(1px); }
+
+    /* Grade dos planos */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap:16px;
+    }
+    @media (max-width:1024px){
+      .grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width:600px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .plan{
+      position:relative;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(148,163,184,.2);
+      border-radius:18px;
+      padding:18px;
+      overflow:hidden;
+      transition: box-shadow .2s ease, transform .08s ease, border-color .2s ease;
+    }
+    .plan:hover{
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      border-color: rgba(59,130,246,.5);
+    }
+    .plan.selected{
+      outline: 2px solid var(--primary);
+      box-shadow: 0 0 0 6px var(--ring), 0 16px 40px rgba(59,130,246,.18);
+    }
+
+    .badge{
+      position:absolute; top:10px; left:10px;
+      background: rgba(34,197,94,.15);
+      color:#bbf7d0; /* green-200 */
+      border:1px solid rgba(34,197,94,.35);
+      font-weight:700; font-size:12px;
+      padding:4px 8px; border-radius:999px;
+      letter-spacing:.3px;
+      backdrop-filter: blur(6px);
+    }
+    .badge.warn{
+      background: rgba(245,158,11,.15);
+      color:#fde68a; border-color: rgba(245,158,11,.35);
+    }
+
+    .head{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .title{ font-size:16px; font-weight:700; letter-spacing:.3px; }
+    .period{ color:var(--muted); font-size:12px; }
+
+    .price{
+      display:flex; align-items:flex-end; gap:6px;
+      margin:8px 0 14px;
+    }
+    .price .currency{ font-size:16px; opacity:.9 }
+    .price .value{ font-size:34px; font-weight:800; line-height:1; letter-spacing:.5px; }
+    .price .cents{ font-size:18px; font-weight:700; align-self:flex-start; padding-top:6px; }
+    .per{ color:var(--muted); font-size:12px; }
+
+    .features{
+      margin:10px 0 16px;
+      color:var(--muted); font-size:13px;
+      line-height:1.45;
+    }
+
+    /* Radio estilizado */
+    .select{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .radio{
+      position:relative; display:inline-flex; align-items:center; gap:10px;
+      user-select:none; cursor:pointer; font-weight:600;
+    }
+    .radio input{ position:absolute; opacity:0; pointer-events:none; }
+    .dot{
+      width:20px; height:20px; border-radius:50%;
+      border:2px solid rgba(148,163,184,.6);
+      display:grid; place-items:center;
+      transition: border-color .2s ease, background .2s ease;
+      background: rgba(255,255,255,.02);
+    }
+    .dot::after{
+      content:""; width:10px; height:10px; border-radius:50%;
+      background: transparent; transition: background .2s ease, transform .2s ease;
+      transform: scale(.7);
+    }
+    .radio input:checked + .dot{
+      border-color: var(--primary);
+      background: rgba(59,130,246,.12);
+    }
+    .radio input:checked + .dot::after{
+      background: var(--primary);
+      transform: scale(1);
+    }
+    .btn{
+      border:1px solid rgba(148,163,184,.35);
+      background: rgba(255,255,255,.03);
+      color:var(--text);
+      padding:10px 14px; border-radius:12px;
+      font-weight:700; font-size:14px; cursor:pointer;
+      transition: background .2s ease, border-color .2s ease, transform .06s ease;
+    }
+    .btn:hover{ background: rgba(255,255,255,.07); border-color: rgba(148,163,184,.6); }
+    .btn:active{ transform: translateY(1px); }
+
+    .tag-best{
+      position:absolute; top:10px; right:-44px; rotate:35deg;
+      background: linear-gradient(90deg, var(--primary), var(--primary-600));
+      color:white; font-weight:800; font-size:12px; padding:6px 60px;
+      box-shadow: 0 8px 24px rgba(59,130,246,.35);
+    }
+
+    footer{
+      text-align:center; color:var(--muted);
+      font-size:12px; margin-top:26px;
+    }
+    .voltar{
+      text-align:center; margin-top:22px;
+    }
+    .voltar a{
+      display:inline-block; text-decoration:none; color:var(--text);
+      padding:10px 14px; border-radius:12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      font-weight:800; letter-spacing:.3px;
+      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+    }
+    .voltar a:hover{
+      background: rgba(255,255,255,.07);
+      border-color: rgba(148,163,184,.6);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Planos de Suporte</h1>
+    <div class="subtitle">Escolha o plano ideal. Os descontos já estão aplicados.</div>
+  </header>
+
+  <div class="wrap">
+    <!-- Status atual -->
+    <section class="status" aria-label="Status do Plano">
+      <div class="row">
+        <div><span class="label">Plano aderido:</span> <span id="plano-aderido" class="value">Nenhum</span></div>
+        <div><span class="label">Vencimento:</span> <span id="vencimento" class="value">—</span></div>
+      </div>
+      <button class="btn-chat" id="btnChat" type="button">Abrir Chat</button>
+    </section>
+
+    <!-- Planos -->
+    <section class="grid" aria-label="Planos disponíveis">
+      <!-- Mensal -->
+      <article class="plan" data-plan="Mensal">
+        <span class="badge">0% off</span>
+        <div class="head">
+          <div class="title"></div>
+          <div class="period">R$ 49,99 / mês</div>
+        </div>
+
+        <div class="price" aria-label="Preço">
+          <span class="currency">R$</span><span class="value">49</span><span class="cents">,99</span>
+          <span class="per">/ mês</span>
+        </div>
+
+        <ul class="features">
+          <li>Suporte contínuo mês a mês.</li>
+          <li>Renovação automática (cancelável).</li>
+        </ul>
+
+        <div class="select">
+          <label class="radio">
+            <input type="radio" name="plano" value="Mensal" />
+            <span class="dot" aria-hidden="true"></span>
+            Selecionar
+          </label>
+          <button class="btn" data-choose="Mensal" type="button">Escolher</button>
+        </div>
+      </article>
+
+      <!-- Trimestral -->
+      <article class="plan" data-plan="Trimestral">
+        <span class="badge">-6,7% off</span>
+        <div class="head">
+          <div class="title"></div>
+          <div class="period">R$ 139,99 / 3 meses</div>
+        </div>
+
+        <div class="price" aria-label="Preço">
+          <span class="currency">R$</span><span class="value">139</span><span class="cents">,99</span>
+          <span class="per">/ 3 meses</span>
+        </div>
+
+        <ul class="features">
+          <li>Economia comparada ao mensal.</li>
+          <li>Vigência de 90 dias.</li>
+        </ul>
+
+        <div class="select">
+          <label class="radio">
+            <input type="radio" name="plano" value="Trimestral" />
+            <span class="dot" aria-hidden="true"></span>
+            Selecionar
+          </label>
+          <button class="btn" data-choose="Trimestral" type="button">Escolher</button>
+        </div>
+      </article>
+
+      <!-- Semestral -->
+      <article class="plan" data-plan="Semestral">
+        <span class="badge warn">-4,7% off</span>
+        <div class="head">
+          <div class="title"></div>
+          <div class="period">R$ 285,99 / 6 meses</div>
+        </div>
+
+        <div class="price" aria-label="Preço">
+          <span class="currency">R$</span><span class="value">285</span><span class="cents">,99</span>
+          <span class="per">/ 6 meses</span>
+        </div>
+
+        <ul class="features">
+          <li>Vigência de 180 dias.</li>
+          <li>Menos renovações no ano.</li>
+        </ul>
+
+        <div class="select">
+          <label class="radio">
+            <input type="radio" name="plano" value="Semestral" />
+            <span class="dot" aria-hidden="true"></span>
+            Selecionar
+          </label>
+          <button class="btn" data-choose="Semestral" type="button">Escolher</button>
+        </div>
+      </article>
+
+      <!-- Anual -->
+      <article class="plan" data-plan="Anual">
+        <span class="tag-best">  MELHOR CUSTO</span>
+        <span class="badge">-8,3% off</span>
+        <div class="head">
+          <div class="title"></div>
+          <div class="period">R$ 549,99 / 12 meses</div>
+        </div>
+
+        <div class="price" aria-label="Preço">
+          <span class="currency">R$</span><span class="value">549</span><span class="cents">,99</span>
+          <span class="per">/ ano</span>
+        </div>
+
+        <ul class="features">
+          <li>Economia máxima no ano.</li>
+          <li>Vigência de 365 dias.</li>
+        </ul>
+
+        <div class="select">
+          <label class="radio">
+            <input type="radio" name="plano" value="Anual" />
+            <span class="dot" aria-hidden="true"></span>
+            Selecionar
+          </label>
+          <button class="btn" data-choose="Anual" type="button">Escolher</button>
+        </div>
+      </article>
+    </section>
+
+    <footer>
+      * Descontos comparados ao valor mensal acumulado no respectivo período.
+    </footer>
+  </div>
+
+  <script>
+    // Seleção visual do plano (somente front-end)
+    const cards = document.querySelectorAll('.plan');
+    const radios = document.querySelectorAll('input[name="plano"]');
+    const chooseBtns = document.querySelectorAll('[data-choose]');
+    const aderido = document.getElementById('plano-aderido');
+
+    function selectPlan(name){
+      radios.forEach(r => { if(r.value === name){ r.checked = true; } });
+      cards.forEach(c => c.classList.toggle('selected', c.dataset.plan === name));
+      // Somente pré-visualização do plano escolhido; o "aderido" real deve vir do backend
+      aderido.textContent = name + ' (selecionado)';
+    }
+
+    radios.forEach(radio=>{
+      radio.addEventListener('change', (e)=> selectPlan(e.target.value));
+    });
+    chooseBtns.forEach(btn=>{
+      btn.addEventListener('click', ()=> selectPlan(btn.dataset.choose));
+    });
+
+    // Inicial: nenhuma seleção aplicada
+  </script>
+  <div class="voltar">
+    <a href="\painel">Voltar</a>
+</div>
+</body>
+</html>
