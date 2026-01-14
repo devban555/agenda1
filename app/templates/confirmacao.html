@@ -88,9 +88,25 @@
 <body>
   <main class="wrap">
     <h3>✅ Agendamento confirmado para {{ nome }} — {{ servico }} em {{ data_str }} às {{ hora_str }}</h3>
+
     <div class="pill">Tudo pronto!</div>
-    <p class="sub">Você será redirecionado para a página de serviços em 5 segundos…</p>
-    <a class="btn" href="/service">Ir agora</a>
+
+    <p class="sub">
+      Você será redirecionado para a agenda em 5 segundos…
+    </p>
+
+    <!-- botão manual -->
+    <a class="btn" href="{{ url_for('main.agenda_publica_slug', slug=slug) }}">
+      Ir agora
+    </a>
   </main>
+
+  <!-- redirecionamento automático -->
+  <script>
+    setTimeout(function () {
+      window.location.href = "{{ url_for('main.agenda_publica_slug', slug=slug) }}";
+    }, 5000);
+  </script>
 </body>
 </html>
+

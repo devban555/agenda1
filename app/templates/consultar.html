@@ -148,9 +148,13 @@
       {% endif %}
     {% endif %}
 
-    <div class="voltar">
-    <a href="\service">Voltar</a>
-</div>
+    {% if slug %}
+      <div class="voltar">
+        <a href="{{ url_for('main.agenda_publica_slug', slug=slug) }}">
+          Voltar
+        </a>
+      </div>
+    {% endif %}
   </div>
 </body>
 </html>

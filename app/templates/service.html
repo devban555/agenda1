@@ -120,43 +120,49 @@
   </style>
 </head>
 <body>
-
+  <h2>Barbearia {{ usuario.username }}</h2>
   <header>Serviços Disponíveis</header>
 
   <div class="toolbar">
-    <!-- <a class="btn" href="/"><i class="fa-solid fa-house"></i> Início</a> -->
-    <a class="btn" href="/consultar"><i class="fa-solid fa-calendar-check"></i> Consultar Agenda</a>
+    <a class="btn" href="{{ url_for('main.consultar_publico', slug=usuario.slug) }}">
+      Consultar Agenda
+    </a>
   </div>
 
-  <div class="container">
-    {% if servicos and servicos|length > 0 %}
-    <div class="grid">
-      {% for servico in servicos %}
-      <div class="card" data-id="{{ servico.id }}">
-        <h3 title="{{ servico.titulo }}">{{ servico.titulo }}</h3>
+<div class="container">
+  {% if servicos and servicos|length > 0 %}
+  <div class="grid">
+    {% for servico in servicos %}
+    <div class="card" data-id="{{ servico.id }}">
+      <h3 title="{{ servico.titulo }}">{{ servico.titulo }}</h3>
 
-        <div class="meta">
-          <span class="tag"><i class="fa-solid fa-tag"></i> Valor: R$ {{ servico.valor }}</span>
-          <span class="tag"><i class="fa-regular fa-clock"></i> Tempo: {{ servico.tempo }}</span>
-        </div>
-
-        <div class="actions">
-          <!-- Ajuste a rota abaixo conforme sua view de agendamento dinâmica -->
-          <a class="btn btn-primary" href="/agendar/{{ servico.id }}">
-            <i class="fa-solid fa-calendar-plus"></i> Agendar
-          </a>
-        </div>
+      <div class="meta">
+        <span class="tag">
+          <i class="fa-solid fa-tag"></i> Valor: R$ {{ servico.valor }}
+        </span>
+        <span class="tag">
+          <i class="fa-regular fa-clock"></i> Tempo: {{ servico.tempo }}
+        </span>
       </div>
-      {% endfor %}
+
+      <div class="actions">
+        <a class="btn btn-primary"
+           href="{{ url_for('main.agendar_por_id', servico_id=servico.id) }}">
+          <i class="fa-solid fa-calendar-plus"></i> Agendar
+        </a>
+      </div>
     </div>
-    {% else %}
-      <div class="empty">
-        <p><i class="fa-regular fa-face-smile"></i></p>
-        <p>Nenhum serviço disponível no momento.</p>
-        <p>Assim que o administrador criar serviços em <strong>/servicos</strong>, eles aparecerão aqui.</p>
-      </div>
-    {% endif %}
+    {% endfor %}
   </div>
+  {% else %}
+    <div class="empty">
+      <p><i class="fa-regular fa-face-smile"></i></p>
+      <p>Nenhum serviço disponível no momento.</p>
+      <p>Assim que o administrador criar serviços, eles aparecerão aqui.</p>
+    </div>
+  {% endif %}
+</div>
+
 
 </body>
 </html>
