@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Serviços Disponíveis</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg:#0f172a;          /* slate-900 */
@@ -117,10 +118,15 @@
       .btn{ width:100%; }
       .actions{ justify-content:stretch }
     }
-  </style>
+ </style>
 </head>
 <body>
-  <h2>Barbearia {{ usuario.username }}</h2>
+
+  <!-- TÍTULO DINÂMICO -->
+  <h2 id="tituloServico" style="text-align: center;">
+    Barbearia {{ usuario.username }}
+  </h2>
+
   <header>Serviços Disponíveis</header>
 
   <div class="toolbar">
@@ -129,40 +135,71 @@
     </a>
   </div>
 
-<div class="container">
-  {% if servicos and servicos|length > 0 %}
-  <div class="grid">
-    {% for servico in servicos %}
-    <div class="card" data-id="{{ servico.id }}">
-      <h3 title="{{ servico.titulo }}">{{ servico.titulo }}</h3>
+  <div class="container">
+    {% if servicos and servicos|length > 0 %}
+    <div class="grid">
+      {% for servico in servicos %}
+      <div class="card" data-id="{{ servico.id }}">
+        <h3 title="{{ servico.titulo }}">{{ servico.titulo }}</h3>
 
-      <div class="meta">
-        <span class="tag">
-          <i class="fa-solid fa-tag"></i> Valor: R$ {{ servico.valor }}
-        </span>
-        <span class="tag">
-          <i class="fa-regular fa-clock"></i> Tempo: {{ servico.tempo }}
-        </span>
-      </div>
+        <div class="meta">
+          <span class="tag">
+            <i class="fa-solid fa-tag"></i> Valor: R$ {{ servico.valor }}
+          </span>
+          <span class="tag">
+            <i class="fa-regular fa-clock"></i> Tempo: {{ servico.tempo }}
+          </span>
+        </div>
 
-      <div class="actions">
-        <a class="btn btn-primary"
-           href="{{ url_for('main.agendar_por_id', servico_id=servico.id) }}">
-          <i class="fa-solid fa-calendar-plus"></i> Agendar
-        </a>
+        <div class="actions">
+          <a class="btn btn-primary"
+             href="{{ url_for('main.agendar_por_id', servico_id=servico.id) }}">
+            <i class="fa-solid fa-calendar-plus"></i> Agendar
+          </a>
+        </div>
       </div>
+      {% endfor %}
     </div>
-    {% endfor %}
+    {% else %}
+      <div class="empty">
+        <p><i class="fa-regular fa-face-smile"></i></p>
+        <p>Nenhum serviço disponível no momento.</p>
+        <p>Assim que o administrador criar serviços, eles aparecerão aqui.</p>
+      </div>
+    {% endif %}
   </div>
-  {% else %}
-    <div class="empty">
-      <p><i class="fa-regular fa-face-smile"></i></p>
-      <p>Nenhum serviço disponível no momento.</p>
-      <p>Assim que o administrador criar serviços, eles aparecerão aqui.</p>
-    </div>
-  {% endif %}
-</div>
 
+  <!-- APLICAÇÃO DO NOME FANTASIA + FONTE -->
+  <script>
+    const titulo = document.getElementById('tituloServico')
+
+    const nomeFantasia = localStorage.getItem('nome_fantasia')
+    const fonteTitulo  = localStorage.getItem('fonte_titulo')
+
+    // aplicar nome fantasia
+    if (nomeFantasia && nomeFantasia.trim() !== '') {
+      titulo.textContent = nomeFantasia
+    }
+
+    // aplicar fonte escolhida
+    switch (fonteTitulo) {
+      case 'poppins':
+        titulo.style.fontFamily = "'Poppins', sans-serif"
+        break
+
+      case 'montserrat':
+        titulo.style.fontFamily = "'Montserrat', sans-serif"
+        break
+
+      case 'playfair':
+        titulo.style.fontFamily = "'Playfair Display', serif"
+        break
+
+      default:
+        titulo.style.fontFamily =
+          "system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Arial"
+    }
+  </script>
 
 </body>
 </html>

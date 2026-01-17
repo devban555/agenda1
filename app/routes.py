@@ -2,16 +2,15 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from functools import wraps
 from datetime import datetime
 from sqlalchemy import extract, func
-from flask import session
+
 from . import db
 from .models import Agendamento
-from app.models import Servico
-from app.models import Usuario
+from app.models import Servico, Usuario, ConfiguracaoAgenda, ExcecaoAgenda
 
 main = Blueprint('main', __name__)
 
 # =========================
-# AUTH DECORATOR (necessário)
+# AUTH DECORATOR
 # =========================
 def login_required(f):
     @wraps(f)
@@ -33,23 +32,13 @@ def home():
 @main.route('/agendar/<int:servico_id>')
 def agendar_por_id(servico_id):
     servico = Servico.query.get_or_404(servico_id)
-    return render_template('agendar_servico.html', servico=servico)
+    usuario = Usuario.query.get_or_404(servico.usuario_id)
 
-
-@main.route('/agendar/<servico>')
-def agendar_servico(servico):
-    servicos = {
-        'corte': {'nome': 'Corte', 'valor': 'R$ 45,00', 'tempo': '01:00'},
-        'corte_barba': {'nome': 'Corte + Barba', 'valor': 'R$ 65,00', 'tempo': '01:30'},
-        'corte_sobrancelha': {'nome': 'Corte + Sobrancelha', 'valor': 'R$ 59,00', 'tempo': '01:00'},
-        'corte_barba_sobrancelha': {'nome': 'Corte + Barba + Sobrancelha', 'valor': 'R$ 70,00', 'tempo': '01:40'},
-    }
-
-    if servico not in servicos:
-        return "Serviço inválido", 404
-
-    dados = servicos[servico]
-    return render_template('agendar_servico.html', servico=dados, id_servico=servico)
+    return render_template(
+        'agendar_servico.html',
+        servico=servico,
+        usuario=usuario
+    )
 
 
 @main.route('/confirmar_agendamento', methods=['POST'])
@@ -65,7 +54,12 @@ def confirmar_agendamento():
     data_obj = datetime.strptime(data_str, '%Y-%m-%d').date()
     hora_obj = datetime.strptime(hora_str, '%H:%M').time()
 
-    existe = Agendamento.query.filter_by(data=data_obj, hora=hora_obj).first()
+    existe = Agendamento.query.filter_by(
+        data=data_obj,
+        hora=hora_obj,
+        usuario_id=servico.usuario_id
+    ).first()
+
     if existe:
         return "Horário já agendado. Volte e escolha outro.", 409
 
@@ -77,6 +71,7 @@ def confirmar_agendamento():
         servico_id=servico.id
     )
 
+
 @main.route('/salvar_agendamento', methods=['POST'])
 def salvar_agendamento():
     nome = request.form['nome']
@@ -84,12 +79,11 @@ def salvar_agendamento():
     data = datetime.strptime(request.form['data'], '%Y-%m-%d').date()
     hora = datetime.strptime(request.form['hora'], '%H:%M').time()
 
-    # serviço selecionado pelo cliente
     sid = request.form.get('servico_id')
     servico = Servico.query.get_or_404(int(sid))
 
     novo = Agendamento(
-        usuario_id=servico.usuario_id,   # 🔐 vínculo correto com o admin
+        usuario_id=servico.usuario_id,
         nome=nome,
         telefone=telefone,
         servico=servico.titulo,
@@ -100,7 +94,6 @@ def salvar_agendamento():
     db.session.add(novo)
     db.session.commit()
 
-    # 🔑 slug público correto
     slug = servico.usuario.slug
 
     return render_template(
@@ -112,18 +105,117 @@ def salvar_agendamento():
         slug=slug
     )
 
-@main.route('/verificar_horarios', methods=['POST'])
-def verificar_horarios():
-    data = request.json.get('data')
-    if not data:
+
+# =========================
+# DISPONIBILIDADE / HORÁRIOS
+# =========================
+@main.route('/horarios_disponiveis', methods=['POST'])
+def horarios_disponiveis():
+    data_str = request.json.get('data')
+    usuario_id = request.json.get('usuario_id')
+
+    if not data_str or not usuario_id:
         return jsonify([])
 
-    data_obj = datetime.strptime(data, '%Y-%m-%d').date()
-    agendamentos = Agendamento.query.filter_by(data=data_obj).all()
-    horarios_ocupados = [ag.hora.strftime('%H:%M') for ag in agendamentos]
-    return jsonify(horarios_ocupados)
+    data = datetime.strptime(data_str, '%Y-%m-%d').date()
+    dia_semana = data.weekday()  # 0 = segunda
+
+    config = ConfiguracaoAgenda.query.filter_by(
+        usuario_id=usuario_id
+    ).first()
+
+    if not config:
+        return jsonify([])
+
+    dias_permitidos = [int(d) for d in config.dias_semana.split(',')]
+    if dia_semana not in dias_permitidos:
+        return jsonify([])
+
+    horarios = config.horarios_base.split(',')
+
+    excecao = ExcecaoAgenda.query.filter_by(
+        usuario_id=usuario_id,
+        data=data
+    ).first()
+
+    if excecao:
+        if not excecao.dia_ativo:
+            return jsonify([])
+
+        if excecao.horarios_desativados:
+            bloqueados = excecao.horarios_desativados.split(',')
+            horarios = [h for h in horarios if h not in bloqueados]
+
+    return jsonify(horarios)
 
 
+@main.route('/verificar_horarios', methods=['POST'])
+def verificar_horarios():
+    data_json = request.get_json()
+    data_str = data_json.get('data')
+    servico_id = data_json.get('servico_id')
+
+    if not data_str or not servico_id:
+        return jsonify([])
+
+    data = datetime.strptime(data_str, '%Y-%m-%d').date()
+    dia_semana = data.weekday()  # 0 = segunda, 6 = domingo
+
+    # serviço e usuário
+    servico = Servico.query.get_or_404(servico_id)
+    usuario_id = servico.usuario_id
+
+    # configuração base
+    config = ConfiguracaoAgenda.query.filter_by(
+        usuario_id=usuario_id
+    ).first()
+
+    if not config:
+        return jsonify([])
+
+    # ✅ AGORA É LISTA, NÃO STRING
+    dias_permitidos = config.dias_semana
+    horarios_base = config.horarios_base
+
+    # dia não permitido
+    if dia_semana not in dias_permitidos:
+        return jsonify([])
+
+    # exceção por data
+    excecao = ExcecaoAgenda.query.filter_by(
+        usuario_id=usuario_id,
+        data=data
+    ).first()
+
+    if excecao:
+        if not excecao.dia_ativo:
+            return jsonify([])
+
+        horarios_base = [
+            h for h in horarios_base
+            if h not in (excecao.horarios_bloqueados or [])
+        ]
+
+    # horários já agendados
+    agendados = Agendamento.query.filter_by(
+        usuario_id=usuario_id,
+        data=data
+    ).all()
+
+    horarios_ocupados = {a.hora.strftime('%H:%M') for a in agendados}
+
+    # horários finais disponíveis
+    horarios_disponiveis = [
+        h for h in horarios_base
+        if h not in horarios_ocupados
+    ]
+
+    return jsonify(horarios_disponiveis)
+
+
+# =========================
+# CONSULTAS / CANCELAMENTO
+# =========================
 @main.route('/consultar', methods=['GET', 'POST'])
 def consultar():
     agendamentos = None
@@ -140,7 +232,6 @@ def consultar():
         ).all()
 
         if agendamentos:
-            # 🔑 envia o SLUG público para o template
             slug = agendamentos[0].usuario.slug
 
     return render_template(
@@ -171,6 +262,7 @@ def cancelar(id):
 def painel():
     return render_template('painel.html')
 
+
 @main.route('/admin', methods=['GET', 'POST'])
 @login_required
 def admin():
@@ -197,19 +289,6 @@ def admin():
         data_filtro=data_filtro
     )
 
-@main.route('/excluir_servico/<int:id>', methods=['POST'])
-@login_required
-def excluir_servico(id):
-    servico = Servico.query.filter_by(
-        id=id,
-        usuario_id=session["user_id"]
-    ).first_or_404()
-
-    db.session.delete(servico)
-    db.session.commit()
-    return ('', 204)
-
-
 
 @main.route('/servicos', methods=['GET', 'POST'])
 @login_required
@@ -218,7 +297,7 @@ def servicos():
 
     if request.method == 'POST':
         novo_servico = Servico(
-            usuario_id=user_id,              # 🔐 vínculo
+            usuario_id=user_id,
             titulo=request.form['titulo'],
             valor=request.form['valor'],
             tempo=request.form['tempo']
@@ -227,8 +306,10 @@ def servicos():
         db.session.commit()
         return redirect(url_for('main.servicos'))
 
-    # 🔐 lista apenas do usuário logado
-    servicos = Servico.query.filter_by(usuario_id=user_id).all()
+    servicos = Servico.query.filter_by(
+        usuario_id=user_id
+    ).all()
+
     return render_template('servicos.html', servicos=servicos)
 
 
@@ -251,89 +332,14 @@ def editar_servico(id):
 
 
 # =========================
-# OUTRAS ROTAS
+# ROTAS PÚBLICAS POR SLUG
 # =========================
 @main.route("/service")
 @login_required
 def service():
     usuario = Usuario.query.get_or_404(session["user_id"])
+    return redirect(url_for("main.agenda_publica_slug", slug=usuario.slug))
 
-    return redirect(
-        url_for(
-            "main.agenda_publica_slug",
-            slug=usuario.slug
-        )
-    )
-
-
-@main.route('/relatorio')
-@login_required
-def relatorio():
-    total_agendamentos = Agendamento.query.count()
-
-    dados_por_mes = (
-        db.session.query(
-            extract('month', Agendamento.data).label('mes'),
-            func.count(Agendamento.id).label('total')
-        )
-        .group_by('mes')
-        .order_by(func.count(Agendamento.id).desc())
-        .all()
-    )
-
-    melhor_mes = None
-    if dados_por_mes:
-        meses_nomes = [
-            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-        ]
-        melhor_mes = meses_nomes[int(dados_por_mes[0].mes) - 1]
-
-    ano_atual = datetime.now().year
-    total_no_ano = Agendamento.query.filter(
-        extract('year', Agendamento.data) == ano_atual
-    ).count()
-
-    return render_template(
-        'relatorio.html',
-        total_agendamentos=total_agendamentos,
-        melhor_mes=melhor_mes,
-        total_cancelados=0,
-        total_no_ano=total_no_ano
-    )
-
-
-@main.route("/lista")
-def lista():
-    return render_template("lista.html")
-
-
-@main.route("/suporte")
-def suporte():
-    return render_template("suporte.html")
-
-
-@main.route("/eventos")
-def eventos():
-    return render_template("eventos.html")
-
-@main.route("/u/<username>")
-def agenda_publica(username):
-    # identifica o admin pelo username
-    usuario = Usuario.query.filter_by(username=username).first_or_404()
-
-    # busca somente os serviços desse admin
-    servicos = Servico.query.filter_by(
-        usuario_id=usuario.id
-    ).order_by(Servico.titulo).all()
-
-    return render_template(
-        "service.html",
-        servicos=servicos,
-        usuario=usuario
-    )
-
-from app.models import Usuario, Servico
 
 @main.route("/agenda/<slug>")
 def agenda_publica_slug(slug):
@@ -348,6 +354,7 @@ def agenda_publica_slug(slug):
         servicos=servicos,
         usuario=usuario
     )
+
 
 @main.route('/agenda/<slug>/consultar', methods=['GET', 'POST'])
 def consultar_publico(slug):
@@ -372,3 +379,119 @@ def consultar_publico(slug):
         telefone=telefone,
         slug=slug
     )
+
+
+@main.route('/salvar_configuracao_agenda', methods=['POST'])
+@login_required
+def salvar_configuracao_agenda():
+    user_id = session['user_id']
+    data = request.get_json()
+
+    dias_semana = data.get('dias_semana')           # [0,1,2,3,4]
+    horarios_base = data.get('horarios_base')       # ['08:00','09:00']
+    excecoes = data.get('excecoes', [])              # opcional
+
+    if not dias_semana or not horarios_base:
+        return jsonify({'erro': 'Dados incompletos'}), 400
+
+    # -----------------------------
+    # CONFIGURAÇÃO BASE (UPSERT)
+    # -----------------------------
+    config = ConfiguracaoAgenda.query.filter_by(
+        usuario_id=user_id
+    ).first()
+
+    dias_str = ','.join(str(d) for d in dias_semana)
+    horarios_str = ','.join(horarios_base)
+
+    if config:
+        config.dias_semana = dias_str
+        config.horarios_base = horarios_str
+    else:
+        config = ConfiguracaoAgenda(
+            usuario_id=user_id,
+            dias_semana=dias_str,
+            horarios_base=horarios_str
+        )
+        db.session.add(config)
+
+    # -----------------------------
+    # EXCEÇÕES POR DATA
+    # -----------------------------
+    for ex in excecoes:
+        data_ex = datetime.strptime(ex['data'], '%Y-%m-%d').date()
+        dia_ativo = ex.get('dia_ativo', True)
+        horarios_desativados = ex.get('horarios', [])
+
+        excecao = ExcecaoAgenda.query.filter_by(
+            usuario_id=user_id,
+            data=data_ex
+        ).first()
+
+        horarios_str = ','.join(horarios_desativados) if horarios_desativados else None
+
+        if excecao:
+            excecao.dia_ativo = dia_ativo
+            excecao.horarios_desativados = horarios_str
+        else:
+            nova = ExcecaoAgenda(
+                usuario_id=user_id,
+                data=data_ex,
+                dia_ativo=dia_ativo,
+                horarios_desativados=horarios_str
+            )
+            db.session.add(nova)
+
+    db.session.commit()
+
+    return jsonify({'status': 'ok'})
+
+@main.route('/configuracoes')
+@login_required
+def configuracoes():
+    return render_template('setup.html')
+
+@main.route('/salvar_configuracao_base', methods=['POST'])
+@login_required
+def salvar_configuracao_base():
+    data = request.get_json()
+
+    config = ConfiguracaoAgenda.query.filter_by(
+        usuario_id=session['user_id']
+    ).first()
+
+    if not config:
+        config = ConfiguracaoAgenda(usuario_id=session['user_id'])
+        db.session.add(config)
+
+    config.dias_semana = data.get('dias_semana', [])
+    config.horarios_base = data.get('horarios_base', [])
+
+    db.session.commit()
+    return jsonify({'status':'ok'})
+
+@main.route('/salvar_excecao_agenda', methods=['POST'])
+@login_required
+def salvar_excecao_agenda():
+    data = request.get_json()
+
+    data_obj = datetime.strptime(data['data'], '%Y-%m-%d').date()
+
+    excecao = ExcecaoAgenda.query.filter_by(
+        usuario_id=session['user_id'],
+        data=data_obj
+    ).first()
+
+    if not excecao:
+        excecao = ExcecaoAgenda(
+            usuario_id=session['user_id'],
+            data=data_obj
+        )
+        db.session.add(excecao)
+
+    excecao.dia_ativo = data.get('dia_ativo', True)
+    excecao.horarios_bloqueados = data.get('horarios_bloqueados', [])
+
+    db.session.commit()
+    return jsonify({'status':'ok'})
+

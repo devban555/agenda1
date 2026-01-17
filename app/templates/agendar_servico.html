@@ -153,58 +153,55 @@
       <label for="data">Quando:</label>
       <input type="date" id="data" name="data" required>
 
-      <h3 style="margin:14px 0 6px; font-weight:800; letter-spacing:.2px;">Horários disponíveis:</h3>
-      <div class="horarios" id="horarios-container">
-        {% set slots = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'] %}
-        {% for h in slots %}
-          <button class="horario" type="button" data-hora="{{ h }}">{{ h }}</button>
-        {% endfor %}
-      </div>
+      <h3 style="margin:14px 0 6px; font-weight:800;">
+        Horários disponíveis:
+      </h3>
+
+      <div class="horarios" id="horarios-container"></div>
+
     </form>
 
     <div class="voltar"><a href="/service">Voltar</a></div>
   </div>
 
   <script>
-    const inputData = document.getElementById('data');
-    const form = document.getElementById('form-confirmar');
+const inputData = document.getElementById('data')
+const container = document.getElementById('horarios-container')
+const form = document.getElementById('form-confirmar')
+const servicoId = {{ servico.id }}
 
-    function atualizarHorarios() {
-      const dataSel = inputData.value;
-      if (!dataSel) return;
+inputData.addEventListener('change', () => {
+  container.innerHTML = ''
 
-      fetch('/verificar_horarios', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ data: dataSel })
-      })
-      .then(r => r.json())
-      .then(ocupados => {
-        document.querySelectorAll('.horario').forEach(btn => {
-          const hora = btn.dataset.hora;
-          if (ocupados.includes(hora)) {
-            btn.disabled = true;
-            btn.textContent = hora + ' (Indisponível)';
-          } else {
-            btn.disabled = false;
-            btn.textContent = hora;
-          }
-        });
-      });
+  fetch('/verificar_horarios', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      data: inputData.value,
+      servico_id: servicoId
+    })
+  })
+  .then(r => r.json())
+  .then(horarios => {
+    if (horarios.length === 0) {
+      container.innerHTML = '<p>Nenhum horário disponível para esta data.</p>'
+      return
     }
 
-    inputData.addEventListener('change', atualizarHorarios);
+    horarios.forEach(h => {
+      const btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'horario'
+      btn.textContent = h
+      btn.onclick = () => {
+        document.getElementById('hora-escolhida').value = h
+        form.submit()
+      }
+      container.appendChild(btn)
+    })
+  })
+})
+</script>
 
-    document.querySelectorAll('.horario').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (!inputData.value) {
-          alert('Escolha uma data primeiro.');
-          return;
-        }
-        document.getElementById('hora-escolhida').value = btn.dataset.hora;
-        form.submit();
-      });
-    });
-  </script>
 </body>
 </html>

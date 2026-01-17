@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configurações</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Montserrat:wght@600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0f172a;
+  --muted:#94a3b8;
+  --text:#e5e7eb;
+  --primary:#3b82f6;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Arial;
+  background:var(--bg);
+  color:var(--text);
+}
+
+header{
+  text-align:center;
+  padding:24px;
+  font-size:28px;
+  font-weight:800;
+  border-bottom:1px solid rgba(255,255,255,.15);
+}
+
+.section{
+  max-width:1000px;
+  margin:30px auto;
+  padding:24px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:14px;
+}
+
+label{display:block;margin-bottom:6px;font-weight:600}
+
+.field{
+  width:100%;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.2);
+  background:#020617;
+  color:var(--text);
+}
+
+.options{display:flex;flex-wrap:wrap;gap:12px}
+.option{display:flex;align-items:center;gap:6px}
+.option input{accent-color:var(--primary)}
+
+.horarios{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(90px,1fr));
+  gap:10px;
+}
+
+.agenda{margin-top:20px}
+.dia{
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:10px;
+  padding:12px;
+}
+
+button{
+  margin:20px auto 0;
+  display:block;
+  padding:14px 28px;
+  border:none;
+  border-radius:10px;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-base{background:var(--primary)}
+.btn-excecao{background:#475569}
+
+.btn-identidade{
+  background:#1e293b;
+  font-size:14px;
+  padding:10px 22px;
+}
+
+.btn-voltar{
+  display:block;
+  margin:10px auto 0;
+  padding:12px 28px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:10px;
+  color:var(--text);
+  text-decoration:none;
+  text-align:center;
+  max-width:260px;
+}
+</style>
+</head>
+
+<body>
+
+<header>Configurações</header>
+
+<!-- IDENTIDADE (BOX MENOR, ISOLADO) -->
+<div class="section" style="max-width:600px">
+  <h2>Identidade</h2>
+
+  <label>Nome fantasia</label>
+  <input id="nomeFantasia" class="field" style="max-width:360px">
+
+  <label style="margin-top:12px;">Estilo da letra</label>
+  <select id="fonteTitulo" class="field" style="max-width:260px">
+    <option value="padrao">Padrão</option>
+    <option value="poppins">Elegante</option>
+    <option value="montserrat">Moderna</option>
+    <option value="playfair">Clássica</option>
+  </select>
+
+  <button id="salvarIdentidade" class="btn-identidade">
+    Salvar identidade
+  </button>
+</div>
+
+<!-- DIAS -->
+<div class="section">
+  <h2>Dias de funcionamento</h2>
+  <div class="options" id="diasSemana">
+    <label class="option"><input type="checkbox" value="0"> Segunda</label>
+    <label class="option"><input type="checkbox" value="1"> Terça</label>
+    <label class="option"><input type="checkbox" value="2"> Quarta</label>
+    <label class="option"><input type="checkbox" value="3"> Quinta</label>
+    <label class="option"><input type="checkbox" value="4"> Sexta</label>
+    <label class="option"><input type="checkbox" value="5"> Sábado</label>
+    <label class="option"><input type="checkbox" value="6"> Domingo</label>
+  </div>
+</div>
+
+<!-- HORÁRIOS -->
+<div class="section">
+  <h2>Horários base</h2>
+  <div class="horarios" id="horarios"></div>
+</div>
+
+<button id="salvarBase" class="btn-base">
+  Salvar configuração padrão
+</button>
+
+<!-- EXCEÇÕES -->
+<div class="section">
+  <h2>Agenda por data (exceções)</h2>
+
+  <label>Selecione a data</label>
+  <input type="date" id="dataSelecionada" class="field">
+
+  <div class="agenda" id="agenda"></div>
+
+  <button id="salvarExcecao" class="btn-excecao">
+    Salvar exceção deste dia
+  </button>
+</div>
+
+<a href="/painel" class="btn-voltar">Voltar para o painel</a>
+
+<script>
+/* ===== IDENTIDADE ===== */
+const inputNome = document.getElementById('nomeFantasia')
+const selectFonte = document.getElementById('fonteTitulo')
+const btnIdentidade = document.getElementById('salvarIdentidade')
+
+inputNome.value = localStorage.getItem('nome_fantasia') || ''
+selectFonte.value = localStorage.getItem('fonte_titulo') || 'padrao'
+
+btnIdentidade.onclick = () => {
+  const nome = inputNome.value.trim()
+  if (!nome) {
+    alert('Informe o nome fantasia')
+    return
+  }
+  localStorage.setItem('nome_fantasia', nome)
+  localStorage.setItem('fonte_titulo', selectFonte.value)
+  alert('Identidade salva')
+}
+
+/* ===== HORÁRIOS BASE ===== */
+const horariosDiv = document.getElementById('horarios')
+for(let i=0;i<24;i++){
+  const h = String(i).padStart(2,'0')+':00'
+  horariosDiv.innerHTML += `
+    <label class="option">
+      <input type="checkbox" value="${h}"> ${h}
+    </label>`
+}
+
+/* ===== EXCEÇÕES ===== */
+const agendaDiv = document.getElementById('agenda')
+const dataInput = document.getElementById('dataSelecionada')
+
+function podeEditarExcecoes(){
+  return (
+    document.querySelectorAll('#diasSemana input:checked').length > 0 &&
+    document.querySelectorAll('#horarios input:checked').length > 0
+  )
+}
+
+dataInput.addEventListener('change', () => {
+  agendaDiv.innerHTML = ''
+
+  if (!podeEditarExcecoes()) {
+    agendaDiv.innerHTML = `<p style="color:var(--muted)">
+      Defina dias e horários base antes.
+    </p>`
+    return
+  }
+
+  const horarios = [...horariosDiv.querySelectorAll('input:checked')]
+    .map(i=>i.value)
+
+  let html = `<div class="dia">
+    <label class="option">
+      <input type="checkbox" id="diaAtivo" checked> Dia ativo
+    </label>`
+
+  horarios.forEach(h=>{
+    html += `
+      <label class="option">
+        <input type="checkbox" checked data-hora="${h}"> ${h}
+      </label>`
+  })
+
+  agendaDiv.innerHTML = html + `</div>`
+})
+
+/* ===== SALVAR BASE ===== */
+document.getElementById('salvarBase').onclick = () => {
+  const dias = [...document.querySelectorAll('#diasSemana input:checked')]
+    .map(cb=>+cb.value)
+
+  const horariosBase = [...document.querySelectorAll('#horarios input:checked')]
+    .map(cb=>cb.value)
+
+  if (!dias.length || !horariosBase.length) {
+    alert('Defina dias e horários.')
+    return
+  }
+
+  fetch('/salvar_configuracao_base',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      dias_semana:dias,
+      horarios_base:horariosBase
+    })
+  }).then(()=>alert('Configuração padrão salva'))
+}
+
+/* ===== SALVAR EXCEÇÃO ===== */
+document.getElementById('salvarExcecao').onclick = () => {
+  if (!dataInput.value) {
+    alert('Selecione uma data')
+    return
+  }
+
+  const bloqueados = []
+  document.querySelectorAll('#agenda input[data-hora]').forEach(cb=>{
+    if(!cb.checked) bloqueados.push(cb.dataset.hora)
+  })
+
+  fetch('/salvar_excecao_agenda',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      data:dataInput.value,
+      dia_ativo:document.getElementById('diaAtivo').checked,
+      horarios_bloqueados:bloqueados
+    })
+  }).then(()=>alert('Exceção salva'))
+}
+</script>
+
+</body>
+</html>
