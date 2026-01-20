@@ -1,13 +1,12 @@
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from config import Config
-
-db = SQLAlchemy()
+from .models import db  # ✅ usa a instância correta
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
+    # ✅ registra o app no SQLAlchemy correto
     db.init_app(app)
 
     # 🔹 cria tabelas automaticamente (apenas DEV)

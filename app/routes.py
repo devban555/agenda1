@@ -26,7 +26,7 @@ def login_required(f):
 # =========================
 @main.route('/', methods=['GET', 'POST'])
 def home():
-    return render_template('index.html')
+    return redirect('/service')
 
 
 @main.route('/agendar/<int:servico_id>')
@@ -212,6 +212,55 @@ def verificar_horarios():
 
     return jsonify(horarios_disponiveis)
 
+@main.route('/relatorio')
+def relatorio():
+    # Total de agendamentos
+    total_agendamentos = Agendamento.query.count()
+
+    # Melhor mês do ano (mês com mais agendamentos)
+    dados_por_mes = (
+        db.session.query(
+            extract('month', Agendamento.data).label('mes'),
+            func.count(Agendamento.id).label('total')
+        )
+        .group_by('mes')
+        .order_by(func.count(Agendamento.id).desc())
+        .all()
+    )
+    melhor_mes = None
+    if dados_por_mes:
+        meses_nomes = [
+            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+        ]
+        melhor_mes = meses_nomes[int(dados_por_mes[0].mes) - 1]
+
+    # Total de cancelados (considerando que há um campo status='cancelado')
+    total_cancelados = Agendamento.query.filter_by(status='cancelado').count() if hasattr(Agendamento, 'status') else 0
+
+    # Total de agendamentos no ano atual
+    ano_atual = datetime.now().year
+    total_no_ano = Agendamento.query.filter(extract('year', Agendamento.data) == ano_atual).count()
+
+    return render_template(
+        'relatorio.html',
+        total_agendamentos=total_agendamentos,
+        melhor_mes=melhor_mes,
+        total_cancelados=total_cancelados,
+        total_no_ano=total_no_ano
+    )
+
+@main.route("/lista")
+def lista():
+    return render_template("lista.html")
+
+@main.route("/suporte")
+def suporte():
+    return render_template("suporte.html")
+
+@main.route("/eventos")
+def eventos():
+    return render_template("eventos.html")
 
 # =========================
 # CONSULTAS / CANCELAMENTO
@@ -281,7 +330,7 @@ def admin():
     else:
         agendamentos = Agendamento.query.filter_by(
             usuario_id=user_id
-        ).order_by(Agendamento.data, Agendamento.hora).all()
+        ).order_by(Agendamento.data, Agendamento.horario).all()
 
     return render_template(
         'admin.html',
@@ -495,3 +544,16 @@ def salvar_excecao_agenda():
     db.session.commit()
     return jsonify({'status':'ok'})
 
+@main.route('/salvar_identidade', methods=['POST'])
+@login_required
+def salvar_identidade():
+    data = request.get_json()
+
+    usuario = Usuario.query.get(session['user_id'])
+
+    usuario.nome_fantasia = data.get('nome_fantasia')
+    usuario.fonte_titulo = data.get('fonte_titulo', 'padrao')
+    usuario.tema = data.get('tema', 'principal')
+
+    db.session.commit()
+    return jsonify({'status': 'ok'})

@@ -272,6 +272,17 @@ document.getElementById('salvarExcecao').onclick = () => {
     if(!cb.checked) bloqueados.push(cb.dataset.hora)
   })
 
+  fetch('/salvar_identidade', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      nome_fantasia: inputNome.value,
+      fonte_titulo: selectFonte.value,
+      tema: selectTema.value
+    })
+  }).then(() => alert('Identidade salva'))
+
+
   fetch('/salvar_excecao_agenda',{
     method:'POST',
     headers:{'Content-Type':'application/json'},

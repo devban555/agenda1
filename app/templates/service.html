@@ -123,9 +123,10 @@
 <body>
 
   <!-- TÍTULO DINÂMICO -->
-  <h2 id="tituloServico" style="text-align: center;">
-    Barbearia {{ usuario.username }}
+  <h2 class="titulo {{ usuario.fonte_titulo }}">
+  {{ usuario.nome_fantasia or usuario.username }}
   </h2>
+
 
   <header>Serviços Disponíveis</header>
 
