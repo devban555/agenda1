@@ -56,7 +56,7 @@ def confirmar_agendamento():
 
     existe = Agendamento.query.filter_by(
         data=data_obj,
-        hora=hora_obj,
+        horario=hora_obj,
         usuario_id=servico.usuario_id
     ).first()
 
@@ -86,9 +86,8 @@ def salvar_agendamento():
         usuario_id=servico.usuario_id,
         nome=nome,
         telefone=telefone,
-        servico=servico.titulo,
         data=data,
-        hora=hora
+        horario=hora
     )
 
     db.session.add(novo)
@@ -202,7 +201,7 @@ def verificar_horarios():
         data=data
     ).all()
 
-    horarios_ocupados = {a.hora.strftime('%H:%M') for a in agendados}
+    horarios_ocupados = {a.horario.strftime('%H:%M') for a in agendados}
 
     # horários finais disponíveis
     horarios_disponiveis = [
@@ -277,7 +276,7 @@ def consultar():
             telefone=telefone
         ).order_by(
             Agendamento.data,
-            Agendamento.hora
+            Agendamento.horario
         ).all()
 
         if agendamentos:
@@ -324,7 +323,7 @@ def admin():
             agendamentos = Agendamento.query.filter_by(
                 usuario_id=user_id,
                 data=data_obj
-            ).order_by(Agendamento.hora).all()
+            ).order_by(Agendamento.horario).all()
         except:
             agendamentos = []
     else:
@@ -419,7 +418,7 @@ def consultar_publico(slug):
             usuario_id=usuario.id
         ).order_by(
             Agendamento.data,
-            Agendamento.hora
+            Agendamento.horario
         ).all()
 
     return render_template(

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agendar: {{ servico.titulo }}</title>
+  <title>Agendar: {{ servico.nome }}</title>
   <style>
     :root{
       --bg:#0f172a;          /* slate-900 */
@@ -138,7 +138,7 @@
 </head>
 <body>
   <div class="container">
-    <h2>{{ servico.titulo }}</h2>
+    <h2>{{ servico.nome }}</h2>
 
     <div class="info">
       <div class="pill"><strong>Valor</strong><br>R$ {{ servico.valor }}</div>

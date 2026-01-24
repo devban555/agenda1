@@ -1,4 +1,4 @@
-from datetime import datetime, date, time
+from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 
@@ -100,15 +100,60 @@ class Servico(db.Model):
         nullable=False
     )
 
-    nome = db.Column(db.String(120), nullable=False)
+    titulo = db.Column(db.String(120), nullable=False)
     duracao_minutos = db.Column(db.Integer, nullable=False)
     preco = db.Column(db.Numeric(10, 2), nullable=True)
 
     ativo = db.Column(db.Boolean, default=True)
 
+    # =========================
+    # COMPATIBILIDADE COM SISTEMA ANTIGO
+    # =========================
+    @property
+    def tempo(self):
+        return self.duracao_minutos
+
+    @tempo.setter
+    def tempo(self, value):
+        """
+        Aceita:
+        - int (60)
+        - '60'
+        - '01:00'
+        - '1:30'
+        """
+        if value is None:
+            self.duracao_minutos = 0
+            return
+
+        # já é número
+        if isinstance(value, int):
+            self.duracao_minutos = value
+            return
+
+        value = str(value).strip()
+
+        # formato HH:MM
+        if ':' in value:
+            horas, minutos = value.split(':')
+            self.duracao_minutos = int(horas) * 60 + int(minutos)
+        else:
+            # string numérica simples
+            self.duracao_minutos = int(value)
+
+    @property
+    def valor(self):
+        return self.preco
+
+    @valor.setter
+    def valor(self, value):
+        if value in (None, ''):
+            self.preco = None
+        else:
+            self.preco = value
 
 # =========================
-# CONFIGURAÇÃO DA AGENDA
+# CONFIGURAÇÃO DA AGENDA (BASE)
 # =========================
 class ConfiguracaoAgenda(db.Model):
     __tablename__ = 'configuracao_agenda'
@@ -122,14 +167,17 @@ class ConfiguracaoAgenda(db.Model):
         unique=True
     )
 
-    hora_inicio = db.Column(db.Time, nullable=False)
-    hora_fim = db.Column(db.Time, nullable=False)
+    # dias da semana permitidos (0=segunda … 6=domingo)
+    dias_semana = db.Column(db.JSON, nullable=False)
 
-    intervalo_minutos = db.Column(db.Integer, default=30)
+    # horários base disponíveis (ex: ["08:00","09:00"])
+    horarios_base = db.Column(db.JSON, nullable=False)
+
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 # =========================
-# EXCEÇÕES DA AGENDA
+# EXCEÇÕES DA AGENDA (POR DATA)
 # =========================
 class ExcecaoAgenda(db.Model):
     __tablename__ = 'excecao_agenda'
@@ -144,4 +192,14 @@ class ExcecaoAgenda(db.Model):
 
     data = db.Column(db.Date, nullable=False)
 
-    bloqueado = db.Column(db.Boolean, default=True)
+    # dia ativo ou totalmente bloqueado
+    dia_ativo = db.Column(db.Boolean, default=True)
+
+    # horários bloqueados especificamente nesse dia
+    horarios_bloqueados = db.Column(db.JSON, default=list)
+
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('usuario_id', 'data'),
+    )

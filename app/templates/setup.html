@@ -83,12 +83,7 @@ button{
 
 .btn-base{background:var(--primary)}
 .btn-excecao{background:#475569}
-
-.btn-identidade{
-  background:#1e293b;
-  font-size:14px;
-  padding:10px 22px;
-}
+.btn-identidade{background:#1e293b;font-size:14px;padding:10px 22px}
 
 .btn-voltar{
   display:block;
@@ -108,7 +103,7 @@ button{
 
 <header>Configurações</header>
 
-<!-- IDENTIDADE (BOX MENOR, ISOLADO) -->
+<!-- IDENTIDADE -->
 <div class="section" style="max-width:600px">
   <h2>Identidade</h2>
 
@@ -169,24 +164,34 @@ button{
 <a href="/painel" class="btn-voltar">Voltar para o painel</a>
 
 <script>
+console.log('SCRIPT CONFIGURAÇÕES CARREGADO')
+
 /* ===== IDENTIDADE ===== */
 const inputNome = document.getElementById('nomeFantasia')
 const selectFonte = document.getElementById('fonteTitulo')
 const btnIdentidade = document.getElementById('salvarIdentidade')
 
-inputNome.value = localStorage.getItem('nome_fantasia') || ''
-selectFonte.value = localStorage.getItem('fonte_titulo') || 'padrao'
+btnIdentidade.addEventListener('click', () => {
+  console.log('SALVAR IDENTIDADE CLICADO')
 
-btnIdentidade.onclick = () => {
   const nome = inputNome.value.trim()
   if (!nome) {
     alert('Informe o nome fantasia')
     return
   }
-  localStorage.setItem('nome_fantasia', nome)
-  localStorage.setItem('fonte_titulo', selectFonte.value)
-  alert('Identidade salva')
-}
+
+  fetch('/salvar_identidade', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      nome_fantasia: nome,
+      fonte_titulo: selectFonte.value,
+      tema: 'principal'
+    })
+  })
+  .then(r => r.json())
+  .then(() => alert('Identidade salva com sucesso'))
+})
 
 /* ===== HORÁRIOS BASE ===== */
 const horariosDiv = document.getElementById('horarios')
@@ -198,52 +203,10 @@ for(let i=0;i<24;i++){
     </label>`
 }
 
-/* ===== EXCEÇÕES ===== */
-const agendaDiv = document.getElementById('agenda')
-const dataInput = document.getElementById('dataSelecionada')
-
-function podeEditarExcecoes(){
-  return (
-    document.querySelectorAll('#diasSemana input:checked').length > 0 &&
-    document.querySelectorAll('#horarios input:checked').length > 0
-  )
-}
-
-dataInput.addEventListener('change', () => {
-  agendaDiv.innerHTML = ''
-
-  if (!podeEditarExcecoes()) {
-    agendaDiv.innerHTML = `<p style="color:var(--muted)">
-      Defina dias e horários base antes.
-    </p>`
-    return
-  }
-
-  const horarios = [...horariosDiv.querySelectorAll('input:checked')]
-    .map(i=>i.value)
-
-  let html = `<div class="dia">
-    <label class="option">
-      <input type="checkbox" id="diaAtivo" checked> Dia ativo
-    </label>`
-
-  horarios.forEach(h=>{
-    html += `
-      <label class="option">
-        <input type="checkbox" checked data-hora="${h}"> ${h}
-      </label>`
-  })
-
-  agendaDiv.innerHTML = html + `</div>`
-})
-
 /* ===== SALVAR BASE ===== */
-document.getElementById('salvarBase').onclick = () => {
-  const dias = [...document.querySelectorAll('#diasSemana input:checked')]
-    .map(cb=>+cb.value)
-
-  const horariosBase = [...document.querySelectorAll('#horarios input:checked')]
-    .map(cb=>cb.value)
+document.getElementById('salvarBase').addEventListener('click', () => {
+  const dias = [...document.querySelectorAll('#diasSemana input:checked')].map(cb=>+cb.value)
+  const horariosBase = [...document.querySelectorAll('#horarios input:checked')].map(cb=>cb.value)
 
   if (!dias.length || !horariosBase.length) {
     alert('Defina dias e horários.')
@@ -253,46 +216,9 @@ document.getElementById('salvarBase').onclick = () => {
   fetch('/salvar_configuracao_base',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      dias_semana:dias,
-      horarios_base:horariosBase
-    })
+    body:JSON.stringify({ dias_semana:dias, horarios_base:horariosBase })
   }).then(()=>alert('Configuração padrão salva'))
-}
-
-/* ===== SALVAR EXCEÇÃO ===== */
-document.getElementById('salvarExcecao').onclick = () => {
-  if (!dataInput.value) {
-    alert('Selecione uma data')
-    return
-  }
-
-  const bloqueados = []
-  document.querySelectorAll('#agenda input[data-hora]').forEach(cb=>{
-    if(!cb.checked) bloqueados.push(cb.dataset.hora)
-  })
-
-  fetch('/salvar_identidade', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      nome_fantasia: inputNome.value,
-      fonte_titulo: selectFonte.value,
-      tema: selectTema.value
-    })
-  }).then(() => alert('Identidade salva'))
-
-
-  fetch('/salvar_excecao_agenda',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      data:dataInput.value,
-      dia_ativo:document.getElementById('diaAtivo').checked,
-      horarios_bloqueados:bloqueados
-    })
-  }).then(()=>alert('Exceção salva'))
-}
+})
 </script>
 
 </body>

@@ -137,7 +137,7 @@
         <div class="agenda-card">
           <p><strong style="color:var(--muted)">Serviço:</strong> {{ ag.servico }}</p>
           <p><strong style="color:var(--muted)">Data:</strong> {{ ag.data.strftime('%d/%m/%Y') }}</p>
-          <p><strong style="color:var(--muted)">Hora:</strong> {{ ag.hora.strftime('%H:%M') }}</p>
+          <p><strong style="color:var(--muted)">Hora:</strong> {{ ag.horario.strftime('%H:%M') }}</p>
           <form method="POST" action="/cancelar/{{ ag.id }}" onsubmit="return confirm('Tem certeza que deseja cancelar?');">
             <button type="submit" class="cancelar-btn">Cancelar</button>
           </form>

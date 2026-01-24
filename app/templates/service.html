@@ -110,6 +110,14 @@
       border:1px dashed var(--border);
       border-radius:12px; background: rgba(255,255,255,.02);
     }
+     .titulo{
+        width: 100%;
+        text-align: center;
+        margin: 18px 0 10px 0;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: .4px;
+    }
 
     /* Mobile refinements */
     @media (max-width:480px){
@@ -118,12 +126,13 @@
       .btn{ width:100%; }
       .actions{ justify-content:stretch }
     }
+
  </style>
 </head>
 <body>
 
   <!-- TÍTULO DINÂMICO -->
-  <h2 class="titulo {{ usuario.fonte_titulo }}">
+  <h2 id="tituloServico" class="titulo {{ usuario.fonte_titulo }}">
   {{ usuario.nome_fantasia or usuario.username }}
   </h2>
 
@@ -178,9 +187,9 @@
     const fonteTitulo  = localStorage.getItem('fonte_titulo')
 
     // aplicar nome fantasia
-    if (nomeFantasia && nomeFantasia.trim() !== '') {
-      titulo.textContent = nomeFantasia
-    }
+    //if (nomeFantasia && nomeFantasia.trim() !== '') {
+     // titulo.textContent = nomeFantasia
+    //}
 
     // aplicar fonte escolhida
     switch (fonteTitulo) {
