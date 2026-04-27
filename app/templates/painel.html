@@ -3,100 +3,229 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Área ADM</title>
+  <title>Área ADM | Profissional</title>
+
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
   <style>
-    :root{
-      --bg:#0f172a;
-      --card:#111827;
-      --muted:#94a3b8;
-      --text:#e5e7eb;
-      --primary:#3b82f6;
-      --primary-600:#2563eb;
-      --ring: rgba(59,130,246,.45);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial;
-      background: radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.12), transparent 60%),
-                  radial-gradient(1200px 800px at 0% 110%, rgba(34,197,94,.10), transparent 60%),
-                  var(--bg);
-      color:var(--text);
-      min-height:100dvh;
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(30, 41, 59, 0.4);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --border: rgba(255, 255, 255, 0.08);
+      --accent-gradient: linear-gradient(135deg, #3b82f6, #8b5cf6);
     }
 
-    header{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border-bottom:1px solid rgba(148,163,184,.2);
-      text-align:center;
-      padding:24px;
-      font-size: clamp(22px, 2.6vw, 32px);
-      font-weight:800;
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', system-ui, sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
     }
 
-    .container{
-      max-width:1100px;
-      margin:40px auto;
-      padding:0 16px;
-      display:grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap:20px;
+    /* HEADER */
+    header {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px 20px;
+      background: rgba(11, 15, 26, 0.5);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
     }
 
-    .btn{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid rgba(148,163,184,.35);
-      color:var(--text);
-      padding:20px;
-      text-align:center;
-      border-radius:14px;
-      text-decoration:none;
-      font-size:16px;
-      font-weight:700;
-      box-shadow: 0 0 8px rgba(255,255,255,0.05);
-      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+    .header-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      background: linear-gradient(to right, #fff, var(--muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
-    .btn:hover{
-      background: rgba(255,255,255,.07);
-      border-color: rgba(148,163,184,.6);
-      transform: translateY(-3px);
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    /* CONTAINER DOS ICONES */
+    .top-actions {
+      position: absolute;
+      right: 30px;
+      display: flex;
+      gap: 12px;
     }
 
-    .btn i{
-      display:block;
-      font-size:28px;
-      margin-bottom:8px;
+    /* BOTÕES ICONES */
+    .icon-btn {
+      width: 45px;
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      text-decoration: none;
+      color: var(--text);
+      background: var(--card);
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+      position: relative;
     }
 
-    @media (max-width:600px){
-      .btn{
-        font-size:14px;
-        padding:16px;
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+      border-color: var(--primary);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* WHATSAPP COR */
+    .icon-btn.whatsapp i {
+      color: #25D366;
+    }
+
+    /* TOOLTIPS */
+    .icon-btn::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: -40px;
+      right: 0;
+      background: #1e293b;
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.2s;
+      white-space: nowrap;
+      border: 1px solid var(--border);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+    }
+
+    .icon-btn:hover::after {
+      opacity: 1;
+      bottom: -45px;
+    }
+
+    /* GRID */
+    .container {
+      max-width: 1000px;
+      margin: 60px auto;
+      padding: 0 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 24px;
+    }
+
+    .btn {
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 30px 20px;
+      text-align: center;
+      border-radius: 24px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .btn i {
+      font-size: 32px;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      transition: transform 0.3s ease;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateY(-8px);
+      border-color: rgba(59, 130, 246, 0.5);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .btn:hover i {
+      transform: scale(1.1);
+    }
+
+    @media (max-width: 600px) {
+      header { justify-content: flex-start; padding: 30px 20px; }
+      .top-actions { position: relative; right: 0; margin-left: auto; }
+      .container {
+        grid-template-columns: repeat(2, 1fr);
+        margin-top: 30px;
+        gap: 15px;
       }
+      .header-title { font-size: 18px; }
     }
   </style>
 </head>
+
 <body>
 
-  <header>Área ADM</header>
+<header>
+  <span class="header-title">Painel de Controle</span>
 
-  <div class="container">
-    <a href="/admin" class="btn"><i class="fas fa-calendar-alt"></i>Agenda</a>
-    <a href="/servicos" class="btn"><i class="fas fa-cut"></i>Serviços</a>
-    <a href="/relatorio" class="btn"><i class="fas fa-chart-line"></i>Relatório</a>
-    <a href="/lista" class="btn"><i class="fas fa-list"></i>Lista</a>
-    <a href="/eventos" class="btn"><i class="fas fa-bullhorn"></i>Eventos</a>
-    <a href="/suporte" class="btn"><i class="fas fa-headset"></i>Suporte</a>
+  <div class="top-actions">
 
-    <!-- BOTÃO CONFIGURAÇÕES -->
-    <a href="/configuracoes" class="btn">
-      <i class="fas fa-gear"></i>
-      Configurações
+    <!-- WHATSAPP -->
+    <a href="#" class="icon-btn whatsapp" data-tooltip="WhatsApp">
+      <i class="fab fa-whatsapp"></i>
     </a>
+
+    <!-- SUPORTE -->
+    <a href="/suporte" class="icon-btn" data-tooltip="Suporte Técnico">
+      <i class="fas fa-headset"></i>
+    </a>
+
+    <!-- CONFIG -->
+    <a href="/configuracoes" class="icon-btn" data-tooltip="Configurações">
+      <i class="fas fa-gear"></i>
+    </a>
+
   </div>
+</header>
+
+<div class="container">
+  <a href="/admin" class="btn">
+    <i class="fas fa-calendar-alt"></i>
+    <span>Agenda</span>
+  </a>
+
+  <a href="/servicos" class="btn">
+    <i class="fas fa-cut"></i>
+    <span>Serviços</span>
+  </a>
+
+  <a href="/relatorio" class="btn">
+    <i class="fas fa-chart-line"></i>
+    <span>Relatórios</span>
+  </a>
+
+  <a href="/lista" class="btn">
+    <i class="fas fa-list-ul"></i>
+    <span>Clientes</span>
+  </a>
+
+  <a href="/eventos" class="btn">
+    <i class="fas fa-bullhorn"></i>
+    <span>Marketing</span>
+  </a>
+</div>
 
 </body>
 </html>

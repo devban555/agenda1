@@ -2,67 +2,179 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
-  <title>Login</title>
+  <title>Login | Acesso Restrito</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
 
   <style>
-    :root{
-      --bg:#0f172a;
-      --card:#111827;
-      --muted:#94a3b8;
-      --text:#e5e7eb;
-      --primary:#3b82f6;
-      --primary-600:#2563eb;
-      --ring: rgba(59,130,246,.45);
-      --border: rgba(148,163,184,.35);
-      --danger:#ef4444;
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(30, 41, 59, 0.45);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --border: rgba(255, 255, 255, 0.08);
+      --danger: #ef4444;
     }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Arial;
-      background: var(--bg);
-      color:var(--text);
-      min-height:100dvh;
-      display:grid; place-items:center;
-      padding:20px;
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
-    .card{
-      width:100%; max-width:420px;
-      background: rgba(255,255,255,.04);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:22px;
-      box-shadow: 0 16px 40px rgba(0,0,0,.28);
+
+    .card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 40px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: fadeIn 0.6s ease-out;
     }
-    h2{ text-align:center; margin-bottom:16px }
-    .group{ margin-bottom:14px }
-    label{ display:block; margin-bottom:6px; font-weight:700; color:var(--muted) }
-    .input{
-      width:100%; padding:12px; border-radius:12px;
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.03); color:var(--text);
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    .btn{
-      width:100%; padding:12px;
-      border-radius:12px; cursor:pointer;
-      background: var(--primary); border:none;
-      color:#fff; font-weight:800;
-      margin-top:10px;
+
+    .header { text-align: center; margin-bottom: 32px; }
+
+    .logo-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      color: var(--primary);
+      margin: 0 auto 16px;
+      border: 1px solid rgba(59, 130, 246, 0.2);
     }
-    .error-message{ color:#fecaca; margin-top:8px; font-size:.9rem }
+
+    h2 { font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px; }
+    p.subtitle { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+    .group { position: relative; margin-bottom: 20px; }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-wrapper { position: relative; }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 0.9rem;
+      transition: 0.3s;
+    }
+
+    .input {
+      width: 100%;
+      padding: 14px 16px 14px 45px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.2);
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: all 0.3s;
+    }
+
+    .input:focus {
+      border-color: var(--primary);
+      background: rgba(59, 130, 246, 0.05);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .input:focus + i { color: var(--primary); }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(180deg, var(--primary), var(--primary-hover));
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: all 0.3s;
+      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 25px rgba(59, 130, 246, 0.3);
+      filter: brightness(1.1);
+    }
+
+    .error-container {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 30px 20px; }
+    }
   </style>
 </head>
 
 <body>
   <div class="card">
-    <h2>Login</h2>
+    <div class="header">
+      <div class="logo-icon">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      <h2>Bem-vindo</h2>
+      <p class="subtitle">Acesse sua conta administrativa</p>
+    </div>
 
     {% with messages = get_flashed_messages() %}
       {% if messages %}
-        <div class="error-message">
-          {% for msg in messages %}
-            {{ msg }}
-          {% endfor %}
+        <div class="error-container">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <div>
+            {% for msg in messages %}
+              {{ msg }}
+            {% endfor %}
+          </div>
         </div>
       {% endif %}
     {% endwith %}
@@ -70,15 +182,23 @@
     <form id="loginForm" method="post" action="{{ url_for('auth.login') }}">
       <div class="group">
         <label for="username">Usuário</label>
-        <input type="text" id="username" name="username" required class="input">
+        <div class="input-wrapper">
+          <input type="text" id="username" name="username" required class="input" placeholder="Seu nome de usuário">
+          <i class="fa-regular fa-user"></i>
+        </div>
       </div>
 
       <div class="group">
         <label for="password">Senha</label>
-        <input type="password" id="password" name="password" required class="input">
+        <div class="input-wrapper">
+          <input type="password" id="password" name="password" required class="input" placeholder="••••••••">
+          <i class="fa-solid fa-lock"></i>
+        </div>
       </div>
 
-      <button type="submit" class="btn">Entrar</button>
+      <button type="submit" class="btn">
+        Entrar no Sistema
+      </button>
     </form>
   </div>
 </body>

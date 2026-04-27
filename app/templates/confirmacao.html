@@ -2,111 +2,204 @@
 <html lang="pt-br">
 <head>
   <meta charset="utf-8" />
-  <title>Confirmação</title>
+  <title>Sucesso! | Agendamento Confirmado</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
 
-  <!-- Fallback META refresh (caso JS esteja desativado) -->
-  <meta http-equiv="refresh" content="5;url=/service" />
-
-  <script>
-    // Redireciona após 5 segundos
-    setTimeout(function () {
-      window.location.href = '/service';
-    }, 8000);
-  </script>
+  <meta http-equiv="refresh" content="6;url={{ url_for('main.agenda_publica_slug', slug=slug) }}" />
 
   <style>
-    :root{
-      --bg:#0f172a;          /* slate-900 */
-      --card:#111827;        /* gray-900 */
-      --muted:#94a3b8;       /* slate-400 */
-      --text:#e5e7eb;        /* gray-200 */
-      --primary:#3b82f6;     /* blue-500 */
-      --primary-600:#2563eb; /* blue-600 */
-      --border: rgba(148,163,184,.35);
-      --row-sep: rgba(148,163,184,.15);
-      --ring: rgba(59,130,246,.45);
-      --ok:#22c55e;
-    }
-    *{box-sizing:border-box;margin:0;padding:0}
-
-    body{
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
-      background:
-        radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.12), transparent 60%),
-        radial-gradient(1200px 800px at 0% 110%, rgba(34,197,94,.10), transparent 60%),
-        var(--bg);
-      color:var(--text);
-      min-height:100dvh;
-      display:grid; place-items:center;
-      padding:20px;
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(30, 41, 59, 0.5);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --border: rgba(255, 255, 255, 0.08);
     }
 
-    .wrap{
-      width:100%; max-width:760px;
-      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:24px 28px;
-      text-align:center;
-      box-shadow: 0 16px 40px rgba(0,0,0,.28);
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.1) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
 
-    h3{
-      font-weight:900; letter-spacing:.3px;
-      font-size: clamp(18px, 3.2vw, 24px);
-      margin:0 0 10px;
+    .wrap {
+      width: 100%;
+      max-width: 500px;
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      padding: 50px 40px;
+      text-align: center;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .sub{
-      color:var(--muted);
-      margin-top:4px;
-      font-size: .98rem;
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
     }
 
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      margin-top:16px; padding:10px 16px; border-radius:12px; text-decoration:none;
-      background: var(--primary); border:1px solid var(--primary);
-      color:#fff; font-weight:800; letter-spacing:.3px; cursor:pointer;
-      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
-      box-shadow: 0 12px 28px rgba(59,130,246,.28);
+    /* ÍCONE DE SUCESSO ANIMADO */
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin: 0 auto 24px;
+      border: 2px solid rgba(16, 185, 129, 0.2);
+      animation: pulseCheck 2s infinite;
     }
-    .btn:hover{
-      background: var(--primary-600); border-color: var(--primary-600);
+
+    @keyframes pulseCheck {
+      0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+      70% { box-shadow: 0 0 0 20px rgba(16, 185, 129, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    h3 {
+      font-weight: 800;
+      font-size: 1.6rem;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .details {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 20px;
+      padding: 20px;
+      margin: 24px 0;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .detail-item:last-child { margin-bottom: 0; }
+    .detail-label { color: var(--muted); }
+    .detail-value { font-weight: 600; color: #fff; }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 16px;
+      border-radius: 16px;
+      text-decoration: none;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 800;
+      transition: all 0.3s;
+      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 14px 34px rgba(59,130,246,.35);
+      filter: brightness(1.1);
+      box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4);
     }
 
-    .pill{
-      display:inline-block; margin-top:10px;
-      padding:8px 12px; border-radius:999px; font-weight:800; font-size:.9rem;
-      color:#bbf7d0; background: rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.35);
+    /* BARRA DE REDIRECIONAMENTO */
+    .redirect-box {
+      margin-top: 30px;
+    }
+
+    .sub {
+      color: var(--muted);
+      font-size: 0.8rem;
+      margin-bottom: 10px;
+    }
+
+    .progress-container {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--primary);
+      width: 100%;
+      transform-origin: left;
+      animation: shrink 5s linear forwards;
+    }
+
+    @keyframes shrink {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
     }
   </style>
 </head>
 <body>
+
   <main class="wrap">
-    <h3>✅ Agendamento confirmado para {{ nome }} — {{ servico }} em {{ data_str }} às {{ hora_str }}</h3>
+    <div class="success-icon">
+      <i class="fa-solid fa-check"></i>
+    </div>
 
-    <div class="pill">Tudo pronto!</div>
+    <h3>Agendamento Confirmado!</h3>
+    <p style="color: var(--muted); font-size: 0.95rem;">Olá <strong>{{ nome }}</strong>, sua reserva foi concluída.</p>
 
-    <p class="sub">
-      Você será redirecionado para a agenda em 5 segundos…
-    </p>
+    <div class="details">
+      <div class="detail-item">
+        <span class="detail-label">Serviço:</span>
+        <span class="detail-value">{{ servico }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Data:</span>
+        <span class="detail-value">{{ data_str }}</span>
+      </div>
+      <div class="detail-item">
+        <span class="detail-label">Horário:</span>
+        <span class="detail-value">{{ hora_str }}</span>
+      </div>
+    </div>
 
-    <!-- botão manual -->
     <a class="btn" href="{{ url_for('main.agenda_publica_slug', slug=slug) }}">
-      Ir agora
+      Ir para minha agenda <i class="fa-solid fa-arrow-right"></i>
     </a>
+
+    <div class="redirect-box">
+      <p class="sub">Redirecionando automaticamente...</p>
+      <div class="progress-container">
+        <div class="progress-bar"></div>
+      </div>
+    </div>
   </main>
 
-  <!-- redirecionamento automático -->
   <script>
     setTimeout(function () {
       window.location.href = "{{ url_for('main.agenda_publica_slug', slug=slug) }}";
     }, 5000);
   </script>
+
 </body>
 </html>
-

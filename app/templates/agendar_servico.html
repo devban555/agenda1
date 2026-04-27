@@ -4,204 +4,277 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Agendar: {{ servico.nome }}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    :root{
-      --bg:#0f172a;          /* slate-900 */
-      --card:#111827;        /* gray-900 */
-      --muted:#94a3b8;       /* slate-400 */
-      --text:#e5e7eb;        /* gray-200 */
-      --primary:#3b82f6;     /* blue-500 */
-      --primary-600:#2563eb; /* blue-600 */
-      --ring: rgba(59,130,246,.45);
-      --border: rgba(148,163,184,.35);
-      --border-soft: rgba(148,163,184,.2);
-      --pill-bg: rgba(255,255,255,.04);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
-      background: radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.12), transparent 60%),
-                  radial-gradient(1200px 800px at 0% 110%, rgba(34,197,94,.10), transparent 60%),
-                  var(--bg);
-      color:var(--text);
-      min-height:100dvh;
-      padding:20px;
-      display:grid; place-items:center;
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(30, 41, 59, 0.4);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.3);
+      --border: rgba(255, 255, 255, 0.08);
+      --accent: #10b981; /* Verde para o valor/preço */
     }
 
-    .container{
-      width:100%;
-      max-width:620px;
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
-    }
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
 
-    h2{
-      text-align:center;
-      margin:0 0 14px;
-      font-weight:800;
-      letter-spacing:.3px;
-      font-size: clamp(20px, 2.4vw, 26px);
-    }
-
-    .info{
-      display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin:12px 0 18px;
-    }
-    .pill{
-      background: var(--pill-bg);
-      border:1px solid var(--border-soft);
-      border-radius:12px;
-      padding:10px;
-      text-align:center;
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
       color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
     }
 
-    label{
-      font-weight:700; display:block; margin:8px 0 6px; color: var(--muted);
-      letter-spacing:.2px;
+    .container {
+      width: 100%;
+      max-width: 580px;
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 32px;
+      padding: 32px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
     }
 
-    input[type="date"]{
-      width:100%;
-      padding:12px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      background: rgba(255,255,255,.03);
-      color: var(--text);
-      outline:none;
-      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    /* HEADER DO SERVIÇO */
+    .service-header {
+      text-align: center;
+      margin-bottom: 24px;
     }
-    input[type="date"]:focus{
+
+    h2 {
+      margin: 0 0 16px;
+      font-weight: 800;
+      font-size: 1.6rem;
+      letter-spacing: -0.5px;
+    }
+
+    .info-bar {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .info-tag {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-tag i { color: var(--primary); }
+    .info-tag.price i { color: var(--accent); }
+
+    /* FORMULÁRIO */
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--muted);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    input[type="date"] {
+      width: 100%;
+      padding: 14px 18px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      margin-bottom: 24px;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    input[type="date"]:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px var(--ring);
-      background: rgba(255,255,255,.05);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
     }
 
-    .horarios{
-      display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:14px;
-    }
-    .horario{
-      padding:10px 14px;
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      color: var(--text);
-      border:1px solid var(--border);
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:800;
-      letter-spacing:.3px;
-      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease, color .2s ease;
-    }
-    .horario:hover{
-      background: rgba(255,255,255,.07);
-      border-color: rgba(148,163,184,.6);
-      transform: translateY(-2px);
-      box-shadow: 0 10px 26px rgba(0,0,0,.25);
-    }
-    .horario[disabled]{
-      background: rgba(148,163,184,.12);
-      border-color: rgba(148,163,184,.25);
-      color: rgba(229,231,235,.55);
-      cursor:not-allowed;
-      box-shadow:none;
-      transform:none;
+    /* GRID DE HORÁRIOS */
+    h3 {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-bottom: 12px;
     }
 
-    .voltar{ text-align:center; margin-top:18px }
-    .voltar a{
-      display:inline-block;
-      text-decoration:none;
-      color:var(--text);
-      padding:10px 14px;
-      border-radius:12px;
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      font-weight:800;
-      letter-spacing:.3px;
-      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
-    }
-    .voltar a:hover{
-      background: rgba(255,255,255,.07);
-      border-color: rgba(148,163,184,.6);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    .horarios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 10px;
+      margin-bottom: 30px;
     }
 
-    @media (max-width:600px){
-      .info{ grid-template-columns:1fr; }
-      .container{ padding:20px; }
+    .horario-btn {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      padding: 12px 10px;
+      border-radius: 14px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .horario-btn:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px var(--primary-glow);
+    }
+
+    .horario-btn small {
+      font-weight: 400;
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+
+    /* EMPTY STATE / LOADING */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      background: rgba(0,0,0,0.1);
+      border-radius: 16px;
+      border: 1px dashed var(--border);
+    }
+
+    /* VOLTAR */
+    .btn-back {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: 0.3s;
+    }
+
+    .btn-back:hover { color: #fff; }
+
+    @media (max-width: 480px) {
+      .container { padding: 24px; }
+      .info-bar { flex-wrap: wrap; }
+      .horarios-grid { grid-template-columns: repeat(3, 1fr); }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>{{ servico.nome }}</h2>
 
-    <div class="info">
-      <div class="pill"><strong>Valor</strong><br>R$ {{ servico.valor }}</div>
-      <div class="pill"><strong>Tempo</strong><br>{{ servico.tempo }}</div>
-      <div class="pill"><strong>ID</strong><br>#{{ servico.id }}</div>
+  <div class="container">
+    <div class="service-header">
+      <h2>{{ servico.nome }}</h2>
+      <div class="info-bar">
+        <div class="info-tag price">
+          <i class="fa-solid fa-tag"></i> R$ {{ servico.valor }}
+        </div>
+        <div class="info-tag">
+          <i class="fa-solid fa-clock"></i> {{ servico.tempo }}
+        </div>
+      </div>
     </div>
 
     <form method="POST" id="form-confirmar" action="/confirmar_agendamento">
       <input type="hidden" name="servico_id" value="{{ servico.id }}">
       <input type="hidden" name="hora" id="hora-escolhida">
 
-      <label for="data">Quando:</label>
+      <label for="data"><i class="fa-regular fa-calendar-check"></i> Selecione o dia:</label>
       <input type="date" id="data" name="data" required>
 
-      <h3 style="margin:14px 0 6px; font-weight:800;">
-        Horários disponíveis:
-      </h3>
-
-      <div class="horarios" id="horarios-container"></div>
-
+      <div id="section-horarios" style="display:none;">
+        <h3><i class="fa-regular fa-clock"></i> Horários disponíveis:</h3>
+        <div class="horarios-grid" id="horarios-container"></div>
+      </div>
     </form>
 
-    <div class="voltar"><a href="/service">Voltar</a></div>
+    <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+      <a href="/service" class="btn-back">
+        <i class="fa-solid fa-chevron-left"></i> Voltar aos serviços
+      </a>
+    </div>
   </div>
 
   <script>
-const inputData = document.getElementById('data')
-const container = document.getElementById('horarios-container')
-const form = document.getElementById('form-confirmar')
-const servicoId = {{ servico.id }}
+    const inputData = document.getElementById('data')
+    const container = document.getElementById('horarios-container')
+    const sectionHorarios = document.getElementById('section-horarios')
+    const form = document.getElementById('form-confirmar')
+    const servicoId = "{{ servico.id }}"
 
-inputData.addEventListener('change', () => {
-  container.innerHTML = ''
+    inputData.addEventListener('change', () => {
+      container.innerHTML = '<div class="empty-state">Buscando horários...</div>'
+      sectionHorarios.style.display = 'block'
 
-  fetch('/verificar_horarios', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      data: inputData.value,
-      servico_id: servicoId
+      fetch('/verificar_horarios', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          data: inputData.value,
+          servico_id: servicoId
+        })
+      })
+      .then(r => r.json())
+      .then(horarios => {
+        container.innerHTML = ''
+
+        if (horarios.length === 0) {
+          container.innerHTML = '<div class="empty-state">Nenhum horário disponível para este dia. Tente outra data.</div>'
+          return
+        }
+
+        horarios.forEach(h => {
+          const btn = document.createElement('button')
+          btn.type = 'button'
+          btn.className = 'horario-btn'
+          btn.innerHTML = `<span>${h}</span><small>Disponível</small>`
+
+          btn.onclick = () => {
+            // Pequeno efeito visual antes de enviar
+            btn.style.transform = 'scale(0.95)'
+            btn.style.background = 'var(--accent)'
+
+            setTimeout(() => {
+              document.getElementById('hora-escolhida').value = h
+              form.submit()
+            }, 150)
+          }
+          container.appendChild(btn)
+        })
+      })
+      .catch(err => {
+        container.innerHTML = '<div class="empty-state">Erro ao carregar. Tente novamente.</div>'
+      })
     })
-  })
-  .then(r => r.json())
-  .then(horarios => {
-    if (horarios.length === 0) {
-      container.innerHTML = '<p>Nenhum horário disponível para esta data.</p>'
-      return
-    }
-
-    horarios.forEach(h => {
-      const btn = document.createElement('button')
-      btn.type = 'button'
-      btn.className = 'horario'
-      btn.textContent = h
-      btn.onclick = () => {
-        document.getElementById('hora-escolhida').value = h
-        form.submit()
-      }
-      container.appendChild(btn)
-    })
-  })
-})
-</script>
+  </script>
 
 </body>
 </html>

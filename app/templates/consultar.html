@@ -3,158 +3,257 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Consultar Agenda</title>
+  <title>Minha Agenda | Consultar</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
   <style>
-    :root{
-      --bg:#0f172a;          /* slate-900 */
-      --card:#111827;        /* gray-900 */
-      --muted:#94a3b8;       /* slate-400 */
-      --text:#e5e7eb;        /* gray-200 */
-      --primary:#3b82f6;     /* blue-500 */
-      --primary-600:#2563eb; /* blue-600 */
-      --ring: rgba(59,130,246,.45);
-      --border: rgba(148,163,184,.35);
-      --border-soft: rgba(148,163,184,.2);
-      --danger:#ef4444;      /* red-500 */
-      --danger-600:#dc2626;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji','Segoe UI Emoji', 'Segoe UI Symbol';
-      background: radial-gradient(1200px 800px at 80% -10%, rgba(59,130,246,.12), transparent 60%),
-                  radial-gradient(1200px 800px at 0% 110%, rgba(34,197,94,.10), transparent 60%),
-                  var(--bg);
-      color:var(--text);
-      min-height:100dvh;
-      padding:20px;
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(30, 41, 59, 0.4);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-glow: rgba(59, 130, 246, 0.3);
+      --danger: #ef4444;
+      --border: rgba(255, 255, 255, 0.08);
     }
 
-    .container{
-      max-width:700px; margin:0 auto;
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      padding:20px; border-radius:18px;
-      border:1px solid var(--border);
-      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(239, 68, 68, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 20px;
     }
 
-    h2{
-      text-align:center; margin:0 0 18px;
-      font-weight:800; letter-spacing:.3px;
-      font-size: clamp(20px, 2.6vw, 28px);
+    .container {
+      max-width: 650px;
+      margin: 0 auto;
     }
 
-    form{
-      display:flex; flex-direction:column; align-items:center; gap:10px; margin-bottom:18px;
+    .header-section {
+      text-align: center;
+      margin-bottom: 40px;
     }
 
-    .input{
-      padding:12px; width:100%; max-width:360px;
-      border:1px solid var(--border); border-radius:12px;
-      background: rgba(255,255,255,.03); color:var(--text);
-      outline:none; font-size:16px;
-      transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+    h2 {
+      font-weight: 800;
+      font-size: 2rem;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
     }
-    .input::placeholder{ color:var(--muted) }
-    .input:focus{
+
+    .subtitle { color: var(--muted); font-size: 0.95rem; }
+
+    /* BUSCA */
+    .search-box {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 30px;
+      border-radius: 24px;
+      margin-bottom: 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 12px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      flex-grow: 1;
+    }
+
+    .input-wrapper i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+    }
+
+    .input {
+      width: 100%;
+      padding: 14px 16px 14px 45px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    .input:focus {
       border-color: var(--primary);
-      box-shadow: 0 0 0 4px var(--ring);
-      background: rgba(255,255,255,.05);
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
     }
 
-    .btn{
-      display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      padding:10px 16px; border-radius:12px; cursor:pointer;
-      font-weight:800; letter-spacing:.3px;
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      color:var(--text); border:1px solid var(--border);
-      text-decoration:none;
-      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
-    }
-    .btn:hover{
-      background: rgba(255,255,255,.07);
-      border-color: rgba(148,163,184,.6);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+    .btn-search {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0 25px;
+      border-radius: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 8px 15px var(--primary-glow);
     }
 
-    .agenda-card{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      margin-bottom:14px; padding:14px;
-      border-radius:14px;
-      box-shadow: 0 6px 20px rgba(0,0,0,.2);
-    }
-    .agenda-card p{ margin:8px 0; font-size:16px; }
+    .btn-search:hover { transform: translateY(-2px); filter: brightness(1.1); }
 
-    .cancelar-btn{
-      margin-top:10px; width:100%; max-width:180px;
-      display:block; margin-left:auto; margin-right:auto;
-      border:1px solid var(--border);
-      border-radius:12px; padding:10px 14px; font-size:15px; cursor:pointer;
-      font-weight:800; letter-spacing:.3px;
-      background: var(--danger); color:#fff;
-      transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
-      box-shadow: 0 10px 26px rgba(239,68,68,.25);
-    }
-    .cancelar-btn:hover{
-      background: var(--danger-600);
-      transform: translateY(-2px);
-      box-shadow: 0 14px 34px rgba(239,68,68,.32);
+    /* CARDS DE AGENDAMENTO */
+    .agenda-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: 0.3s;
+      animation: slideUp 0.4s ease-out forwards;
     }
 
-    .voltar{
-      text-align:center; margin-top:22px;
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-    .voltar a{
-      display:inline-block; text-decoration:none; color:var(--text);
-      padding:10px 14px; border-radius:12px;
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--border);
-      font-weight:800; letter-spacing:.3px;
-      transition: background .2s ease, border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+
+    .agenda-card:hover {
+      border-color: rgba(255,255,255,0.2);
+      background: rgba(30, 41, 59, 0.6);
     }
-    .voltar a:hover{
-      background: rgba(255,255,255,.07);
-      border-color: rgba(148,163,184,.6);
-      transform: translateY(-2px);
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+
+    .agenda-info { display: flex; flex-direction: column; gap: 8px; }
+
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+    }
+
+    .info-row i {
+      width: 20px;
+      color: var(--primary);
+      font-size: 0.85rem;
+    }
+
+    .info-row.service { font-weight: 700; font-size: 1.1rem; color: #fff; margin-bottom: 4px; }
+    .info-row.service i { color: var(--muted); }
+
+    .cancelar-btn {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 0.3s;
+      font-family: inherit;
+    }
+
+    .cancelar-btn:hover {
+      background: var(--danger);
+      color: white;
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+    }
+
+    /* VOLTAR */
+    .voltar { text-align: center; margin-top: 40px; }
+    .voltar a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.3s;
+    }
+    .voltar a:hover { color: #fff; }
+
+    @media (max-width: 600px) {
+      .input-group { flex-direction: column; }
+      .btn-search { padding: 14px; }
+      .agenda-card { flex-direction: column; align-items: flex-start; gap: 20px; }
+      .cancelar-btn { width: 100%; }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>Consultar Agendamentos</h2>
 
-    <form method="POST">
-      <input class="input" type="text" name="telefone" placeholder="Digite seu telefone" required value="{{ telefone if telefone else '' }}">
-      <button class="btn" type="submit">Pesquisar</button>
-    </form>
+  <div class="container">
+    <div class="header-section">
+      <h2>Meus Agendamentos</h2>
+      <p class="subtitle">Consulte ou cancele suas reservas informando seu telefone.</p>
+    </div>
+
+    <section class="search-box">
+      <form method="POST" class="input-group">
+        <div class="input-wrapper">
+          <i class="fa-solid fa-phone"></i>
+          <input class="input" type="text" name="telefone" placeholder="(00) 00000-0000" required value="{{ telefone if telefone else '' }}">
+        </div>
+        <button class="btn-search" type="submit">Buscar Agenda</button>
+      </form>
+    </section>
 
     {% if agendamentos is not none %}
-      {% if agendamentos %}
-        {% for ag in agendamentos %}
-        <div class="agenda-card">
-          <p><strong style="color:var(--muted)">Serviço:</strong> {{ ag.servico }}</p>
-          <p><strong style="color:var(--muted)">Data:</strong> {{ ag.data.strftime('%d/%m/%Y') }}</p>
-          <p><strong style="color:var(--muted)">Hora:</strong> {{ ag.horario.strftime('%H:%M') }}</p>
-          <form method="POST" action="/cancelar/{{ ag.id }}" onsubmit="return confirm('Tem certeza que deseja cancelar?');">
-            <button type="submit" class="cancelar-btn">Cancelar</button>
-          </form>
-        </div>
-        {% endfor %}
-      {% else %}
-        <p style="text-align:center; color:var(--muted);">Nenhum agendamento encontrado para este número.</p>
-      {% endif %}
+      <div class="results-section">
+        {% if agendamentos %}
+          {% for ag in agendamentos %}
+          <div class="agenda-card">
+            <div class="agenda-info">
+              <div class="info-row service">
+                <i class="fa-solid fa-scissors"></i> {{ ag.servico }}
+              </div>
+              <div class="info-row">
+                <i class="fa-regular fa-calendar"></i> {{ ag.data.strftime('%d/%m/%Y') }}
+              </div>
+              <div class="info-row">
+                <i class="fa-regular fa-clock"></i> {{ ag.horario.strftime('%H:%M') }}
+              </div>
+            </div>
+
+            <form method="POST" action="/cancelar/{{ ag.id }}" onsubmit="return confirm('Tem certeza que deseja cancelar este agendamento?');">
+              <button type="submit" class="cancelar-btn">
+                <i class="fa-solid fa-xmark"></i> Cancelar
+              </button>
+            </form>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div style="text-align:center; padding: 40px; background: rgba(255,255,255,0.02); border-radius: 20px; border: 1px dashed var(--border);">
+            <i class="fa-regular fa-face-frown" style="font-size: 2rem; color: var(--muted); margin-bottom: 15px; display: block;"></i>
+            <p style="color: var(--muted); margin: 0;">Nenhum agendamento encontrado para este número.</p>
+          </div>
+        {% endif %}
+      </div>
     {% endif %}
 
     {% if slug %}
       <div class="voltar">
         <a href="{{ url_for('main.agenda_publica_slug', slug=slug) }}">
-          Voltar
+          <i class="fa-solid fa-arrow-left"></i> Voltar para a Agenda
         </a>
       </div>
     {% endif %}
   </div>
+
 </body>
 </html>
