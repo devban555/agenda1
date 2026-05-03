@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel Administrativo | Agenda</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(30, 41, 59, 0.4);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --accent: #6366f1;
+      --border: rgba(255, 255, 255, 0.08);
+      --row-hover: rgba(59, 130, 246, 0.05);
+    }
+
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', system-ui, sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      font-weight: 800;
+      font-size: 2rem;
+      letter-spacing: -0.02em;
+      background: linear-gradient(to right, #fff, var(--muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* CONTAINER DA TABELA */
+    .table-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .table-wrap {
+      overflow-x: auto; /* Scroll para mobile */
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95rem;
+    }
+
+    /* HEADER DA TABELA */
+    thead th {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 20px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* CELULAS */
+    td {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: all 0.2s ease;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover td {
+      background: var(--row-hover);
+      color: #fff;
+    }
+
+    /* DESTAQUES DENTRO DA TABELA */
+    .badge-service {
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .date-text {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .time-text {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .phone-link {
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .phone-link:hover {
+      color: var(--primary);
+    }
+
+    /* BOTÃO VOLTAR */
+    .voltar {
+      text-align: center;
+      margin-top: 40px;
+    }
+
+    .voltar a {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--muted);
+      padding: 12px 24px;
+      border-radius: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .voltar a:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--primary);
+      transform: translateX(-5px);
+    }
+
+    /* RESPONSIVIDADE */
+    @media (max-width: 768px) {
+      body { padding: 20px 10px; }
+      td, th { padding: 12px; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Agenda de Atendimentos</h1>
+
+<div class="table-container">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th><i class="fa-regular fa-user"></i> Cliente</th>
+          <th><i class="fa-solid fa-phone"></i> Contato</th>
+          <th><i class="fa-solid fa-hand-sparkles"></i> Serviço</th>
+          <th><i class="fa-regular fa-calendar"></i> Data</th>
+          <th><i class="fa-regular fa-clock"></i> Horário</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for agendamento in agendamentos %}
+        <tr>
+          <td style="font-weight: 600;">{{ agendamento.nome }}</td>
+          <td>
+            <a href="tel:{{ agendamento.telefone }}" class="phone-link">
+              {{ agendamento.telefone }}
+            </a>
+          </td>
+          <td>
+            <span class="badge-service">
+              {{ agendamento.servico.titulo if agendamento.servico else '—' }}
+            </span>
+          </td>
+          <td class="date-text">
+            {{ agendamento.data.strftime('%d/%m/%Y') }}
+          </td>
+          <td>
+            <span class="time-text">
+              {{ agendamento.horario.strftime('%H:%M') }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="voltar">
+    <a href="/painel">
+      <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+    </a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações | Painel Pro</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(30, 41, 59, 0.4);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --border: rgba(255, 255, 255, 0.08);
+      --input-bg: rgba(2, 6, 23, 0.5);
+    }
+
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      padding-bottom: 50px;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 15, 26, 0.8);
+      backdrop-filter: blur(12px);
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 0 16px;
+    }
+
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      border-left: 4px solid var(--primary);
+      padding-left: 12px;
+    }
+
+    .card-header h2 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--muted);
+    }
+
+    .field {
+      width: 100%;
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      color: var(--text);
+      font-family: inherit;
+      margin-bottom: 16px;
+      transition: all 0.3s;
+    }
+
+    .field:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    }
+
+    .options {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .option {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .option:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .option input {
+      display: none;
+    }
+
+    .option:has(input:checked) {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .horarios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .horario-chip {
+      padding: 8px;
+      text-align: center;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .horario-chip:has(input:checked) {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 14px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: 0.3s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border: 1px solid var(--border);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    }
+
+    .btn-voltar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--muted);
+      font-weight: 600;
+      margin-top: 30px;
+      transition: 0.2s;
+    }
+
+    .btn-voltar:hover {
+      color: #fff;
+    }
+
+    @media (max-width: 600px) {
+      .options { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1><i class="fas fa-sliders"></i> Painel de Configurações</h1>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <div class="card-header">
+      <i class="fas fa-paint-brush"></i>
+      <h2>Identidade Visual</h2>
+    </div>
+
+    <label><i class="fas fa-store"></i> Nome fantasia</label>
+    <input id="nomeFantasia" class="field" placeholder="Ex: Minha Barbearia">
+
+    <label><i class="fas fa-font"></i> Estilo da tipografia</label>
+    <select id="fonteTitulo" class="field">
+      <option value="padrao">Padrão (Sistema)</option>
+      <option value="poppins">Elegante (Poppins)</option>
+      <option value="montserrat">Moderna (Montserrat)</option>
+      <option value="playfair">Clássica (Playfair)</option>
+    </select>
+
+    <button id="salvarIdentidade" class="btn btn-secondary">
+      <i class="fas fa-save"></i> Atualizar Identidade
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <i class="fas fa-calendar-week"></i>
+      <h2>Dias de Funcionamento</h2>
+    </div>
+    <div class="options" id="diasSemana">
+      <label class="option"><input type="checkbox" value="0"> Seg</label>
+      <label class="option"><input type="checkbox" value="1"> Ter</label>
+      <label class="option"><input type="checkbox" value="2"> Qua</label>
+      <label class="option"><input type="checkbox" value="3"> Qui</label>
+      <label class="option"><input type="checkbox" value="4"> Sex</label>
+      <label class="option"><input type="checkbox" value="5"> Sáb</label>
+      <label class="option"><input type="checkbox" value="6"> Dom</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <i class="fas fa-clock"></i>
+      <h2>Horários de Atendimento</h2>
+    </div>
+    <label>Selecione os horários padrão da sua agenda:</label>
+    <div class="horarios-grid" id="horarios"></div>
+
+    <button id="salvarBase" class="btn btn-primary">
+      <i class="fas fa-check-circle"></i> Salvar Configurações
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <i class="fas fa-calendar-day"></i>
+      <h2>Exceções por Data</h2>
+    </div>
+
+    <label>Configurar dia específico (Feriados ou Folgas)</label>
+    <input type="date" id="dataSelecionada" class="field">
+
+    <div id="agenda"></div>
+
+    <button id="salvarExcecao" class="btn btn-secondary">
+      <i class="fas fa-calendar-plus"></i> Aplicar a esta data
+    </button>
+  </div>
+
+  <a href="/painel" class="btn-voltar">
+    <i class="fas fa-arrow-left"></i> Voltar ao painel administrativo
+  </a>
+
+</div>
+
+<script>
+  /* ===== GERADOR DE HORÁRIOS ===== */
+  const horariosDiv = document.getElementById('horarios');
+  for(let i=0; i<24; i++) {
+    const h = String(i).padStart(2,'0') + ':00';
+    horariosDiv.innerHTML += `
+      <label class="option horario-chip">
+        <input type="checkbox" value="${h}"> ${h}
+      </label>`;
+  }
+
+  /* ===== LÓGICA DE SALVAMENTO (RESTURADA) ===== */
+
+  // 1. Identidade Visual
+  const inputNome = document.getElementById('nomeFantasia');
+  const selectFonte = document.getElementById('fonteTitulo');
+  const btnIdentidade = document.getElementById('salvarIdentidade');
+
+  btnIdentidade.addEventListener('click', () => {
+    const nome = inputNome.value.trim();
+    if (!nome) {
+      alert('Informe o nome fantasia');
+      return;
+    }
+
+    fetch('/salvar_identidade', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        nome_fantasia: nome,
+        fonte_titulo: selectFonte.value,
+        tema: 'principal'
+      })
+    })
+    .then(r => r.json())
+    .then(() => alert('Identidade salva com sucesso!'))
+    .catch(err => console.error('Erro:', err));
+  });
+
+  // 2. Configuração Base (Dias e Horários)
+  document.getElementById('salvarBase').addEventListener('click', () => {
+    const dias = [...document.querySelectorAll('#diasSemana input:checked')].map(cb => parseInt(cb.value));
+    const horariosBase = [...document.querySelectorAll('#horarios input:checked')].map(cb => cb.value);
+
+    if (!dias.length || !horariosBase.length) {
+      alert('Selecione ao menos um dia e um horário.');
+      return;
+    }
+
+    fetch('/salvar_configuracao_base', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        dias_semana: dias,
+        horarios_base: horariosBase
+      })
+    })
+    .then(r => r.json())
+    .then(() => alert('Configuração padrão salva!'))
+    .catch(err => console.error('Erro:', err));
+  });
+
+  // 3. Exceções
+  document.getElementById('salvarExcecao').addEventListener('click', () => {
+    const data = document.getElementById('dataSelecionada').value;
+    if(!data) {
+      alert('Selecione uma data primeiro.');
+      return;
+    }
+    // Aqui você pode adicionar a lógica de fetch para exceções se necessário
+    alert('Funcionalidade de exceção para ' + data + ' acionada.');
+  });
+</script>
+
+</body>
+</html>

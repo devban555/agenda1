@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>MASTER ADM</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(30, 41, 59, 0.45);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --accent: #8b5cf6;
+      --border: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.15), transparent 50%),
+        radial-gradient(at 0% 100%, rgba(59, 130, 246, 0.1), transparent 50%);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: 260px;
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(16px);
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .logo h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+    }
+
+    .menu a {
+      display: block;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--text);
+      background: rgba(255,255,255,0.02);
+      transition: 0.3s;
+    }
+
+    .menu a:hover {
+      background: rgba(139, 92, 246, 0.15);
+    }
+
+    .menu i {
+      margin-right: 8px;
+    }
+
+    .logout {
+      background: #ef4444;
+      padding: 10px;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .logout:hover {
+      background: #dc2626;
+    }
+
+    /* MAIN */
+    .main {
+      flex: 1;
+      padding: 40px;
+    }
+
+    .title {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    /* CARDS */
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      padding: 20px;
+      border-radius: 20px;
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    /* AREA */
+    .area {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 20px;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div>
+      <div class="logo">
+        <h1>MASTER ADM</h1>
+      </div>
+
+      <div class="menu">
+
+        <a href="{{ url_for('auth.register') }}">
+          <i class="fa-solid fa-user-plus"></i> Criar Conta
+        </a>
+
+        <a href="{{ url_for('main.usuarios') }}">
+          <i class="fa-solid fa-users"></i> Usuários
+        </a>
+
+        <a href="#">
+          <i class="fa-solid fa-layer-group"></i> Planos
+        </a>
+
+        <a href="#">
+          <i class="fa-solid fa-database"></i> Banco
+        </a>
+
+        <a href="#">
+          <i class="fa-solid fa-money-bill-wave"></i> Pagamentos
+        </a>
+
+        <a href="#">
+          <i class="fa-solid fa-bullhorn"></i> Avisos
+        </a>
+
+        <a href="#">
+          <i class="fa-solid fa-plug"></i> API
+        </a>
+
+        <a href="{{ url_for('main.logs') }}">
+          <i class="fa-solid fa-bug"></i> Logs
+        </a>
+
+      </div>
+    </div>
+
+    <div class="logout">
+      <i class="fa-solid fa-right-from-bracket"></i> Sair
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="title">Dashboard MASTER</div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Usuários</h3>
+        <p>0</p>
+      </div>
+
+      <div class="card">
+        <h3>Planos</h3>
+        <p>0</p>
+      </div>
+
+      <div class="card">
+        <h3>Pagamentos</h3>
+        <p>R$ 0</p>
+      </div>
+    </div>
+
+    <div class="area">
+      Área dinâmica futura (Flask / Jinja)
+    </div>
+
+  </div>
+
+</body>
+</html>
