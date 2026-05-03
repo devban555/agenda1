@@ -223,7 +223,8 @@
 <script>
     window.SESSION_ID = "{{ session_id }}";
 
-    const API_URL = "http://localhost:3000";
+    // 🔥 AGORA USA O FLASK (PROXY)
+    const API_URL = "";
     const sessionId = window.SESSION_ID;
     let ultimaStatus = null;
 
@@ -239,7 +240,7 @@
         statusText.innerText = "Solicitando QR...";
 
         try {
-            await fetch(`${API_URL}/session/${sessionId}`);
+            await fetch(`/api/session/${sessionId}`);
         } catch {
             statusText.innerText = "❌ Erro de Conexão";
             btnConnect.disabled = false;
@@ -249,7 +250,7 @@
 
     async function logout() {
         if(!confirm("Encerrar conexão com o WhatsApp?")) return;
-        await fetch(`${API_URL}/logout/${sessionId}`);
+        await fetch(`/api/logout/${sessionId}`);
         resetUI();
     }
 
@@ -266,13 +267,13 @@
 
     async function atualizar() {
         try {
-            const resStatus = await fetch(`${API_URL}/status/${sessionId}`);
+            const resStatus = await fetch(`/api/status/${sessionId}`);
             const statusData = await resStatus.json();
 
             if (ultimaStatus === statusData.status) return;
             ultimaStatus = statusData.status;
 
-            // 🔥 READY (CORREÇÃO PRINCIPAL)
+            // 🔥 READY
             if (statusData.status === "ready") {
                 statusText.innerText = "WhatsApp Conectado";
                 statusText.style.color = "var(--success)";
@@ -283,7 +284,7 @@
                 return;
             }
 
-            // ⚠️ ainda sincronizando
+            // ⚠️ sincronizando
             if (statusData.status === "connected") {
                 statusText.innerText = "Sincronizando...";
                 statusText.style.color = "var(--primary)";
@@ -291,8 +292,9 @@
                 return;
             }
 
+            // 📲 QR
             if (statusData.status === "qr") {
-                const resQR = await fetch(`${API_URL}/qr/${sessionId}`);
+                const resQR = await fetch(`/api/qr/${sessionId}`);
                 const qrData = await resQR.json();
 
                 if (qrData.qr) {

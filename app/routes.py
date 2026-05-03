@@ -962,3 +962,23 @@ def envio_whatsapp_background(user_id, numero, mensagem_cliente, grupo_id, mensa
     enviar_whatsapp(user_id, grupo_id, mensagem_grupo)
 
 
+import requests
+
+@main.route('/api/status/<session>')
+def api_status(session):
+    return requests.get(f"http://localhost:3000/status/{session}").json()
+
+
+@main.route('/api/qr/<session>')
+def api_qr(session):
+    return requests.get(f"http://localhost:3000/qr/{session}").json()
+
+
+@main.route('/api/session/<session>')
+def api_session(session):
+    return requests.get(f"http://localhost:3000/session/{session}").json()
+
+
+@main.route('/api/logout/<session>')
+def api_logout(session):
+    return requests.get(f"http://localhost:3000/logout/{session}").json()
