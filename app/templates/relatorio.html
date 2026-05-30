@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Relatório Estratégico</title>
+  <title>Dashboard Gerencial | Painel Pro</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -17,6 +17,7 @@
       --success: #10b981;
       --danger: #ef4444;
       --warning: #f59e0b;
+      --accent: #6366f1;
       --border: rgba(255, 255, 255, 0.08);
     }
 
@@ -34,20 +35,49 @@
       padding: 40px 20px;
     }
 
+    .dashboard-container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
     h1 {
       text-align: center;
-      margin-bottom: 50px;
-      font-weight: 800;
-      font-size: clamp(1.8rem, 4vw, 2.5rem);
-      letter-spacing: -0.02em;
-      background: linear-gradient(to right, #fff, var(--muted));
+      margin-bottom: 10px;
+      font-weight: 900;
+      font-size: clamp(2rem, 5vw, 2.8rem);
+      letter-spacing: -0.03em;
+      background: linear-gradient(to right, #fff, #cbd5e1);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
+    .dashboard-subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 50px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      margin: 40px 0 20px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(to right, var(--border), transparent);
+    }
+
+    /* GRIDS COMPATÍVEIS */
     .cards-grid {
-      max-width: 1100px;
-      margin: 0 auto;
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 24px;
@@ -57,20 +87,19 @@
       background: var(--card);
       backdrop-filter: blur(12px);
       border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 30px;
+      border-radius: 24px;
+      padding: 24px;
       position: relative;
       overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.3s ease;
       display: flex;
       flex-direction: column;
-      align-items: center;
     }
 
     .card:hover {
-      transform: translateY(-10px);
-      border-color: rgba(255,255,255,0.2);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      transform: translateY(-5px);
+      border-color: rgba(255,255,255,0.15);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
     }
 
     /* Ícone flutuante de fundo */
@@ -79,25 +108,33 @@
       right: -10px;
       bottom: -10px;
       font-size: 5rem;
-      opacity: 0.05;
+      opacity: 0.04;
       transform: rotate(-15deg);
+      pointer-events: none;
     }
 
     .metric {
-      margin: 15px 0 5px;
-      font-size: clamp(2.5rem, 5vw, 3.5rem);
-      font-weight: 900;
-      line-height: 1;
+      margin: 10px 0 4px;
+      font-size: clamp(2.2rem, 4vw, 3rem);
+      font-weight: 800;
+      line-height: 1.1;
       letter-spacing: -1px;
     }
 
     .label {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 600;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 1px;
-      text-align: center;
+      letter-spacing: 0.5px;
+    }
+
+    .desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: auto;
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
     }
 
     /* Cores Temáticas */
@@ -105,26 +142,191 @@
     .card.best .metric { color: var(--success); }
     .card.cancelled .metric { color: var(--danger); }
     .card.year .metric { color: var(--warning); }
+    .card.future-data .metric { color: #e2e8f0; }
 
     .icon-box {
-      width: 50px;
-      height: 50px;
-      border-radius: 15px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.5rem;
-      margin-bottom: 10px;
+      font-size: 1.2rem;
+      margin-bottom: 8px;
     }
 
     .total .icon-box { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
     .best .icon-box { background: rgba(16, 185, 129, 0.1); color: var(--success); }
     .cancelled .icon-box { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
     .year .icon-box { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+    .future-data .icon-box { background: rgba(255, 255, 255, 0.05); color: var(--muted); }
 
+    /* SEÇÃO 3, 4, 5: LAYOUT SPLIT */
+    .split-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .large-card {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+    }
+
+    .large-card h3 {
+      margin: 0 0 20px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .large-card h3 i {
+      color: var(--primary);
+    }
+
+    /* LISTAS DE RANKING */
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 12px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .ranking-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ranking-icon {
+      font-size: 1.2rem;
+      width: 24px;
+      text-align: center;
+    }
+
+    .ranking-name {
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .ranking-value {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--primary);
+      background: rgba(59, 130, 246, 0.1);
+      padding: 2px 10px;
+      border-radius: 8px;
+    }
+
+    /* GRÁFICO FAKE EM HTML/CSS */
+    .fake-chart {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding-top: 10px;
+    }
+
+    .chart-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chart-label {
+      width: 35px;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .chart-bar-container {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.03);
+      height: 16px;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .chart-bar {
+      height: 100%;
+      background: linear-gradient(to right, var(--primary), var(--accent));
+      border-radius: 8px;
+      transition: width 0.5s ease;
+    }
+
+    /* INSIGHTS CARD */
+    .insights-card {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 28px;
+      margin-bottom: 24px;
+    }
+
+    .insights-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .insight-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      border-radius: 16px;
+      padding: 16px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .insight-icon {
+      font-size: 1.3rem;
+      color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .insight-info h4 {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .insight-info p {
+      margin: 2px 0 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    /* VOLTAR */
     .voltar {
       text-align: center;
-      margin-top: 60px;
+      margin-top: 50px;
     }
 
     .voltar a {
@@ -151,42 +353,209 @@
 </head>
 <body>
 
-  <h1>Relatório Executivo</h1>
+  <div class="dashboard-container">
+    <h1>Dashboard Gerencial</h1>
+    <div class="dashboard-subtitle">Indicadores, métricas e análises estratégicas sobre o seu negócio</div>
 
-  <div class="cards-grid">
-    <article class="card total">
-      <div class="icon-box"><i class="fa-solid fa-calendar-check"></i></div>
-      <h2 class="metric">{{ total_agendamentos }}</h2>
-      <div class="label">Total Geral</div>
-      <i class="fa-solid fa-calendar-check bg-icon"></i>
-    </article>
+    <div class="section-title"><i class="fa-solid fa-chart-pie"></i> Resumo Executivo</div>
+    <div class="cards-grid">
+      <article class="card total">
+        <div class="icon-box"><i class="fa-solid fa-calendar-check"></i></div>
+        <h2 class="metric">{{ total_agendamentos }}</h2>
+        <div class="label">Total Geral</div>
+        <div class="desc">Volume histórico de solicitações recebidas.</div>
+        <i class="fa-solid fa-calendar-check bg-icon"></i>
+      </article>
 
-    <article class="card best">
-      <div class="icon-box"><i class="fa-solid fa-crown"></i></div>
-      <h2 class="metric" style="font-size: 2rem; margin: 25px 0 15px;">{{ melhor_mes if melhor_mes else "N/A" }}</h2>
-      <div class="label">Mês de Pico</div>
-      <i class="fa-solid fa-chart-line bg-icon"></i>
-    </article>
+      <article class="card cancelled">
+        <div class="icon-box"><i class="fa-solid fa-calendar-xmark"></i></div>
+        <h2 class="metric">{{ total_cancelados }}</h2>
+        <div class="label">Cancelamentos</div>
+        <div class="desc">Agendamentos cancelados por clientes/admin.</div>
+        <i class="fa-solid fa-calendar-xmark bg-icon"></i>
+      </article>
 
-    <article class="card cancelled">
-      <div class="icon-box"><i class="fa-solid fa-calendar-xmark"></i></div>
-      <h2 class="metric">{{ total_cancelados }}</h2>
-      <div class="label">Cancelamentos</div>
-      <i class="fa-solid fa-calendar-xmark bg-icon"></i>
-    </article>
+      <article class="card best">
+        <div class="icon-box"><i class="fa-solid fa-crown"></i></div>
+        <h2 class="metric" style="font-size: 1.8rem; margin: 24px 0 14px; font-weight: 800;">{{ melhor_mes if melhor_mes else "N/A" }}</h2>
+        <div class="label">Mês de Pico</div>
+        <div class="desc">Período com maior concentração de demanda.</div>
+        <i class="fa-solid fa-chart-line bg-icon"></i>
+      </article>
 
-    <article class="card year">
-      <div class="icon-box"><i class="fa-solid fa-arrow-trend-up"></i></div>
-      <h2 class="metric">{{ total_no_ano }}</h2>
-      <div class="label">Acumulado do Ano</div>
-      <i class="fa-solid fa-calendar-days bg-icon"></i>
-    </article>
-  </div>
+      <article class="card year">
+        <div class="icon-box"><i class="fa-solid fa-arrow-trend-up"></i></div>
+        <h2 class="metric">{{ total_no_ano }}</h2>
+        <div class="label">Acumulado do Ano</div>
+        <div class="desc">Atendimentos contabilizados no ano corrente.</div>
+        <i class="fa-solid fa-calendar-days bg-icon"></i>
+      </article>
+    </div>
 
-  <div class="voltar">
-    <a href="/painel">
-      <i class="fa-solid fa-chevron-left"></i> Painel de Controle
-    </a>
+    <div class="section-title"><i class="fa-solid fa-bolt"></i> Movimento e Fluxo</div>
+    <div class="cards-grid">
+      <article class="card future-data">
+        <div class="icon-box"><i class="fa-solid fa-bolt-lightning"></i></div>
+        <h2 class="metric">--</h2>
+        <div class="label">Atendimentos Hoje</div>
+        <div class="desc">Implementação futura</div>
+        <i class="fa-solid fa-bolt-lightning bg-icon"></i>
+      </article>
+
+      <article class="card future-data">
+        <div class="icon-box"><i class="fa-solid fa-calendar-day"></i></div>
+        <h2 class="metric">--</h2>
+        <div class="label">Atendimentos Semana</div>
+        <div class="desc">Implementação futura</div>
+        <i class="fa-solid fa-calendar-day bg-icon"></i>
+      </article>
+
+      <article class="card future-data">
+        <div class="icon-box"><i class="fa-solid fa-calendar-days"></i></div>
+        <h2 class="metric">--</h2>
+        <div class="label">Atendimentos Mês</div>
+        <div class="desc">Implementação futura</div>
+        <i class="fa-solid fa-calendar-days bg-icon"></i>
+      </article>
+
+      <article class="card future-data">
+        <div class="icon-box"><i class="fa-solid fa-hourglass-half"></i></div>
+        <h2 class="metric">--</h2>
+        <div class="label">Próximos 7 Dias</div>
+        <div class="desc">Implementação futura</div>
+        <i class="fa-solid fa-hourglass-half bg-icon"></i>
+      </article>
+    </div>
+
+    <div class="section-title"><i class="fa-solid fa-ranking-star"></i> Distribuição e Rankings</div>
+    <div class="split-grid">
+
+      <div class="large-card">
+        <h3><i class="fa-solid fa-scissors"></i> Serviços Mais Vendidos</h3>
+        <div class="ranking-list">
+          <div class="ranking-item">
+            <div class="ranking-meta">
+              <span class="ranking-icon">🥇</span>
+              <span class="ranking-name">Serviço A</span>
+            </div>
+            <span class="ranking-value">--</span>
+          </div>
+          <div class="ranking-item">
+            <div class="ranking-meta">
+              <span class="ranking-icon">🥈</span>
+              <span class="ranking-name">Serviço B</span>
+            </div>
+            <span class="ranking-value">--</span>
+          </div>
+          <div class="ranking-item">
+            <div class="ranking-meta">
+              <span class="ranking-icon">🥉</span>
+              <span class="ranking-name">Serviço C</span>
+            </div>
+            <span class="ranking-value">--</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="large-card">
+        <h3><i class="fa-solid fa-user-group"></i> Clientes Frequentes</h3>
+        <div class="ranking-list">
+          <div class="ranking-item">
+            <div class="ranking-meta">
+              <span class="ranking-icon">👑</span>
+              <span class="ranking-name">Cliente A</span>
+            </div>
+            <span class="ranking-value" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">12 visitas</span>
+          </div>
+          <div class="ranking-item">
+            <div class="ranking-meta">
+              <span class="ranking-icon">👑</span>
+              <span class="ranking-name">Cliente B</span>
+            </div>
+            <span class="ranking-value" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">8 visitas</span>
+          </div>
+          <div class="ranking-item">
+            <div class="ranking-meta">
+              <span class="ranking-icon">👑</span>
+              <span class="ranking-name">Cliente C</span>
+            </div>
+            <span class="ranking-value" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">5 visitas</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="large-card" style="grid-column: span 1;">
+        <h3><i class="fa-solid fa-chart-bar"></i> Desempenho Mensal</h3>
+        <div class="fake-chart">
+          <div class="chart-row">
+            <div class="chart-label">Jan</div>
+            <div class="chart-bar-container"><div class="chart-bar" style="width: 45%;"></div></div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label">Fev</div>
+            <div class="chart-bar-container"><div class="chart-bar" style="width: 60%;"></div></div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label">Mar</div>
+            <div class="chart-bar-container"><div class="chart-bar" style="width: 85%;"></div></div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label">Abr</div>
+            <div class="chart-bar-container"><div class="chart-bar" style="width: 50%;"></div></div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label">Mai</div>
+            <div class="chart-bar-container"><div class="chart-bar" style="width: 70%;"></div></div>
+          </div>
+          <div class="chart-row">
+            <div class="chart-label">Jun</div>
+            <div class="chart-bar-container"><div class="chart-bar" style="width: 95%;"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="section-title"><i class="fa-regular fa-lightbulb"></i> Análises e Insights Automáticos</div>
+    <div class="insights-card">
+      <div class="insights-grid">
+        <div class="insight-box">
+          <div class="insight-icon"><i class="fa-solid fa-fire"></i></div>
+          <div class="insight-info">
+            <h4>Mais Procurado</h4>
+            <p>Aguardando dados</p>
+          </div>
+        </div>
+        <div class="insight-box">
+          <div class="insight-icon"><i class="fa-solid fa-star"></i></div>
+          <div class="insight-info">
+            <h4>Cliente do Mês</h4>
+            <p>Aguardando dados</p>
+          </div>
+        </div>
+        <div class="insight-box">
+          <div class="insight-icon"><i class="fa-solid fa-calendar-day"></i></div>
+          <div class="insight-info">
+            <h4>Dia de Pico</h4>
+            <p>Aguardando dados</p>
+          </div>
+        </div>
+        <div class="insight-box">
+          <div class="insight-icon"><i class="fa-solid fa-percentage"></i></div>
+          <div class="insight-info">
+            <h4>Taxa de Retenção</h4>
+            <p>Aguardando dados</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="voltar">
+      <a href="/painel">
+        <i class="fa-solid fa-chevron-left"></i> Painel de Controle
+      </a>
+    </div>
+
   </div>
 
 </body>

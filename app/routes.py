@@ -294,7 +294,7 @@ Seu horário foi cancelado com sucesso.
         print("ERRO WHATS:", e)
 
     flash('Agendamento cancelado com sucesso!')
-    return redirect(f"/agenda/{slug}")
+    return redirect(request.referrer or f"/agenda/{slug}")
 
 def envio_cancelamento_background(user_id, numero, msg_cliente, grupo_id, msg_grupo):
     import time
@@ -318,13 +318,16 @@ def horarios_disponiveis():
     if not data_str or not usuario_id:
         return jsonify([])
 
-    data = datetime.strptime(data_str, '%Y-%m-%d').date()
+    data = datetime.strptime(
+        data_str,
+        '%Y-%m-%d'
+    ).date()
 
-    # 🔒 BLOQUEIO DATA PASSADA
+    # bloqueio data passada
     if data < date.today():
         return jsonify([])
 
-    dia_semana = data.weekday()  # 0 = segunda
+    dia_semana = data.weekday()
 
     config = ConfiguracaoAgenda.query.filter_by(
         usuario_id=usuario_id
@@ -333,11 +336,30 @@ def horarios_disponiveis():
     if not config:
         return jsonify([])
 
-    dias_permitidos = [int(d) for d in config.dias_semana.split(',')]
+    dias_permitidos = config.dias_semana or []
+
     if dia_semana not in dias_permitidos:
         return jsonify([])
 
-    horarios = config.horarios_base.split(',')
+    horarios_cfg = config.horarios_base or {}
+
+    # NOVO FORMATO
+    if isinstance(horarios_cfg, dict):
+
+        if dia_semana == 5:
+            horarios = horarios_cfg.get(
+                'sabado',
+                []
+            )
+        else:
+            horarios = horarios_cfg.get(
+                'semana',
+                []
+            )
+
+    else:
+        # compatibilidade com registros antigos
+        horarios = horarios_cfg
 
     excecao = ExcecaoAgenda.query.filter_by(
         usuario_id=usuario_id,
@@ -345,12 +367,20 @@ def horarios_disponiveis():
     ).first()
 
     if excecao:
+
         if not excecao.dia_ativo:
             return jsonify([])
 
-        if excecao.horarios_desativados:
-            bloqueados = excecao.horarios_desativados.split(',')
-            horarios = [h for h in horarios if h not in bloqueados]
+        bloqueados = (
+            excecao.horarios_bloqueados
+            or []
+        )
+
+        horarios = [
+            h
+            for h in horarios
+            if h not in bloqueados
+        ]
 
     return jsonify(horarios)
 
@@ -360,25 +390,29 @@ from datetime import datetime, date
 @main.route('/verificar_horarios', methods=['POST'])
 def verificar_horarios():
     data_json = request.get_json()
+
     data_str = data_json.get('data')
     servico_id = data_json.get('servico_id')
 
     if not data_str or not servico_id:
         return jsonify([])
 
-    data = datetime.strptime(data_str, '%Y-%m-%d').date()
+    data = datetime.strptime(
+        data_str,
+        '%Y-%m-%d'
+    ).date()
 
-    # 🔒 BLOQUEIO DATA PASSADA
+    # bloqueio data passada
     if data < date.today():
         return jsonify([])
 
-    dia_semana = data.weekday()  # 0 = segunda, 6 = domingo
+    dia_semana = data.weekday()
 
-    # serviço e usuário
+    # serviço
     servico = Servico.query.get_or_404(servico_id)
     usuario_id = servico.usuario_id
 
-    # configuração base
+    # configuração
     config = ConfiguracaoAgenda.query.filter_by(
         usuario_id=usuario_id
     ).first()
@@ -386,50 +420,89 @@ def verificar_horarios():
     if not config:
         return jsonify([])
 
-    # lista
-    dias_permitidos = config.dias_semana
-    horarios_base = config.horarios_base
+    dias_permitidos = config.dias_semana or []
 
     # dia não permitido
     if dia_semana not in dias_permitidos:
         return jsonify([])
 
-    # exceção por data
+    # ==========================
+    # NOVO FORMATO DE HORÁRIOS
+    # ==========================
+    horarios_cfg = config.horarios_base or {}
+
+    if isinstance(horarios_cfg, dict):
+
+        if dia_semana == 5:
+            horarios_base = horarios_cfg.get(
+                'sabado',
+                []
+            )
+        else:
+            horarios_base = horarios_cfg.get(
+                'semana',
+                []
+            )
+
+    else:
+        # compatibilidade com formato antigo
+        horarios_base = horarios_cfg
+
+    # exceção
     excecao = ExcecaoAgenda.query.filter_by(
         usuario_id=usuario_id,
         data=data
     ).first()
 
     if excecao:
+
         if not excecao.dia_ativo:
             return jsonify([])
 
         horarios_base = [
-            h for h in horarios_base
-            if h not in (excecao.horarios_bloqueados or [])
+            h
+            for h in horarios_base
+            if h not in (
+                excecao.horarios_bloqueados or []
+            )
         ]
 
-    # horários já agendados
+    # agendados
     agendados = Agendamento.query.filter_by(
         usuario_id=usuario_id,
         data=data
     ).all()
 
-    horarios_ocupados = {a.horario.strftime('%H:%M') for a in agendados}
+    horarios_ocupados = {
+        a.horario.strftime('%H:%M')
+        for a in agendados
+    }
 
-    # 🔥 FILTRO FINAL (OCUPADOS + PASSADOS)
     agora = datetime.now()
+
     horarios_disponiveis = []
 
     for h in horarios_base:
-        hora_obj = datetime.strptime(h, "%H:%M").time()
-        data_hora = datetime.combine(data, hora_obj)
 
-        # remove horários já passados
+        try:
+            hora_obj = datetime.strptime(
+                h,
+                "%H:%M"
+            ).time()
+
+        except Exception:
+            continue
+
+        data_hora = datetime.combine(
+            data,
+            hora_obj
+        )
+
+        # remove passados
         if data_hora <= agora:
             continue
 
-        # remove horários ocupados
+        # remove ocupados
         if h in horarios_ocupados:
             continue
 
@@ -542,27 +615,69 @@ def painel():
 @main.route('/admin', methods=['GET', 'POST'])
 @login_required
 def admin():
+    from datetime import datetime, date, timedelta
+
     data_filtro = request.form.get('data')
     user_id = session["user_id"]
 
     if data_filtro:
         try:
             data_obj = datetime.strptime(data_filtro, '%Y-%m-%d').date()
+
             agendamentos = Agendamento.query.filter_by(
                 usuario_id=user_id,
                 data=data_obj
-            ).order_by(Agendamento.horario).all()
+            ).order_by(
+                Agendamento.horario
+            ).all()
+
         except:
             agendamentos = []
+
     else:
         agendamentos = Agendamento.query.filter_by(
             usuario_id=user_id
-        ).order_by(Agendamento.data, Agendamento.horario).all()
+        ).order_by(
+            Agendamento.data,
+            Agendamento.horario
+        ).all()
+
+    hoje = date.today()
+    amanha = hoje + timedelta(days=1)
+    fim_semana = hoje + timedelta(days=7)
+
+    total_hoje = Agendamento.query.filter_by(
+        usuario_id=user_id,
+        data=hoje
+    ).count()
+
+    total_amanha = Agendamento.query.filter_by(
+        usuario_id=user_id,
+        data=amanha
+    ).count()
+
+    total_semana = Agendamento.query.filter(
+        Agendamento.usuario_id == user_id,
+        Agendamento.data >= hoje,
+        Agendamento.data <= fim_semana
+    ).count()
+
+    proximo_agendamento = Agendamento.query.filter(
+        Agendamento.usuario_id == user_id,
+        Agendamento.data >= hoje
+    ).order_by(
+        Agendamento.data,
+        Agendamento.horario
+    ).first()
 
     return render_template(
         'admin.html',
         agendamentos=agendamentos,
-        data_filtro=data_filtro
+        data_filtro=data_filtro,
+        total_hoje=total_hoje,
+        total_amanha=total_amanha,
+        total_semana=total_semana,
+        proximo_agendamento=proximo_agendamento
     )
 
 
@@ -737,14 +852,29 @@ def salvar_configuracao_base():
     ).first()
 
     if not config:
-        config = ConfiguracaoAgenda(usuario_id=session['user_id'])
+        config = ConfiguracaoAgenda(
+            usuario_id=session['user_id']
+        )
         db.session.add(config)
 
-    config.dias_semana = data.get('dias_semana', [])
-    config.horarios_base = data.get('horarios_base', [])
+    dias_semana = data.get('dias_semana', [])
+
+    horarios_base = data.get(
+        'horarios_base',
+        {
+            'semana': [],
+            'sabado': []
+        }
+    )
+
+    config.dias_semana = dias_semana
+    config.horarios_base = horarios_base
 
     db.session.commit()
-    return jsonify({'status':'ok'})
+
+    return jsonify({
+        'status': 'ok'
+    })
 
 @main.route('/salvar_excecao_agenda', methods=['POST'])
 @login_required
@@ -982,3 +1112,176 @@ def api_session(session):
 @main.route('/api/logout/<session>')
 def api_logout(session):
     return requests.get(f"http://localhost:3000/logout/{session}").json()
+
+@main.route('/disponibilidade')
+@login_required
+def disponibilidade():
+    return render_template('disponibilidade.html')
+
+@main.route('/carregar_disponibilidade', methods=['POST'])
+@login_required
+def carregar_disponibilidade():
+
+    data_str = request.json.get('data')
+
+    if not data_str:
+        return jsonify({
+            'horarios': [],
+            'bloqueados': []
+        })
+
+    data = datetime.strptime(
+        data_str,
+        '%Y-%m-%d'
+    ).date()
+
+    config = ConfiguracaoAgenda.query.filter_by(
+        usuario_id=session['user_id']
+    ).first()
+
+    if not config:
+        return jsonify({
+            'horarios': [],
+            'bloqueados': []
+        })
+
+    dia_semana = data.weekday()
+
+    horarios_cfg = config.horarios_base or {}
+
+    if isinstance(horarios_cfg, dict):
+
+        if dia_semana == 5:
+            horarios = horarios_cfg.get(
+                'sabado',
+                []
+            )
+        else:
+            horarios = horarios_cfg.get(
+                'semana',
+                []
+            )
+
+    else:
+        horarios = horarios_cfg
+
+    excecao = ExcecaoAgenda.query.filter_by(
+        usuario_id=session['user_id'],
+        data=data
+    ).first()
+
+    bloqueados = []
+
+    if excecao:
+        bloqueados = (
+            excecao.horarios_bloqueados
+            or []
+        )
+
+    return jsonify({
+        'horarios': horarios,
+        'bloqueados': bloqueados
+    })
+
+@main.route('/salvar_disponibilidade', methods=['POST'])
+@login_required
+def salvar_disponibilidade():
+
+    data_str = request.json.get('data')
+    bloqueados = request.json.get(
+        'horarios_bloqueados',
+        []
+    )
+
+    if not data_str:
+        return jsonify({
+            'status': 'erro'
+        }), 400
+
+    data = datetime.strptime(
+        data_str,
+        '%Y-%m-%d'
+    ).date()
+
+    excecao = ExcecaoAgenda.query.filter_by(
+        usuario_id=session['user_id'],
+        data=data
+    ).first()
+
+    if not excecao:
+
+        excecao = ExcecaoAgenda(
+            usuario_id=session['user_id'],
+            data=data,
+            dia_ativo=True
+        )
+
+        db.session.add(excecao)
+
+    excecao.horarios_bloqueados = bloqueados
+
+    db.session.commit()
+
+    return jsonify({
+        'status': 'ok'
+    })
+
+from collections import defaultdict
+from datetime import date
+
+@main.route('/clientes')
+@login_required
+def clientes():
+
+    user_id = session['user_id']
+
+    agendamentos = (
+        Agendamento.query
+        .filter_by(usuario_id=user_id)
+        .order_by(Agendamento.data.desc())
+        .all()
+    )
+
+    clientes_dict = {}
+
+    hoje = date.today()
+
+    for ag in agendamentos:
+
+        telefone = ag.telefone
+
+        if telefone not in clientes_dict:
+
+            dias_sem_visita = (
+                hoje - ag.data
+            ).days
+
+            if dias_sem_visita <= 30:
+                status = 'ativo'
+            elif dias_sem_visita <= 60:
+                status = 'atencao'
+            else:
+                status = 'inativo'
+
+            clientes_dict[telefone] = {
+                'nome': ag.nome,
+                'telefone': telefone,
+                'visitas': 1,
+                'ultima_visita': ag.data,
+                'status': status
+            }
+
+        else:
+
+            clientes_dict[telefone]['visitas'] += 1
+
+    clientes = sorted(
+        clientes_dict.values(),
+        key=lambda x: x['ultima_visita'],
+        reverse=True
+    )
+
+    return render_template(
+        'clientes.html',
+        clientes=clientes
+    )

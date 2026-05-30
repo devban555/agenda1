@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Gestão de Clientes Recorrentes | CRM Pro</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0f1a;
+      --card: rgba(30, 41, 59, 0.4);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --primary: #3b82f6;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border: rgba(255, 255, 255, 0.08);
+      --glass: rgba(255, 255, 255, 0.03);
+    }
+
+    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 800;
+      font-size: clamp(1.8rem, 4vw, 2.2rem);
+      margin-bottom: 40px;
+      background: linear-gradient(to right, #fff, var(--muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .wrap { max-width: 1100px; margin: 0 auto; }
+
+    /* SEÇÃO DE ESTATÍSTICAS DO TOPO */
+    .crm-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .crm-stat-card {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .crm-stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(59, 130, 246, 0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+    }
+
+    .crm-stat-card.active-card .crm-stat-icon {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+    }
+
+    .crm-stat-card.inactive-card .crm-stat-icon {
+      background: rgba(239, 68, 68, 0.1);
+      color: var(--danger);
+    }
+
+    .crm-stat-info h3 {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .crm-stat-info p {
+      margin: 4px 0 0;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+
+    /* FILTROS E PESQUISA */
+    .controls-container {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 24px;
+      margin-bottom: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .pesquisa-container {
+      display: flex;
+      gap: 12px;
+    }
+
+    .input-group {
+      position: relative;
+      flex: 1;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+    }
+
+    .input {
+      width: 100%;
+      padding: 14px 15px 14px 45px;
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: white;
+      font-family: inherit;
+      transition: 0.3s;
+    }
+
+    .input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+    }
+
+    .btn-search {
+      padding: 0 25px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn-search:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); }
+
+    /* TABELA */
+    .table-card {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; min-width: 900px; }
+
+    th {
+      background: rgba(255,255,255,0.03);
+      padding: 18px 20px;
+      text-align: left;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td { padding: 18px 20px; border-bottom: 1px solid var(--border); font-size: 0.9rem; vertical-align: middle; }
+
+    tbody tr:hover { background: rgba(59, 130, 246, 0.03); }
+
+    .contact-name { font-weight: 700; color: #fff; }
+
+    .contact-phone {
+      color: var(--text);
+      text-decoration: none;
+      font-family: monospace;
+      font-size: 0.95rem;
+    }
+
+    .contact-phone:hover {
+      color: var(--primary);
+    }
+
+    .badge-count {
+      background: rgba(255,255,255,0.05);
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+      border: 1px solid var(--border);
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .status-ativo { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
+    .status-atencao { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.2); }
+    .status-inativo { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+
+    /* BOTÕES DE AÇÃO VISUAIS */
+    .crm-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-crm-action {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .btn-crm-action.whatsapp {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--success);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .btn-crm-action.whatsapp:hover {
+      background: var(--success);
+      color: #fff;
+    }
+
+    .btn-crm-action.history {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .btn-crm-action.history:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* CARD ESTADO VAZIO */
+    .empty-state {
+      text-align: center;
+      padding: 60px 40px;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .empty-state p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin: 0;
+    }
+
+    .voltar { text-align: center; margin-top: 40px; }
+    .voltar a {
+      color: var(--muted);
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: 0.3s;
+    }
+    .voltar a:hover { color: #fff; transform: translateX(-5px); }
+
+    @media (max-width: 768px) {
+      .pesquisa-container { flex-direction: column; }
+      .btn-search { padding: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="wrap">
+    <h1>Gestão de Clientes Recorrentes</h1>
+
+    <div class="crm-stats-grid">
+      <div class="crm-stat-card">
+        <div class="crm-stat-icon"><i class="fa-solid fa-users"></i></div>
+        <div class="crm-stat-info">
+          <h3>Total de Clientes</h3>
+          <p>{{ clientes|length }}</p>
+        </div>
+      </div>
+
+      <div class="crm-stat-card active-card">
+        <div class="crm-stat-icon"><i class="fa-solid fa-user-check"></i></div>
+        <div class="crm-stat-info">
+          <h3>Clientes Ativos</h3>
+          <p>--</p>
+        </div>
+      </div>
+
+      <div class="crm-stat-card inactive-card">
+        <div class="crm-stat-icon"><i class="fa-solid fa-user-slash"></i></div>
+        <div class="crm-stat-info">
+          <h3>Clientes Inativos</h3>
+          <p>--</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls-container">
+      <div class="pesquisa-container">
+        <div class="input-group">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input class="input" type="text" placeholder="Buscar cliente...">
+        </div>
+        <button class="btn-search">Buscar</button>
+      </div>
+    </div>
+
+    <div class="table-card">
+      {% if clientes %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Telefone</th>
+                <th>Visitas</th>
+                <th>Última Visita</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cliente in clientes %}
+              <tr>
+                <td class="contact-name">{{ cliente.nome }}</td>
+                <td>
+                  <a href="tel:{{ cliente.telefone }}" class="contact-phone">
+                    {{ cliente.telefone }}
+                  </a>
+                </td>
+                <td><span class="badge-count">{{ cliente.visitas }}</span></td>
+                <td style="color: var(--muted)">
+                  {{ cliente.ultima_visita.strftime('%d/%m/%Y') if cliente.ultima_visita else '—' }}
+                </td>
+                <td>
+                  {% if cliente.status == 'ativo' %}
+                    <span class="status status-ativo">🟢 ATIVO</span>
+                  {% elif cliente.status == 'atencao' %}
+                    <span class="status status-atencao">🟡 ATENÇÃO</span>
+                  {% else %}
+                    <span class="status status-inativo">🔴 INATIVO</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <div class="crm-actions">
+                    <a href="#" class="btn-crm-action whatsapp">
+                      <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                    </a>
+                    <a href="#" class="btn-crm-action history">
+                      <i class="fa-solid fa-clock-rotate-left"></i> Histórico
+                    </a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <i class="fa-regular fa-folder-open"></i>
+          <p>Nenhum cliente encontrado.</p>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="voltar">
+      <a href="/painel">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>

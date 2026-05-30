@@ -125,6 +125,7 @@
       align-items: center;
       transition: 0.3s;
       animation: slideUp 0.4s ease-out forwards;
+      gap: 20px;
     }
 
     @keyframes slideUp {
@@ -137,7 +138,13 @@
       background: rgba(30, 41, 59, 0.6);
     }
 
-    .agenda-info { display: flex; flex-direction: column; gap: 8px; }
+    .agenda-info {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      min-width: 0;
+    }
 
     .info-row {
       display: flex;
@@ -155,6 +162,10 @@
     .info-row.service { font-weight: 700; font-size: 1.1rem; color: #fff; margin-bottom: 4px; }
     .info-row.service i { color: var(--muted); }
 
+    .cancelar-form {
+      flex-shrink: 0;
+    }
+
     .cancelar-btn {
       background: rgba(239, 68, 68, 0.1);
       color: var(--danger);
@@ -166,6 +177,7 @@
       cursor: pointer;
       transition: 0.3s;
       font-family: inherit;
+      white-space: nowrap;
     }
 
     .cancelar-btn:hover {
@@ -220,7 +232,7 @@
           <div class="agenda-card">
             <div class="agenda-info">
               <div class="info-row service">
-                <i class="fa-solid fa-scissors"></i> {{ ag.servico }}
+                <i class="fa-solid fa-scissors"></i> {{ ag.servico.titulo }}
               </div>
               <div class="info-row">
                 <i class="fa-regular fa-calendar"></i> {{ ag.data.strftime('%d/%m/%Y') }}
@@ -230,7 +242,7 @@
               </div>
             </div>
 
-            <form method="POST" action="/cancelar/{{ ag.id }}" onsubmit="return confirm('Tem certeza que deseja cancelar este agendamento?');">
+            <form class="cancelar-form" method="POST" action="/cancelar/{{ ag.id }}" onsubmit="return confirm('Tem certeza que deseja cancelar este agendamento?');">
               <button type="submit" class="cancelar-btn">
                 <i class="fa-solid fa-xmark"></i> Cancelar
               </button>

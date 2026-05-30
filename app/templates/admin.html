@@ -17,9 +17,14 @@
       --accent: #6366f1;
       --border: rgba(255, 255, 255, 0.08);
       --row-hover: rgba(59, 130, 246, 0.05);
+      --danger: #dc2626;
+      --danger-hover: #b91c1c;
     }
 
-    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
 
     body {
       margin: 0;
@@ -44,6 +49,191 @@
       -webkit-text-fill-color: transparent;
     }
 
+    /* CARDS DE ESTATÍSTICAS */
+    .stats-grid {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 22px;
+      text-align: center;
+      backdrop-filter: blur(12px);
+    }
+
+    .stat-card span {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    .stat-card strong {
+      font-size: 2rem;
+      color: #fff;
+    }
+
+    /* CARD PRÓXIMO ATENDIMENTO */
+    .next-card {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+    }
+
+    .next-title {
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .next-name {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .next-info {
+      color: #cbd5e1;
+    }
+
+    .next-service {
+      margin-top: 10px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* ESTILO ADICIONADO: SEÇÃO DE FILTROS */
+    .filter-card {
+      max-width: 1100px;
+      margin: 0 auto 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 24px;
+      backdrop-filter: blur(12px);
+    }
+
+    .filter-card h2 {
+      margin: 0 0 6px 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .filter-card p {
+      margin: 0 0 16px 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .filter-shortcuts {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-shortcut {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-shortcut:hover {
+      background: rgba(59, 130, 246, 0.1);
+      border-color: var(--primary);
+    }
+
+    .filter-form {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .filter-input {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      min-width: 160px;
+      transition: border-color 0.2s;
+    }
+
+    .filter-input:focus {
+      border-color: var(--primary);
+    }
+
+    .btn-filter {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-filter:hover {
+      filter: brightness(1.1);
+    }
+
+    .btn-clear {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border: 1px solid var(--border);
+      padding: 10px 20px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-decoration: none;
+      text-align: center;
+      transition: background 0.2s;
+    }
+
+    .btn-clear:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .table-header-title {
+      max-width: 1100px;
+      margin: 12px auto 16px;
+      padding-left: 4px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     /* CONTAINER DA TABELA */
     .table-container {
       max-width: 1100px;
@@ -57,7 +247,7 @@
     }
 
     .table-wrap {
-      overflow-x: auto; /* Scroll para mobile */
+      overflow-x: auto;
     }
 
     table {
@@ -79,24 +269,37 @@
       border-bottom: 1px solid var(--border);
     }
 
-    /* CELULAS */
+    thead th i {
+      margin-right: 6px;
+    }
+
+    /* CÉLULAS */
     td {
       padding: 18px 20px;
       border-bottom: 1px solid var(--border);
-      transition: all 0.2s ease;
+      vertical-align: middle;
     }
 
     tbody tr:last-child td {
       border-bottom: none;
     }
 
-    tbody tr:hover td {
+    tbody tr {
+      transition: background 0.2s ease;
+    }
+
+    tbody tr:hover {
       background: var(--row-hover);
+    }
+
+    /* DESTAQUES DA TABELA */
+    .client-name {
+      font-weight: 600;
       color: #fff;
     }
 
-    /* DESTAQUES DENTRO DA TABELA */
     .badge-service {
+      display: inline-block;
       background: rgba(59, 130, 246, 0.1);
       color: var(--primary);
       padding: 4px 12px;
@@ -129,6 +332,27 @@
       color: var(--primary);
     }
 
+    /* BOTÃO CANCELAR */
+    .btn-cancelar {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-cancelar:hover {
+      background: var(--danger-hover);
+      transform: translateY(-1px);
+    }
+
     /* BOTÃO VOLTAR */
     .voltar {
       text-align: center;
@@ -159,7 +383,9 @@
     /* RESPONSIVIDADE */
     @media (max-width: 768px) {
       body { padding: 20px 10px; }
-      td, th { padding: 12px; font-size: 0.85rem; }
+      td, th { padding: 14px 12px; font-size: 0.85rem; }
+      .filter-form { flex-direction: column; align-items: stretch; }
+      .btn-clear { text-align: center; }
     }
   </style>
 </head>
@@ -167,6 +393,65 @@
 <body>
 
 <h1>Agenda de Atendimentos</h1>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <span>Hoje</span>
+    <strong>{{ total_hoje }}</strong>
+  </div>
+  <div class="stat-card">
+    <span>Amanhã</span>
+    <strong>{{ total_amanha }}</strong>
+  </div>
+  <div class="stat-card">
+    <span>Próximos 7 dias</span>
+    <strong>{{ total_semana }}</strong>
+  </div>
+</div>
+
+{% if proximo_agendamento %}
+<div class="next-card">
+  <div class="next-title">Próximo Atendimento</div>
+  <div class="next-name">{{ proximo_agendamento.nome }}</div>
+  <div class="next-info">
+    {{ proximo_agendamento.data.strftime('%d/%m/%Y') }} às {{ proximo_agendamento.horario.strftime('%H:%M') }}
+  </div>
+  <div class="next-service">
+    {{ proximo_agendamento.servico.titulo if proximo_agendamento.servico else 'Serviço' }}
+  </div>
+</div>
+{% endif %}
+
+<div class="filter-card">
+  <h2>Filtrar Agenda</h2>
+  <p>Visualize os agendamentos de uma data específica.</p>
+
+  <div class="filter-shortcuts">
+    <button type="button" class="btn-shortcut" onclick="setFilterDate('hoje')"> Hoje </button>
+    <button type="button" class="btn-shortcut" onclick="setFilterDate('amanha')"> Amanhã </button>
+    <a href="/admin" class="btn-shortcut" style="text-decoration: none;"> Todos </a>
+  </div>
+
+  <form id="filterForm" method="POST" action="/admin" class="filter-form">
+    <input
+      type="date"
+      id="filterDateInput"
+      name="data"
+      class="filter-input"
+      value="{{ data_filtro if data_filtro else '' }}"
+    >
+    <button type="submit" class="btn-filter">Filtrar</button>
+    <a href="/admin" class="btn-clear">Limpar</a>
+  </form>
+</div>
+
+<div class="table-header-title">
+  {% if data_filtro %}
+    <i class="fa-regular fa-calendar-check" style="color: var(--primary);"></i> Agenda de: {{ data_filtro.split('-')[2] }}/{{ data_filtro.split('-')[1] }}/{{ data_filtro.split('-')[0] }}
+  {% else %}
+    <i class="fa-solid fa-list-ul" style="color: var(--accent);"></i> Todos os Agendamentos
+  {% endif %}
+</div>
 
 <div class="table-container">
   <div class="table-wrap">
@@ -178,30 +463,43 @@
           <th><i class="fa-solid fa-hand-sparkles"></i> Serviço</th>
           <th><i class="fa-regular fa-calendar"></i> Data</th>
           <th><i class="fa-regular fa-clock"></i> Horário</th>
+          <th><i class="fa-solid fa-gear"></i> Ações</th>
         </tr>
       </thead>
 
       <tbody>
         {% for agendamento in agendamentos %}
         <tr>
-          <td style="font-weight: 600;">{{ agendamento.nome }}</td>
+          <td class="client-name">{{ agendamento.nome }}</td>
+
           <td>
             <a href="tel:{{ agendamento.telefone }}" class="phone-link">
               {{ agendamento.telefone }}
             </a>
           </td>
+
           <td>
             <span class="badge-service">
               {{ agendamento.servico.titulo if agendamento.servico else '—' }}
             </span>
           </td>
+
           <td class="date-text">
             {{ agendamento.data.strftime('%d/%m/%Y') }}
           </td>
+
           <td>
             <span class="time-text">
               {{ agendamento.horario.strftime('%H:%M') }}
             </span>
+          </td>
+
+          <td>
+            <form action="{{ url_for('main.cancelar', id=agendamento.id) }}" method="POST" onsubmit="return confirm('Cancelar este agendamento?');">
+              <button class="btn-cancelar" type="submit">
+                <i class="fa-solid fa-trash"></i> Cancelar
+              </button>
+            </form>
           </td>
         </tr>
         {% endfor %}
@@ -211,10 +509,34 @@
 </div>
 
 <div class="voltar">
-    <a href="/painel">
-      <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
-    </a>
+  <a href="/painel">
+    <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+  </a>
 </div>
+
+<script>
+  function setFilterDate(target) {
+    const input = document.getElementById('filterDateInput');
+    const form = document.getElementById('filterForm');
+    const today = new Date();
+
+    if (target === 'hoje') {
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      input.value = `${yyyy}-${mm}-${dd}`;
+      form.submit();
+    } else if (target === 'amanha') {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      const yyyy = tomorrow.getFullYear();
+      const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+      const dd = String(tomorrow.getDate()).padStart(2, '0');
+      input.value = `${yyyy}-${mm}-${dd}`;
+      form.submit();
+    }
+  }
+</script>
 
 </body>
 </html>
