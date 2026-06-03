@@ -1285,3 +1285,31 @@ def clientes():
         'clientes.html',
         clientes=clientes
     )
+
+@main.route('/excluir_servico/<int:id>', methods=['POST'])
+@login_required
+def excluir_servico(id):
+
+    try:
+        servico = Servico.query.filter_by(
+            id=id,
+            usuario_id=session["user_id"]
+        ).first_or_404()
+
+        db.session.delete(servico)
+        db.session.commit()
+
+        return jsonify({
+            'mensagem': 'Serviço excluído com sucesso!'
+        })
+
+    except Exception as e:
+        db.session.rollback()
+
+        current_app.logger.exception(
+            f"Erro ao excluir serviço {id}"
+        )
+
+        return jsonify({
+            'erro': str(e)
+        }), 500
