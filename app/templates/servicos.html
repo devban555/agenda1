@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -65,7 +66,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 20px;
-            align-items: flex-end;
+            align-items: end; /* Corrigido de flex-end para end (padrão Grid) */
         }
 
         .form-group {
@@ -289,7 +290,7 @@
                         <input type="text" class="table-input" id="tempo-{{ servico.id }}" value="{{ servico.tempo }}" disabled>
                     </td>
                     <td class="acoes">
-                        <button class="action-btn btn-edit" onclick="habilitarEdicao({{ servico.id }})" title="Editar">
+                        <button class="action-btn btn-edit" id="editar-{{ servico.id }}" onclick="habilitarEdicao({{ servico.id }})" title="Editar">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </button>
                         <button class="action-btn btn-save" id="salvar-{{ servico.id }}" onclick="salvarEdicao({{ servico.id }})" title="Salvar">
@@ -323,6 +324,9 @@
         document.getElementById('titulo-' + id).disabled = false;
         document.getElementById('valor-' + id).disabled = false;
         document.getElementById('tempo-' + id).disabled = false;
+
+        // Esconde o botão de editar e mostra o de salvar para não quebrar o layout lateral
+        document.getElementById('editar-' + id).style.display = 'none';
         document.getElementById('salvar-' + id).style.display = 'flex';
 
         // Foco automático no primeiro campo
@@ -348,16 +352,33 @@
     }
 
     function excluirServico(id) {
-        if (confirm("Tem certeza que deseja excluir este serviço?")) {
-            fetch('/excluir_servico/' + id, { method: 'POST' })
-            .then(response => {
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    alert("Erro ao excluir serviço.");
-                }
-            });
+        if (!confirm("Tem certeza que deseja excluir este serviço?")) {
+            return;
         }
+
+        fetch('/excluir_servico/' + id, {
+            method: 'POST'
+        })
+        .then(async response => {
+            const texto = await response.text();
+
+            console.log('Status:', response.status);
+            console.log('Resposta:', texto);
+
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert(
+                    'Erro ao excluir serviço.\n\n' +
+                    'Status: ' + response.status +
+                    '\nResposta: ' + texto
+                );
+            }
+        })
+        .catch(error => {
+            console.error('Erro fetch:', error);
+            alert('Erro de comunicação: ' + error.message);
+        });
     }
 </script>
 

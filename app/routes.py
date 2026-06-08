@@ -842,6 +842,30 @@ def salvar_configuracao_agenda():
 def configuracoes():
     return render_template('setup.html')
 
+@main.route('/configuracao_base', methods=['GET'])
+@login_required
+def configuracao_base():
+    config = ConfiguracaoAgenda.query.filter_by(
+        usuario_id=session['user_id']
+    ).first()
+
+    if not config:
+        return jsonify({
+            'dias_semana': [0, 1, 2, 3, 4, 5],
+            'horarios_base': {
+                'semana': [],
+                'sabado': []
+            }
+        })
+
+    return jsonify({
+        'dias_semana': config.dias_semana or [],
+        'horarios_base': config.horarios_base or {
+            'semana': [],
+            'sabado': []
+        }
+    })
+
 @main.route('/salvar_configuracao_base', methods=['POST'])
 @login_required
 def salvar_configuracao_base():
