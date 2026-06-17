@@ -1,421 +1,550 @@
+
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Painel Administrativo | Agenda</title>
+  <title>Painel Administrativo | Dashboard Agenda</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.4);
-      --text: #f8fafc;
-      --muted: #94a3b8;
+      --bg-main: #070a13;
+      --bg-surface: #101726;
+      --bg-surface-hover: #151e33;
+      --border-color: rgba(255, 255, 255, 0.05);
+      --text-main: #f8fafc;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
       --primary: #3b82f6;
       --accent: #6366f1;
-      --border: rgba(255, 255, 255, 0.08);
-      --row-hover: rgba(59, 130, 246, 0.05);
-      --danger: #dc2626;
-      --danger-hover: #b91c1c;
+      --success: #10b981;
+      --danger: #ef4444;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     }
 
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
       -webkit-font-smoothing: antialiased;
     }
 
     body {
-      margin: 0;
-      font-family: 'Poppins', system-ui, sans-serif;
-      background-color: var(--bg);
+      font-family: var(--font-sans);
+      background-color: var(--bg-main);
       background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
-      color: var(--text);
+        radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.06) 0px, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.04) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
       padding: 40px 20px;
       min-height: 100vh;
     }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 40px;
+    .dashboard-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* HEADER & SAUDAÇÃO */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .header-title h1 {
+      font-size: 2.25rem;
       font-weight: 800;
-      font-size: 2rem;
-      letter-spacing: -0.02em;
-      background: linear-gradient(to right, #fff, var(--muted));
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
-    /* CARDS DE ESTATÍSTICAS */
-    .stats-grid {
-      max-width: 1100px;
-      margin: 0 auto 24px;
+    .header-title p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: var(--text-light);
+      padding: 10px 20px;
+      border-radius: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-back:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.15);
+      transform: translateX(-4px);
+    }
+
+    /* INDICADORES / METRICAS */
+    .metrics-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
     }
 
-    .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 22px;
-      text-align: center;
-      backdrop-filter: blur(12px);
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
     }
 
-    .stat-card span {
+    .metric-info span {
       display: block;
-      color: var(--muted);
-      margin-bottom: 8px;
-      font-size: 0.9rem;
-    }
-
-    .stat-card strong {
-      font-size: 2rem;
-      color: #fff;
-    }
-
-    /* CARD PRÓXIMO ATENDIMENTO */
-    .next-card {
-      max-width: 1100px;
-      margin: 0 auto 24px;
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(99, 102, 241, 0.15));
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 24px;
-      backdrop-filter: blur(12px);
-    }
-
-    .next-title {
-      color: var(--muted);
-      margin-bottom: 10px;
+      color: var(--text-muted);
       font-size: 0.85rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
     }
 
-    .next-name {
-      font-size: 1.4rem;
-      font-weight: 700;
-      margin-bottom: 6px;
-    }
-
-    .next-info {
-      color: #cbd5e1;
-    }
-
-    .next-service {
-      margin-top: 10px;
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    /* FILTROS */
-    .filter-card {
-      max-width: 1100px;
-      margin: 0 auto 24px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 24px;
-      backdrop-filter: blur(12px);
-    }
-
-    .filter-card h2 {
-      margin: 0 0 6px 0;
-      font-size: 1.25rem;
-      font-weight: 600;
+    .metric-info strong {
+      font-size: 2.25rem;
+      font-weight: 800;
       color: #fff;
+      line-height: 1;
     }
 
-    .filter-card p {
-      margin: 0 0 16px 0;
-      color: var(--muted);
-      font-size: 0.9rem;
+    .metric-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-light);
+    }
+
+    .metric-card:nth-child(1) .metric-icon { color: var(--primary); background: rgba(59, 130, 246, 0.1); }
+    .metric-card:nth-child(2) .metric-icon { color: var(--accent); background: rgba(99, 102, 241, 0.1); }
+    .metric-card:nth-child(3) .metric-icon { color: var(--success); background: rgba(16, 185, 129, 0.1); }
+
+    /* HERO CARD (PRÓXIMO ATENDIMENTO) */
+    .hero-next-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 30px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-next-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: var(--service-color, var(--primary));
+    }
+
+    .hero-next-content {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .hero-badge {
+      align-self: flex-start;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 6px 14px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hero-name {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+    }
+
+    .hero-meta {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      color: var(--text-light);
+      font-size: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .hero-meta span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-service-badge {
+      padding: 12px 24px;
+      border-radius: 16px;
+      font-size: 1rem;
+      font-weight: 800;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      box-shadow: var(--service-glow);
+    }
+
+    /* FILTROS INTEGRADOS */
+    .filter-bar-container {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 24px;
+    }
+
+    .filter-bar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 20px;
     }
 
     .filter-shortcuts {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
       flex-wrap: wrap;
     }
 
     .btn-shortcut {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 8px 16px;
-      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-light);
+      padding: 10px 18px;
+      border-radius: 12px;
       font-family: inherit;
       font-size: 0.85rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s ease;
+      text-decoration: none;
+      transition: all 0.2s;
     }
 
     .btn-shortcut:hover {
-      background: rgba(59, 130, 246, 0.1);
-      border-color: var(--primary);
+      background: rgba(255, 255, 255, 0.07);
+      border-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
     }
 
     .filter-form {
       display: flex;
       gap: 12px;
+      width: 100%;
       align-items: center;
       flex-wrap: wrap;
     }
 
+    .filter-input-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 240px;
+    }
+
+    .filter-input-wrapper i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
     .filter-input {
+      width: 100%;
       background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--border);
+      border: 1px solid var(--border-color);
       color: #fff;
-      padding: 10px 14px;
-      border-radius: 12px;
+      padding: 14px 16px 14px 44px;
+      border-radius: 14px;
       font-family: inherit;
       font-size: 0.95rem;
       outline: none;
-      min-width: 160px;
-      transition: border-color 0.2s;
-    }
-
-    .filter-input:focus {
-      border-color: var(--primary);
     }
 
     .btn-filter {
       background: var(--primary);
       color: #fff;
       border: none;
-      padding: 10px 20px;
-      border-radius: 12px;
+      padding: 14px 28px;
+      border-radius: 14px;
       font-family: inherit;
       font-weight: 600;
       font-size: 0.95rem;
       cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn-filter:hover {
-      filter: brightness(1.1);
     }
 
     .btn-clear {
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
-      border: 1px solid var(--border);
-      padding: 10px 20px;
-      border-radius: 12px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      padding: 14px 24px;
+      border-radius: 14px;
       font-family: inherit;
       font-weight: 600;
       font-size: 0.95rem;
       text-decoration: none;
-      text-align: center;
-      transition: background 0.2s;
     }
 
-    .btn-clear:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .table-header-title {
-      max-width: 1100px;
-      margin: 12px auto 16px;
-      padding-left: 4px;
-      font-size: 1.1rem;
-      font-weight: 600;
+    /* TIMELINE DE AGENDAMENTOS */
+    .timeline-section-title {
+      font-size: 1.2rem;
+      font-weight: 700;
       color: #fff;
       display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .timeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* CARD ESTRUTURAL BASE (DESKTOP) */
+    .timeline-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      display: grid;
+      grid-template-columns: 24px 140px 1fr auto auto;
+      align-items: center;
+      gap: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .timeline-card:hover {
+      transform: translateY(-2px);
+    }
+
+    /* FAIXA LATERAL COMPACTA */
+    .card-color-stripe {
+      width: 100%;
+      height: 100%;
+      background: var(--stripe-color);
+    }
+
+    /* BLOCO DE HORÁRIO COLORIDO */
+    .timeline-time-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--stripe-color);
+      border-radius: 16px;
+      padding: 16px;
+      min-width: 110px;
+      text-align: center;
+      color: #ffffff;
+      box-shadow: var(--card-glow);
+    }
+
+    .time-hour {
+      font-size: 1.6rem;
+      font-weight: 800;
+      line-height: 1;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .time-date {
+      font-size: 0.8rem;
+      font-weight: 700;
+      opacity: 0.9;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* INFORMAÇÕES INTERNAS */
+    .timeline-main-info {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px 0;
+    }
+
+    .client-identity {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .client-identity h3 {
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.01em;
+    }
+
+    .contact-link {
+      color: var(--text-light);
+      text-decoration: none;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 4px 12px;
+      border-radius: 8px;
+    }
+
+    /* MEGA BADGE PILL */
+    .service-meta-wrapper {
+      display: inline-flex;
+    }
+
+    .mega-service-pill {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #ffffff;
+      padding: 8px 20px;
+      border-radius: 30px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      box-shadow: var(--card-glow);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: inline-flex;
       align-items: center;
       gap: 8px;
     }
 
-    /* CONTAINER DA TABELA */
-    .table-container {
-      max-width: 1100px;
-      margin: 0 auto;
-      background: var(--card);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      overflow: hidden;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    .timeline-actions-wrapper {
+      display: contents; /* Mantém comportamento original do grid em desktop */
     }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.95rem;
-    }
-
-    thead th {
-      background: rgba(255, 255, 255, 0.03);
-      padding: 20px;
-      text-align: left;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 1px;
-      border-bottom: 1px solid var(--border);
-    }
-
-    thead th i {
-      margin-right: 6px;
-    }
-
-    td {
-      padding: 18px 20px;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
-
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    tbody tr {
-      transition: background 0.2s ease;
-    }
-
-    tbody tr:hover {
-      background: var(--row-hover);
-    }
-
-    /* ELEMENTOS DA TABELA */
-    .client-name {
-      font-weight: 600;
-      color: #fff;
-    }
-
-    .badge-service {
-      display: inline-block;
-      background: rgba(59, 130, 246, 0.1);
-      color: var(--primary);
-      padding: 4px 12px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border: 1px solid rgba(59, 130, 246, 0.2);
-    }
-
-    .date-text {
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .time-text {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      color: var(--accent);
-      font-weight: 700;
-    }
-
-    .phone-link {
-      color: var(--muted);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    .phone-link:hover {
-      color: var(--primary);
-    }
-
-    .contato-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .btn-whatsapp {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      background: #22c55e;
-      color: #fff;
+    /* BOTÕES DE AÇÕES */
+    .btn-action-whatsapp {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--success);
       display: flex;
       align-items: center;
       justify-content: center;
       text-decoration: none;
-      transition: all .2s ease;
-      flex-shrink: 0;
+      font-size: 1.25rem;
+      transition: all 0.2s;
     }
 
-    .btn-whatsapp:hover {
-      background: #16a34a;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(34,197,94,.35);
+    .btn-action-whatsapp:hover {
+      background: var(--success);
+      color: #fff;
+      transform: scale(1.05);
     }
 
-    .btn-cancelar {
+    .btn-action-cancelar {
+      height: 46px;
+      padding: 0 20px;
+      border-radius: 14px;
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-action-cancelar:hover {
       background: var(--danger);
       color: #fff;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-size: .85rem;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s ease;
     }
 
-    .btn-cancelar:hover {
-      background: var(--danger-hover);
-      transform: translateY(-1px);
-    }
-
-    .voltar {
-      text-align: center;
-      margin-top: 40px;
-    }
-
-    .voltar a {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: var(--muted);
-      padding: 12px 24px;
-      border-radius: 14px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      font-weight: 600;
-      transition: all 0.3s ease;
-    }
-
-    .voltar a:hover {
-      color: #fff;
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--primary);
-      transform: translateX(-5px);
-    }
-
-    /* RESPONSIVIDADE ADAPTADA */
-    @media (max-width: 768px) {
+    /* ==========================================
+       CORREÇÃO DE RESPONSIVIDADE (MOBILE CRÍTICO)
+       ========================================== */
+    @media (max-width: 850px) {
       body {
         padding: 20px 12px;
       }
 
-      h1 {
-        font-size: 1.6rem;
-        margin-bottom: 24px;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
+      .dashboard-header {
+        flex-direction: column;
+        align-items: stretch;
         gap: 12px;
       }
 
-      .filter-card {
-        padding: 16px;
+      .btn-back {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .hero-next-card {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 20px;
+        gap: 20px;
+      }
+
+      .hero-service-badge {
+        width: 100%;
+        text-align: center;
+        display: block;
+      }
+
+      .filter-bar-top {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .filter-shortcuts {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+      }
+
+      .btn-shortcut {
+        text-align: center;
+        padding: 10px 2px;
       }
 
       .filter-form {
@@ -423,70 +552,69 @@
         align-items: stretch;
       }
 
-      .filter-form > *, .btn-shortcut {
+      .btn-filter, .btn-clear {
         width: 100%;
-        text-align: center;
       }
 
-      /* TRANSFORMANDO TABELA EM CARDS PARA CELULAR */
-      .table-container {
-        background: transparent;
-        border: none;
-        box-shadow: none;
+      /* REESTRUTURAÇÃO DO CARD PARA MOBILE */
+      .timeline-card {
+        grid-template-columns: 1fr; /* Vira bloco único vertical */
+        gap: 16px;
+        padding: 0 0 20px 0; /* Remove padding interno superior para o box do horário */
       }
 
-      table, thead, tbody, th, td, tr {
+      .card-color-stripe {
+        display: none; /* Oculta a faixa lateral fina no mobile */
+      }
+
+      /* Bloco vira cabeçalho interno cobrindo o topo do card */
+      .timeline-time-block {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+        min-width: 100%;
+        border-radius: 22px 22px 0 0; /* Arredonda apenas os cantos superiores */
+        padding: 14px 20px;
+      }
+
+      .time-hour {
+        font-size: 1.4rem;
+      }
+
+      .time-date {
+        margin-top: 0;
+      }
+
+      .timeline-main-info {
+        padding: 0 20px; /* Adiciona espaçamento das laterais internas */
+      }
+
+      .client-identity h3 {
+        font-size: 1.25rem;
+        width: 100%;
+      }
+
+      /* Organização horizontal perfeita dos botões de ação */
+      .timeline-actions-wrapper {
+        display: flex;
+        padding: 0 20px;
+        gap: 10px;
+        align-items: center;
+        width: 100%;
+      }
+
+      .timeline-contact-action {
         display: block;
       }
 
-      thead {
-        display: none; /* Esconde o cabeçalho original no mobile */
+      .timeline-actions {
+        flex: 1; /* Faz o botão de Cancelar ocupar o resto do espaço lateral */
       }
 
-      tbody tr {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        margin-bottom: 16px;
-        padding: 16px;
-        backdrop-filter: blur(12px);
-      }
-
-      td {
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.03);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        text-align: right;
-        font-size: 0.9rem;
-      }
-
-      td:last-child {
-        border-bottom: none;
-        padding-top: 12px;
-        justify-content: center;
-      }
-
-      /* Injeta os nomes das colunas de forma limpa antes dos dados */
-      td::before {
-        content: attr(data-label);
-        float: left;
-        font-weight: 600;
-        color: var(--muted);
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
-      }
-
-      .contato-wrapper {
-        justify-content: flex-end;
-      }
-
-      .btn-cancelar {
+      .btn-action-cancelar {
         width: 100%;
         justify-content: center;
-        padding: 10px;
       }
     }
   </style>
@@ -494,134 +622,169 @@
 
 <body>
 
-<h1>Agenda de Atendimentos</h1>
+<div class="dashboard-layout">
 
-<div class="stats-grid">
-  <div class="stat-card">
-    <span>Hoje</span>
-    <strong>{{ total_hoje }}</strong>
-  </div>
-  <div class="stat-card">
-    <span>Amanhã</span>
-    <strong>{{ total_amanha }}</strong>
-  </div>
-  <div class="stat-card">
-    <span>Próximos 7 dias</span>
-    <strong>{{ total_semana }}</strong>
-  </div>
-</div>
+  <header class="dashboard-header">
+    <div class="header-title">
+      <h1>Agenda de Atendimentos</h1>
+      <p>Gerenciamento e controle de horários em tempo real</p>
+    </div>
+    <a href="/painel" class="btn-back">
+      <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+    </a>
+  </header>
 
-{% if proximo_agendamento %}
-<div class="next-card">
-  <div class="next-title">Próximo Atendimento</div>
-  <div class="next-name">{{ proximo_agendamento.nome }}</div>
-  <div class="next-info">
-    {{ proximo_agendamento.data.strftime('%d/%m/%Y') }} às {{ proximo_agendamento.horario.strftime('%H:%M') }}
-  </div>
-  <div class="next-service">
-    {{ proximo_agendamento.servico.titulo if proximo_agendamento.servico else 'Serviço' }}
-  </div>
-</div>
-{% endif %}
+  <section class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-info">
+        <span>Hoje</span>
+        <strong>{{ total_hoje }}</strong>
+      </div>
+      <div class="metric-icon">
+        <i class="fa-regular fa-calendar"></i>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-info">
+        <span>Amanhã</span>
+        <strong>{{ total_amanha }}</strong>
+      </div>
+      <div class="metric-icon">
+        <i class="fa-regular fa-calendar-plus"></i>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-info">
+        <span>Próximos 7 dias</span>
+        <strong>{{ total_semana }}</strong>
+      </div>
+      <div class="metric-icon">
+        <i class="fa-solid fa-calendar-days"></i>
+      </div>
+    </div>
+  </section>
 
-<div class="filter-card">
-  <h2>Filtrar Agenda</h2>
-  <p>Visualize os agendamentos de uma data específica.</p>
-
-  <div class="filter-shortcuts">
-    <button type="button" class="btn-shortcut" onclick="setFilterDate('hoje')"> Hoje </button>
-    <button type="button" class="btn-shortcut" onclick="setFilterDate('amanha')"> Amanhã </button>
-    <a href="/admin" class="btn-shortcut" style="text-decoration: none;"> Todos </a>
-  </div>
-
-  <form id="filterForm" method="POST" action="/admin" class="filter-form">
-    <input
-      type="date"
-      id="filterDateInput"
-      name="data"
-      class="filter-input"
-      value="{{ data_filtro if data_filtro else '' }}"
-    >
-    <button type="submit" class="btn-filter">Filtrar</button>
-    <a href="/admin" class="btn-clear">Limpar</a>
-  </form>
-</div>
-
-<div class="table-header-title">
-  {% if data_filtro %}
-    <i class="fa-regular fa-calendar-check" style="color: var(--primary);"></i> Agenda de: {{ data_filtro.split('-')[2] }}/{{ data_filtro.split('-')[1] }}/{{ data_filtro.split('-')[0] }}
-  {% else %}
-    <i class="fa-solid fa-list-ul" style="color: var(--accent);"></i> Todos os Agendamentos
+  {% if proximo_agendamento %}
+  {% set cor_proximo = proximo_agendamento.servico.cor if proximo_agendamento.servico and proximo_agendamento.servico.cor else '#2563eb' %}
+  <section class="hero-next-card" style="--service-color: {{ cor_proximo }}; box-shadow: 0 16px 32px {{ cor_proximo }}15; border-color: {{ cor_proximo }}33;">
+    <div class="hero-next-content">
+      <div class="hero-badge" style="background: {{ cor_proximo }}20; color: {{ cor_proximo }};">Próximo Atendimento</div>
+      <div class="hero-name">{{ proximo_agendamento.nome }}</div>
+      <div class="hero-meta">
+        <span>
+          <i class="fa-regular fa-calendar-check" style="color: {{ cor_proximo }};"></i>
+          {{ proximo_agendamento.data.strftime('%d/%m/%Y') }}
+        </span>
+        <span>
+          <i class="fa-regular fa-clock" style="color: {{ cor_proximo }};"></i>
+          {{ proximo_agendamento.horario.strftime('%H:%M') }}
+        </span>
+      </div>
+    </div>
+    <div class="hero-service">
+      <span class="hero-service-badge" style="background: {{ cor_proximo }}; --service-glow: 0 8px 20px {{ cor_proximo }}55;">
+        {{ proximo_agendamento.servico.titulo if proximo_agendamento.servico else 'Serviço' }}
+      </span>
+    </div>
+  </section>
   {% endif %}
-</div>
 
-<div class="table-container">
-  <table>
-    <thead>
-      <tr>
-        <th><i class="fa-regular fa-user"></i> Cliente</th>
-        <th><i class="fab fa-whatsapp"></i> Contato</th>
-        <th><i class="fa-solid fa-hand-sparkles"></i> Serviço</th>
-        <th><i class="fa-regular fa-calendar"></i> Data</th>
-        <th><i class="fa-regular fa-clock"></i> Horário</th>
-        <th><i class="fa-solid fa-gear"></i> Ações</th>
-      </tr>
-    </thead>
+  <section class="filter-bar-container">
+    <div class="filter-bar-top">
+      <div>
+        <h2 style="font-size: 1.1rem; font-weight: 700; color: #fff;">Filtrar Atendimentos</h2>
+      </div>
+      <div class="filter-shortcuts">
+        <button type="button" class="btn-shortcut" onclick="setFilterDate('hoje')">Hoje</button>
+        <button type="button" class="btn-shortcut" onclick="setFilterDate('amanha')">Amanhã</button>
+        <a href="/admin" class="btn-shortcut">Todos</a>
+      </div>
+    </div>
 
-    <tbody>
-      {% for agendamento in agendamentos %}
-      <tr>
-        <td data-label="Cliente" class="client-name">{{ agendamento.nome }}</td>
+    <form id="filterForm" method="POST" action="/admin" class="filter-form">
+      <div class="filter-input-wrapper">
+        <i class="fa-regular fa-calendar"></i>
+        <input
+          type="date"
+          id="filterDateInput"
+          name="data"
+          class="filter-input"
+          value="{{ data_filtro if data_filtro else '' }}"
+        >
+      </div>
+      <button type="submit" class="btn-filter">Filtrar</button>
+      <a href="/admin" class="btn-clear">Limpar</a>
+    </form>
+  </section>
 
-        <td data-label="Contato">
-          <div class="contato-wrapper">
-            <a href="tel:{{ agendamento.telefone }}" class="phone-link">
-              {{ agendamento.telefone }}
-            </a>
-            <a
-              href="https://wa.me/55{{ agendamento.telefone|replace('(','')|replace(')','')|replace('-','')|replace(' ','') }}"
-              target="_blank"
-              class="btn-whatsapp"
-              title="Abrir WhatsApp"
-            >
-              <i class="fab fa-whatsapp"></i>
-            </a>
-          </div>
-        </td>
+  <div class="timeline-section-title">
+    {% if data_filtro %}
+      <i class="fa-regular fa-calendar-check" style="color: var(--primary);"></i> Cronograma de: {{ data_filtro.split('-')[2] }}/{{ data_filtro.split('-')[1] }}/{{ data_filtro.split('-')[0] }}
+    {% else %}
+      <i class="fa-solid fa-clock-rotate-left" style="color: var(--accent);"></i> Fluxo Geral de Agendamentos
+    {% endif %}
+  </div>
 
-        <td data-label="Serviço">
-          <span class="badge-service">
-            {{ agendamento.servico.titulo if agendamento.servico else '—' }}
+  <main class="timeline-container">
+    {% for agendamento in agendamentos %}
+    {% set cor_servico = agendamento.servico.cor if agendamento.servico and agendamento.servico.cor else '#2563eb' %}
+    <div
+      class="timeline-card"
+      style="
+        --stripe-color: {{ cor_servico }};
+        --card-glow: 0 4px 14px {{ cor_servico }}40;
+        border-color: {{ cor_servico }}22;
+        background: linear-gradient(90deg, {{ cor_servico }}15 0%, rgba(16, 23, 38, 0.4) 150px, var(--bg-surface) 100%);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.02);
+      "
+    >
+
+      <div class="card-color-stripe"></div>
+
+      <div class="timeline-time-block">
+        <div class="time-hour">{{ agendamento.horario.strftime('%H:%M') }}</div>
+        <div class="time-date">{{ agendamento.data.strftime('%d/%m') }}</div>
+      </div>
+
+      <div class="timeline-main-info">
+        <div class="client-identity">
+          <h3>{{ agendamento.nome }}</h3>
+          <a href="tel:{{ agendamento.telefone }}" class="contact-link">
+            <i class="fa-solid fa-phone"></i> {{ agendamento.telefone }}
+          </a>
+        </div>
+        <div class="service-meta-wrapper">
+          <span class="mega-service-pill" style="background: {{ cor_servico }};">
+            <i class="fa-solid fa-cut"></i> {{ agendamento.servico.titulo if agendamento.servico else '—' }}
           </span>
-        </td>
+        </div>
+      </div>
 
-        <td data-label="Data" class="date-text">
-          {{ agendamento.data.strftime('%d/%m/%Y') }}
-        </td>
+      <div class="timeline-actions-wrapper">
+        <div class="timeline-contact-action">
+          <a
+            href="https://wa.me/55{{ agendamento.telefone|replace('(','')|replace(')','')|replace('-','')|replace(' ','') }}"
+            target="_blank"
+            class="btn-action-whatsapp"
+            title="Iniciar conversa no WhatsApp"
+          >
+            <i class="fab fa-whatsapp"></i>
+          </a>
+        </div>
 
-        <td data-label="Horário">
-          <span class="time-text">
-            {{ agendamento.horario.strftime('%H:%M') }}
-          </span>
-        </td>
-
-        <td data-label="Ação">
-          <form action="{{ url_for('main.cancelar', id=agendamento.id) }}" method="POST" onsubmit="return confirm('Cancelar este agendamento?');" style="width: 100%;">
-            <button class="btn-cancelar" type="submit">
-              <i class="fa-solid fa-trash"></i> Cancelar
+        <div class="timeline-actions">
+          <form action="{{ url_for('main.cancelar', id=agendamento.id) }}" method="POST" onsubmit="return confirm('Confirmar o cancelamento deste agendamento?');" style="display: block; width: 100%;">
+            <button class="btn-action-cancelar" type="submit">
+              <i class="fa-solid fa-calendar-xmark"></i> Cancelar
             </button>
           </form>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+        </div>
+      </div>
 
-<div class="voltar">
-  <a href="/painel">
-    <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
-  </a>
+    </div>
+    {% endfor %}
+  </main>
+
 </div>
 
 <script>

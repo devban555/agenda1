@@ -87,6 +87,8 @@ class Servico(db.Model):
 
     ativo = db.Column(db.Boolean, default=True)
 
+    cor = db.Column(db.String(30), default='azul')
+
     @property
     def tempo(self):
         return self.duracao_minutos

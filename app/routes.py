@@ -691,7 +691,8 @@ def servicos():
             usuario_id=user_id,
             titulo=request.form['titulo'],
             valor=request.form['valor'],
-            tempo=request.form['tempo']
+            tempo=request.form['tempo'],
+            cor=request.form.get('cor', 'azul')
         )
         db.session.add(novo_servico)
         db.session.commit()
@@ -717,6 +718,7 @@ def editar_servico(id):
     servico.titulo = data.get('titulo')
     servico.valor = data.get('valor')
     servico.tempo = data.get('tempo')
+    servico.cor = data.get('cor', servico.cor)
 
     db.session.commit()
     return jsonify({'mensagem': 'Serviço atualizado com sucesso!'})
