@@ -12,6 +12,7 @@ main = Blueprint('main', __name__)
 from flask import session, redirect
 from app.models import Usuario  # ajusta conforme seu projeto
 from functools import wraps
+from datetime import datetime, date, timedelta
 
 def master_required(f):
     @wraps(f)
@@ -70,17 +71,44 @@ def confirmar_agendamento():
         return "Dados insuficientes.", 400
 
     servico = Servico.query.get_or_404(int(servico_id))
-    data_obj = datetime.strptime(data_str, '%Y-%m-%d').date()
-    hora_obj = datetime.strptime(hora_str, '%H:%M').time()
 
-    existe = Agendamento.query.filter_by(
+    try:
+        data_obj = datetime.strptime(data_str, '%Y-%m-%d').date()
+        inicio_novo = horario_para_datetime(data_obj, hora_str)
+    except Exception:
+        return "Data ou horário inválido.", 400
+
+    duracao = minutos_servico(servico)
+    fim_novo = inicio_novo + timedelta(minutes=duracao)
+
+    horarios_base = obter_horarios_base_usuario(
+        servico.usuario_id,
+        data_obj
+    )
+
+    if not servico_cabe_no_expediente(
+            data_obj,
+            horarios_base,
+            inicio_novo,
+            fim_novo
+    ):
+        return (
+            "Este serviço não possui tempo disponível para este horário.",
+            409
+        )
+
+    if inicio_novo <= datetime.now():
+        return "Horário indisponível. Escolha outro horário.", 409
+
+    conflito = existe_conflito_agendamento(
+        usuario_id=servico.usuario_id,
         data=data_obj,
-        horario=hora_obj,
-        usuario_id=servico.usuario_id
-    ).first()
+        inicio_novo=inicio_novo,
+        fim_novo=fim_novo
+    )
 
-    if existe:
-        return "Horário já agendado. Volte e escolha outro.", 409
+    if conflito:
+        return "Horário indisponível para a duração deste serviço. Escolha outro horário.", 409
 
     return render_template(
         'confirmar_dados.html',
@@ -135,6 +163,39 @@ def salvar_agendamento():
         return f"Erro ao processar dados: {e}", 400
 
     servico = Servico.query.get_or_404(sid)
+
+    inicio_novo = datetime.combine(data, hora)
+    duracao = minutos_servico(servico)
+    fim_novo = inicio_novo + timedelta(minutes=duracao)
+
+    horarios_base = obter_horarios_base_usuario(
+        servico.usuario_id,
+        data
+    )
+
+    if not servico_cabe_no_expediente(
+            data,
+            horarios_base,
+            inicio_novo,
+            fim_novo
+    ):
+        return (
+            "Este serviço não possui tempo disponível para este horário.",
+            409
+        )
+
+    if inicio_novo <= datetime.now():
+        return "Horário indisponível. Escolha outro horário.", 409
+
+    conflito = existe_conflito_agendamento(
+        usuario_id=servico.usuario_id,
+        data=data,
+        inicio_novo=inicio_novo,
+        fim_novo=fim_novo
+    )
+
+    if conflito:
+        return "Horário indisponível para a duração deste serviço. Escolha outro horário.", 409
 
     novo = Agendamento(
         usuario_id=servico.usuario_id,
@@ -336,12 +397,18 @@ def horarios_disponiveis():
     if not config:
         return jsonify([])
 
-    dias_permitidos = config.dias_semana or []
+    dias_permitidos = carregar_json_campo(
+        config.dias_semana,
+        []
+    )
 
     if dia_semana not in dias_permitidos:
         return jsonify([])
 
-    horarios_cfg = config.horarios_base or {}
+    horarios_cfg = carregar_json_campo(
+        config.horarios_base,
+        {}
+    )
 
     # NOVO FORMATO
     if isinstance(horarios_cfg, dict):
@@ -385,130 +452,245 @@ def horarios_disponiveis():
     return jsonify(horarios)
 
 
-from datetime import datetime, date
 
-@main.route('/verificar_horarios', methods=['POST'])
-def verificar_horarios():
-    data_json = request.get_json()
+#====================================================================
+def minutos_servico(servico):
+    try:
+        minutos = int(servico.duracao_minutos or 60)
 
-    data_str = data_json.get('data')
-    servico_id = data_json.get('servico_id')
+        if minutos <= 0:
+            return 60
 
-    if not data_str or not servico_id:
-        return jsonify([])
+        return minutos
 
-    data = datetime.strptime(
-        data_str,
-        '%Y-%m-%d'
-    ).date()
+    except Exception:
+        return 60
 
-    # bloqueio data passada
-    if data < date.today():
-        return jsonify([])
+import json
 
-    dia_semana = data.weekday()
+def carregar_json_campo(valor, padrao):
+    if valor is None:
+        return padrao
 
-    # serviço
-    servico = Servico.query.get_or_404(servico_id)
-    usuario_id = servico.usuario_id
+    if isinstance(valor, (list, dict)):
+        return valor
 
-    # configuração
+    if isinstance(valor, str):
+        try:
+            return json.loads(valor)
+        except Exception:
+            return padrao
+
+    return padrao
+
+
+def horario_para_datetime(data, hora_str):
+    hora_obj = datetime.strptime(hora_str, "%H:%M").time()
+    return datetime.combine(data, hora_obj)
+
+def calcular_limite_final(data, horarios_base):
+    if not horarios_base:
+        return None
+
+    horarios_ordenados = sorted(
+        horarios_base,
+        key=lambda h: datetime.strptime(h, "%H:%M").time()
+    )
+
+    ultimo_horario_dt = horario_para_datetime(
+        data,
+        horarios_ordenados[-1]
+    )
+
+    return ultimo_horario_dt + timedelta(minutes=60)
+
+def servico_cabe_no_expediente(data, horarios_base, inicio_novo, fim_novo):
+    limite_final_dt = calcular_limite_final(data, horarios_base)
+
+    if not limite_final_dt:
+        return False
+
+    return fim_novo <= limite_final_dt
+
+def obter_horarios_base_usuario(usuario_id, data):
     config = ConfiguracaoAgenda.query.filter_by(
         usuario_id=usuario_id
     ).first()
 
     if not config:
-        return jsonify([])
+        return []
 
-    dias_permitidos = config.dias_semana or []
+    dia_semana = data.weekday()
 
-    # dia não permitido
-    if dia_semana not in dias_permitidos:
-        return jsonify([])
-
-    # ==========================
-    # NOVO FORMATO DE HORÁRIOS
-    # ==========================
-    horarios_cfg = config.horarios_base or {}
+    horarios_cfg = carregar_json_campo(
+        config.horarios_base,
+        {}
+    )
 
     if isinstance(horarios_cfg, dict):
 
         if dia_semana == 5:
-            horarios_base = horarios_cfg.get(
-                'sabado',
-                []
-            )
-        else:
-            horarios_base = horarios_cfg.get(
-                'semana',
-                []
-            )
+            return horarios_cfg.get('sabado', [])
 
-    else:
-        # compatibilidade com formato antigo
-        horarios_base = horarios_cfg
+        return horarios_cfg.get('semana', [])
 
-    # exceção
-    excecao = ExcecaoAgenda.query.filter_by(
+    return horarios_cfg or []
+
+def existe_conflito_agendamento(usuario_id, data, inicio_novo, fim_novo, ignorar_agendamento_id=None):
+    query = Agendamento.query.filter_by(
         usuario_id=usuario_id,
         data=data
-    ).first()
+    )
 
-    if excecao:
+    if ignorar_agendamento_id:
+        query = query.filter(Agendamento.id != ignorar_agendamento_id)
 
-        if not excecao.dia_ativo:
+    agendamentos = query.all()
+
+    for ag in agendamentos:
+        if not ag.horario:
+            continue
+
+        inicio_existente = datetime.combine(data, ag.horario)
+
+        duracao_existente = 60
+
+        if ag.servico:
+            duracao_existente = minutos_servico(ag.servico)
+
+        fim_existente = inicio_existente + timedelta(minutes=duracao_existente)
+
+        if inicio_novo < fim_existente and fim_novo > inicio_existente:
+            return True
+
+    return False
+
+from datetime import datetime, date
+
+#==================================================================================
+@main.route('/verificar_horarios', methods=['POST'])
+def verificar_horarios():
+    try:
+        data_json = request.get_json() or {}
+
+        data_str = data_json.get('data')
+        servico_id = data_json.get('servico_id')
+
+        if not data_str or not servico_id:
             return jsonify([])
 
-        horarios_base = [
-            h
-            for h in horarios_base
-            if h not in (
-                excecao.horarios_bloqueados or []
-            )
-        ]
+        data = datetime.strptime(data_str, '%Y-%m-%d').date()
 
-    # agendados
-    agendados = Agendamento.query.filter_by(
-        usuario_id=usuario_id,
-        data=data
-    ).all()
+        if data < date.today():
+            return jsonify([])
 
-    horarios_ocupados = {
-        a.horario.strftime('%H:%M')
-        for a in agendados
-    }
+        servico = Servico.query.get_or_404(int(servico_id))
 
-    agora = datetime.now()
+        usuario_id = servico.usuario_id
+        duracao_novo = minutos_servico(servico)
 
-    horarios_disponiveis = []
+        dia_semana = data.weekday()
 
-    for h in horarios_base:
+        config = ConfiguracaoAgenda.query.filter_by(
+            usuario_id=usuario_id
+        ).first()
 
-        try:
-            hora_obj = datetime.strptime(
-                h,
-                "%H:%M"
-            ).time()
+        if not config:
+            return jsonify([])
 
-        except Exception:
-            continue
-
-        data_hora = datetime.combine(
-            data,
-            hora_obj
+        dias_permitidos = carregar_json_campo(
+            config.dias_semana,
+            []
         )
 
-        # remove passados
-        if data_hora <= agora:
-            continue
+        if dia_semana not in dias_permitidos:
+            return jsonify([])
 
-        # remove ocupados
-        if h in horarios_ocupados:
-            continue
+        horarios_cfg = carregar_json_campo(
+            config.horarios_base,
+            {}
+        )
 
-        horarios_disponiveis.append(h)
+        if isinstance(horarios_cfg, dict):
+            if dia_semana == 5:
+                horarios_base = horarios_cfg.get('sabado', [])
+            else:
+                horarios_base = horarios_cfg.get('semana', [])
+        else:
+            horarios_base = horarios_cfg
 
-    return jsonify(horarios_disponiveis)
+        excecao = ExcecaoAgenda.query.filter_by(
+            usuario_id=usuario_id,
+            data=data
+        ).first()
+
+        if excecao:
+            if not excecao.dia_ativo:
+                return jsonify([])
+
+            horarios_base = [
+                h for h in horarios_base
+                if h not in (excecao.horarios_bloqueados or [])
+            ]
+
+        if not horarios_base:
+            return jsonify([])
+
+        try:
+            horarios_base = sorted(
+                horarios_base,
+                key=lambda h: datetime.strptime(h, "%H:%M").time()
+            )
+        except Exception:
+            return jsonify([])
+
+        ultimo_horario_dt = horario_para_datetime(
+            data,
+            horarios_base[-1]
+        )
+
+        limite_final_dt = ultimo_horario_dt + timedelta(minutes=60)
+
+        agora = datetime.now()
+        horarios_disponiveis = []
+
+        for h in horarios_base:
+            try:
+                inicio_novo = horario_para_datetime(data, h)
+            except Exception:
+                continue
+
+            fim_novo = inicio_novo + timedelta(minutes=duracao_novo)
+
+            # Regra:
+            # o último horário cadastrado ainda aceita serviços de até 60 minutos.
+            # Exemplo: último horário 18:00 = limite final 19:00.
+            if fim_novo > limite_final_dt:
+                continue
+
+            if inicio_novo <= agora:
+                continue
+
+            conflito = existe_conflito_agendamento(
+                usuario_id=usuario_id,
+                data=data,
+                inicio_novo=inicio_novo,
+                fim_novo=fim_novo
+            )
+
+            if conflito:
+                continue
+
+            horarios_disponiveis.append(h)
+
+        return jsonify(horarios_disponiveis)
+
+    except Exception as e:
+        current_app.logger.exception("ERRO EM verificar_horarios")
+        return jsonify({
+            "erro": str(e),
+            "tipo": type(e).__name__
+        }), 500
 
 @main.route('/relatorio')
 @login_required
@@ -690,9 +872,10 @@ def servicos():
         novo_servico = Servico(
             usuario_id=user_id,
             titulo=request.form['titulo'],
-            valor=request.form['valor'],
-            tempo=request.form['tempo'],
-            cor=request.form.get('cor', 'azul')
+            preco=request.form.get('valor'),
+            duracao_minutos=int(request.form.get('tempo') or 60),
+            cor=request.form.get('cor', '#2563eb'),
+            ativo=True
         )
         db.session.add(novo_servico)
         db.session.commit()
@@ -716,8 +899,8 @@ def editar_servico(id):
     ).first_or_404()
 
     servico.titulo = data.get('titulo')
-    servico.valor = data.get('valor')
-    servico.tempo = data.get('tempo')
+    servico.preco = data.get('valor')
+    servico.duracao_minutos = int(data.get('tempo') or 60)
     servico.cor = data.get('cor', servico.cor)
 
     db.session.commit()

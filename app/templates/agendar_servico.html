@@ -247,7 +247,23 @@
         container.innerHTML = ''
 
         if (horarios.length === 0) {
-          container.innerHTML = '<div class="empty-state">Nenhum horário disponível para este dia. Tente outra data.</div>'
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size:48px;margin-bottom:12px;"></div>
+
+                    <strong>
+                        Não há tempo disponível para este serviço nesta data.
+                    </strong>
+
+                    <p style="margin-top:10px;">
+                        Este serviço exige um período maior de atendimento e os horários livres já não comportam sua duração.
+                    </p>
+
+                    <p style="margin-top:8px;">
+                        Escolha outra data ou selecione um serviço diferente.
+                    </p>
+                </div>
+          `
           return
         }
 
