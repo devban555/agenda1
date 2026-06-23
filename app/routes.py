@@ -695,40 +695,156 @@ def verificar_horarios():
 @main.route('/relatorio')
 @login_required
 def relatorio():
-    # Total de agendamentos
-    total_agendamentos = Agendamento.query.count()
+    from datetime import date, timedelta
+    from sqlalchemy import extract, func
 
-    # Melhor mês do ano (mês com mais agendamentos)
+    user_id = session["user_id"]
+
+    hoje = date.today()
+    inicio_semana = hoje - timedelta(days=hoje.weekday())
+    fim_semana = inicio_semana + timedelta(days=6)
+
+    inicio_mes = hoje.replace(day=1)
+    fim_7_dias = hoje + timedelta(days=7)
+    ano_atual = hoje.year
+
+    total_agendamentos = Agendamento.query.filter_by(
+        usuario_id=user_id
+    ).count()
+
+    total_hoje = Agendamento.query.filter_by(
+        usuario_id=user_id,
+        data=hoje
+    ).count()
+
+    total_semana = Agendamento.query.filter(
+        Agendamento.usuario_id == user_id,
+        Agendamento.data >= inicio_semana,
+        Agendamento.data <= fim_semana
+    ).count()
+
+    total_mes = Agendamento.query.filter(
+        Agendamento.usuario_id == user_id,
+        Agendamento.data >= inicio_mes
+    ).count()
+
+    proximos_7_dias = Agendamento.query.filter(
+        Agendamento.usuario_id == user_id,
+        Agendamento.data >= hoje,
+        Agendamento.data <= fim_7_dias
+    ).count()
+
+    total_no_ano = Agendamento.query.filter(
+        Agendamento.usuario_id == user_id,
+        extract('year', Agendamento.data) == ano_atual
+    ).count()
+
+    total_cancelados = 0
+
     dados_por_mes = (
         db.session.query(
             extract('month', Agendamento.data).label('mes'),
             func.count(Agendamento.id).label('total')
         )
+        .filter(
+            Agendamento.usuario_id == user_id,
+            extract('year', Agendamento.data) == ano_atual
+        )
         .group_by('mes')
         .order_by(func.count(Agendamento.id).desc())
         .all()
     )
+
+    meses_nomes = [
+        "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+        "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ]
+
     melhor_mes = None
+
     if dados_por_mes:
-        meses_nomes = [
-            "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
-            "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
-        ]
         melhor_mes = meses_nomes[int(dados_por_mes[0].mes) - 1]
 
-    # Total de cancelados (considerando que há um campo status='cancelado')
-    total_cancelados = Agendamento.query.filter_by(status='cancelado').count() if hasattr(Agendamento, 'status') else 0
+    servicos_mais_vendidos = (
+        db.session.query(
+            Servico.titulo.label("titulo"),
+            func.count(Agendamento.id).label("total")
+        )
+        .join(Servico, Servico.id == Agendamento.servico_id)
+        .filter(Agendamento.usuario_id == user_id)
+        .group_by(Servico.id, Servico.titulo)
+        .order_by(func.count(Agendamento.id).desc())
+        .limit(5)
+        .all()
+    )
 
-    # Total de agendamentos no ano atual
-    ano_atual = datetime.now().year
-    total_no_ano = Agendamento.query.filter(extract('year', Agendamento.data) == ano_atual).count()
+    clientes_frequentes = (
+        db.session.query(
+            Agendamento.nome.label("nome"),
+            Agendamento.telefone.label("telefone"),
+            func.count(Agendamento.id).label("total")
+        )
+        .filter(Agendamento.usuario_id == user_id)
+        .group_by(Agendamento.telefone, Agendamento.nome)
+        .order_by(func.count(Agendamento.id).desc())
+        .limit(5)
+        .all()
+    )
+
+    desempenho_mensal = []
+
+    for mes in range(1, 13):
+        total_mes_item = Agendamento.query.filter(
+            Agendamento.usuario_id == user_id,
+            extract('year', Agendamento.data) == ano_atual,
+            extract('month', Agendamento.data) == mes
+        ).count()
+
+        desempenho_mensal.append({
+            "mes": meses_nomes[mes - 1][:3],
+            "total": total_mes_item
+        })
+
+    maior_mes_total = max([m["total"] for m in desempenho_mensal] or [0])
+
+    for item in desempenho_mensal:
+        if maior_mes_total > 0:
+            item["percentual"] = int((item["total"] / maior_mes_total) * 100)
+        else:
+            item["percentual"] = 0
+
+    servico_mais_procurado = servicos_mais_vendidos[0].titulo if servicos_mais_vendidos else "Sem dados"
+    cliente_do_mes = clientes_frequentes[0].nome if clientes_frequentes else "Sem dados"
+
+    dia_pico_dado = (
+        db.session.query(
+            Agendamento.data.label("data"),
+            func.count(Agendamento.id).label("total")
+        )
+        .filter(Agendamento.usuario_id == user_id)
+        .group_by(Agendamento.data)
+        .order_by(func.count(Agendamento.id).desc())
+        .first()
+    )
+
+    dia_pico = dia_pico_dado.data.strftime('%d/%m/%Y') if dia_pico_dado else "Sem dados"
 
     return render_template(
         'relatorio.html',
         total_agendamentos=total_agendamentos,
-        melhor_mes=melhor_mes,
         total_cancelados=total_cancelados,
-        total_no_ano=total_no_ano
+        melhor_mes=melhor_mes,
+        total_no_ano=total_no_ano,
+        total_hoje=total_hoje,
+        total_semana=total_semana,
+        total_mes=total_mes,
+        proximos_7_dias=proximos_7_dias,
+        servicos_mais_vendidos=servicos_mais_vendidos,
+        clientes_frequentes=clientes_frequentes,
+        desempenho_mensal=desempenho_mensal,
+        servico_mais_procurado=servico_mais_procurado,
+        cliente_do_mes=cliente_do_mes,
+        dia_pico=dia_pico
     )
 
 @main.route("/lista")

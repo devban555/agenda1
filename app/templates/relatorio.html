@@ -396,125 +396,93 @@
     <div class="cards-grid">
       <article class="card future-data">
         <div class="icon-box"><i class="fa-solid fa-bolt-lightning"></i></div>
-        <h2 class="metric">--</h2>
+        <h2 class="metric">{{ total_hoje }}</h2>
         <div class="label">Atendimentos Hoje</div>
-        <div class="desc">Implementação futura</div>
         <i class="fa-solid fa-bolt-lightning bg-icon"></i>
       </article>
 
       <article class="card future-data">
         <div class="icon-box"><i class="fa-solid fa-calendar-day"></i></div>
-        <h2 class="metric">--</h2>
+        <h2 class="metric">{{ total_semana }}</h2>
         <div class="label">Atendimentos Semana</div>
-        <div class="desc">Implementação futura</div>
         <i class="fa-solid fa-calendar-day bg-icon"></i>
       </article>
 
       <article class="card future-data">
         <div class="icon-box"><i class="fa-solid fa-calendar-days"></i></div>
-        <h2 class="metric">--</h2>
+        <h2 class="metric">{{ total_mes }}</h2>
         <div class="label">Atendimentos Mês</div>
-        <div class="desc">Implementação futura</div>
         <i class="fa-solid fa-calendar-days bg-icon"></i>
       </article>
 
       <article class="card future-data">
         <div class="icon-box"><i class="fa-solid fa-hourglass-half"></i></div>
-        <h2 class="metric">--</h2>
+        <h2 class="metric">{{ proximos_7_dias }}</h2>
         <div class="label">Próximos 7 Dias</div>
-        <div class="desc">Implementação futura</div>
         <i class="fa-solid fa-hourglass-half bg-icon"></i>
       </article>
     </div>
 
-    <div class="section-title"><i class="fa-solid fa-ranking-star"></i> Distribuição e Rankings</div>
-    <div class="split-grid">
+  <div class="section-title"><i class="fa-solid fa-ranking-star"></i> Distribuição e Rankings</div>
+  <div class="split-grid">
 
-      <div class="large-card">
-        <h3><i class="fa-solid fa-scissors"></i> Serviços Mais Vendidos</h3>
-        <div class="ranking-list">
-          <div class="ranking-item">
-            <div class="ranking-meta">
-              <span class="ranking-icon">🥇</span>
-              <span class="ranking-name">Serviço A</span>
-            </div>
-            <span class="ranking-value">--</span>
+    <div class="large-card">
+      <h3><i class="fa-solid fa-scissors"></i> Serviços Mais Vendidos</h3>
+      <div class="ranking-list">
+        {% for item in servicos_mais_vendidos %}
+        <div class="ranking-item">
+          <div class="ranking-meta">
+            <span class="ranking-icon">
+              {% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}⭐{% endif %}
+            </span>
+            <span class="ranking-name">{{ item.titulo }}</span>
           </div>
-          <div class="ranking-item">
-            <div class="ranking-meta">
-              <span class="ranking-icon">🥈</span>
-              <span class="ranking-name">Serviço B</span>
-            </div>
-            <span class="ranking-value">--</span>
-          </div>
-          <div class="ranking-item">
-            <div class="ranking-meta">
-              <span class="ranking-icon">🥉</span>
-              <span class="ranking-name">Serviço C</span>
-            </div>
-            <span class="ranking-value">--</span>
-          </div>
+          <span class="ranking-value">{{ item.total }}x</span>
         </div>
-      </div>
-
-      <div class="large-card">
-        <h3><i class="fa-solid fa-user-group"></i> Clientes Frequentes</h3>
-        <div class="ranking-list">
-          <div class="ranking-item">
-            <div class="ranking-meta">
-              <span class="ranking-icon">👑</span>
-              <span class="ranking-name">Cliente A</span>
-            </div>
-            <span class="ranking-value" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">12 visitas</span>
-          </div>
-          <div class="ranking-item">
-            <div class="ranking-meta">
-              <span class="ranking-icon">👑</span>
-              <span class="ranking-name">Cliente B</span>
-            </div>
-            <span class="ranking-value" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">8 visitas</span>
-          </div>
-          <div class="ranking-item">
-            <div class="ranking-meta">
-              <span class="ranking-icon">👑</span>
-              <span class="ranking-name">Cliente C</span>
-            </div>
-            <span class="ranking-value" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">5 visitas</span>
-          </div>
+        {% else %}
+        <div class="ranking-item">
+          <span class="ranking-name">Sem dados</span>
         </div>
+        {% endfor %}
       </div>
-
-      <div class="large-card" style="grid-column: span 1;">
-        <h3><i class="fa-solid fa-chart-bar"></i> Desempenho Mensal</h3>
-        <div class="fake-chart">
-          <div class="chart-row">
-            <div class="chart-label">Jan</div>
-            <div class="chart-bar-container"><div class="chart-bar" style="width: 45%;"></div></div>
-          </div>
-          <div class="chart-row">
-            <div class="chart-label">Fev</div>
-            <div class="chart-bar-container"><div class="chart-bar" style="width: 60%;"></div></div>
-          </div>
-          <div class="chart-row">
-            <div class="chart-label">Mar</div>
-            <div class="chart-bar-container"><div class="chart-bar" style="width: 85%;"></div></div>
-          </div>
-          <div class="chart-row">
-            <div class="chart-label">Abr</div>
-            <div class="chart-bar-container"><div class="chart-bar" style="width: 50%;"></div></div>
-          </div>
-          <div class="chart-row">
-            <div class="chart-label">Mai</div>
-            <div class="chart-bar-container"><div class="chart-bar" style="width: 70%;"></div></div>
-          </div>
-          <div class="chart-row">
-            <div class="chart-label">Jun</div>
-            <div class="chart-bar-container"><div class="chart-bar" style="width: 95%;"></div></div>
-          </div>
-        </div>
-      </div>
-
     </div>
+
+    <div class="large-card">
+      <h3><i class="fa-solid fa-user-group"></i> Clientes Frequentes</h3>
+      <div class="ranking-list">
+        {% for item in clientes_frequentes %}
+        <div class="ranking-item">
+          <div class="ranking-meta">
+            <span class="ranking-icon">👑</span>
+            <span class="ranking-name">{{ item.nome }}</span>
+          </div>
+          <span class="ranking-value" style="color: var(--success); background: rgba(16, 185, 129, 0.1);">
+            {{ item.total }} visitas
+          </span>
+        </div>
+        {% else %}
+        <div class="ranking-item">
+          <span class="ranking-name">Sem dados</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="large-card">
+      <h3><i class="fa-solid fa-chart-bar"></i> Desempenho Mensal</h3>
+      <div class="fake-chart">
+        {% for item in desempenho_mensal %}
+        <div class="chart-row">
+          <div class="chart-label">{{ item.mes }}</div>
+          <div class="chart-bar-container">
+            <div class="chart-bar" style="width: {{ item.percentual }}%;"></div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
 
     <div class="section-title"><i class="fa-regular fa-lightbulb"></i> Análises e Insights Automáticos</div>
     <div class="insights-card">
@@ -523,21 +491,21 @@
           <div class="insight-icon"><i class="fa-solid fa-fire"></i></div>
           <div class="insight-info">
             <h4>Mais Procurado</h4>
-            <p>Aguardando dados</p>
+            <p>{{ servico_mais_procurado }}</p>
           </div>
         </div>
         <div class="insight-box">
           <div class="insight-icon"><i class="fa-solid fa-star"></i></div>
           <div class="insight-info">
             <h4>Cliente do Mês</h4>
-            <p>Aguardando dados</p>
+            <p>{{ cliente_do_mes }}</p>
           </div>
         </div>
         <div class="insight-box">
           <div class="insight-icon"><i class="fa-solid fa-calendar-day"></i></div>
           <div class="insight-info">
             <h4>Dia de Pico</h4>
-            <p>Aguardando dados</p>
+            <p>{{ dia_pico }}</p>
           </div>
         </div>
         <div class="insight-box">
