@@ -946,67 +946,205 @@ def painel():
 def admin():
     from datetime import datetime, date, timedelta
 
-    data_filtro = request.form.get('data')
     user_id = session["user_id"]
-
-    if data_filtro:
-        try:
-            data_obj = datetime.strptime(data_filtro, '%Y-%m-%d').date()
-
-            agendamentos = Agendamento.query.filter_by(
-                usuario_id=user_id,
-                data=data_obj
-            ).order_by(
-                Agendamento.horario
-            ).all()
-
-        except:
-            agendamentos = []
-
-    else:
-        agendamentos = Agendamento.query.filter_by(
-            usuario_id=user_id
-        ).order_by(
-            Agendamento.data,
-            Agendamento.horario
-        ).all()
 
     hoje = date.today()
     amanha = hoje + timedelta(days=1)
-    fim_semana = hoje + timedelta(days=7)
 
-    total_hoje = Agendamento.query.filter_by(
-        usuario_id=user_id,
-        data=hoje
-    ).count()
+    inicio_semana = hoje - timedelta(days=hoje.weekday())
+    fim_semana = inicio_semana + timedelta(days=6)
 
-    total_amanha = Agendamento.query.filter_by(
-        usuario_id=user_id,
-        data=amanha
-    ).count()
+    inicio_mes = hoje.replace(day=1)
 
-    total_semana = Agendamento.query.filter(
-        Agendamento.usuario_id == user_id,
-        Agendamento.data >= hoje,
-        Agendamento.data <= fim_semana
-    ).count()
+    data_filtro = request.args.get("data") or request.form.get("data")
+    periodo = request.args.get("periodo", "hoje")
 
-    proximo_agendamento = Agendamento.query.filter(
-        Agendamento.usuario_id == user_id,
-        Agendamento.data >= hoje
-    ).order_by(
-        Agendamento.data,
-        Agendamento.horario
-    ).first()
+    # ==========================================
+    # FILTRO POR DATA ESPECÍFICA
+    # ==========================================
+    if data_filtro:
+
+        try:
+
+            data_obj = datetime.strptime(
+                data_filtro,
+                "%Y-%m-%d"
+            ).date()
+
+            agendamentos = (
+                Agendamento.query
+                .filter_by(
+                    usuario_id=user_id,
+                    data=data_obj
+                )
+                .order_by(
+                    Agendamento.horario
+                )
+                .all()
+            )
+
+        except:
+
+            agendamentos = []
+
+    # ==========================================
+    # FILTROS POR PERÍODO
+    # ==========================================
+    else:
+
+        if periodo == "hoje":
+
+            agendamentos = (
+                Agendamento.query
+                .filter_by(
+                    usuario_id=user_id,
+                    data=hoje
+                )
+                .order_by(
+                    Agendamento.horario
+                )
+                .all()
+            )
+
+        elif periodo == "amanha":
+
+            agendamentos = (
+                Agendamento.query
+                .filter_by(
+                    usuario_id=user_id,
+                    data=amanha
+                )
+                .order_by(
+                    Agendamento.horario
+                )
+                .all()
+            )
+
+        elif periodo == "semana":
+
+            agendamentos = (
+                Agendamento.query
+                .filter(
+                    Agendamento.usuario_id == user_id,
+                    Agendamento.data >= inicio_semana,
+                    Agendamento.data <= fim_semana
+                )
+                .order_by(
+                    Agendamento.data,
+                    Agendamento.horario
+                )
+                .all()
+            )
+
+        elif periodo == "mes":
+
+            agendamentos = (
+                Agendamento.query
+                .filter(
+                    Agendamento.usuario_id == user_id,
+                    Agendamento.data >= inicio_mes
+                )
+                .order_by(
+                    Agendamento.data,
+                    Agendamento.horario
+                )
+                .all()
+            )
+
+        elif periodo == "todos":
+
+            agendamentos = (
+                Agendamento.query
+                .filter_by(
+                    usuario_id=user_id
+                )
+                .order_by(
+                    Agendamento.data,
+                    Agendamento.horario
+                )
+                .all()
+            )
+
+        else:
+
+            periodo = "hoje"
+
+            agendamentos = (
+                Agendamento.query
+                .filter_by(
+                    usuario_id=user_id,
+                    data=hoje
+                )
+                .order_by(
+                    Agendamento.horario
+                )
+                .all()
+            )
+
+    # ==========================================
+    # CARDS SUPERIORES
+    # ==========================================
+
+    total_hoje = (
+        Agendamento.query
+        .filter_by(
+            usuario_id=user_id,
+            data=hoje
+        )
+        .count()
+    )
+
+    total_amanha = (
+        Agendamento.query
+        .filter_by(
+            usuario_id=user_id,
+            data=amanha
+        )
+        .count()
+    )
+
+    total_semana = (
+        Agendamento.query
+        .filter(
+            Agendamento.usuario_id == user_id,
+            Agendamento.data >= inicio_semana,
+            Agendamento.data <= fim_semana
+        )
+        .count()
+    )
+
+    # ==========================================
+    # PRÓXIMO AGENDAMENTO
+    # ==========================================
+
+    proximo_agendamento = (
+        Agendamento.query
+        .filter(
+            Agendamento.usuario_id == user_id,
+            Agendamento.data >= hoje
+        )
+        .order_by(
+            Agendamento.data,
+            Agendamento.horario
+        )
+        .first()
+    )
 
     return render_template(
-        'admin.html',
+
+        "admin.html",
+
         agendamentos=agendamentos,
+
         data_filtro=data_filtro,
+        periodo=periodo,
+
         total_hoje=total_hoje,
         total_amanha=total_amanha,
         total_semana=total_semana,
+
         proximo_agendamento=proximo_agendamento
+
     )
 
 
