@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import extract, func
 from flask import current_app
 from . import db
-from .models import Agendamento
+from .models import Agendamento, Cliente
 from app.models import Servico, Usuario, ConfiguracaoAgenda, ExcecaoAgenda
 
 main = Blueprint('main', __name__)
@@ -140,6 +140,13 @@ def salvar_agendamento():
         current_app.logger.warning("Falha agendamento: dados incompletos")
         return "Erro: dados incompletos no envio", 400
 
+    nome = ' '.join(nome.strip().split())
+
+    partes_nome = nome.split()
+
+    if len(partes_nome) < 2:
+        return "Informe nome e sobrenome.", 400
+
     # ==============================
     # 🔒 VALIDA TELEFONE (SIMPLES)
     # ==============================
@@ -197,8 +204,32 @@ def salvar_agendamento():
     if conflito:
         return "Horário indisponível para a duração deste serviço. Escolha outro horário.", 409
 
+    # =====================================
+    # LOCALIZA OU CRIA O CLIENTE
+    # =====================================
+    cliente = Cliente.query.filter_by(
+        usuario_id=servico.usuario_id,
+        telefone=telefone
+    ).first()
+
+    if not cliente:
+        cliente = Cliente(
+            usuario_id=servico.usuario_id,
+            nome=nome,
+            telefone=telefone,
+            recorrente='nao'
+        )
+
+        db.session.add(cliente)
+        db.session.flush()  # gera o ID antes do commit
+
+    else:
+        # Atualiza o nome caso tenha sido alterado
+        cliente.nome = nome
+
     novo = Agendamento(
         usuario_id=servico.usuario_id,
+        cliente_id=cliente.id,
         nome=nome,
         telefone=telefone,
         data=data,
@@ -1551,6 +1582,299 @@ def salvar_disponibilidade():
         'status': 'ok'
     })
 
+# =========================
+# API CRM / CLIENTES
+# =========================
+@main.route('/api/crm/dados')
+@login_required
+def api_crm_dados():
+    user_id = session['user_id']
+
+    filtro = request.args.get('filtro', 'todos')
+    semana = request.args.get('semana')
+    mes = request.args.get('mes')
+
+    hoje = date.today()
+    limite_inativo = hoje - timedelta(days=60)
+
+    # =========================
+    # PERÍODO DA SEMANA
+    # =========================
+    inicio_semana = None
+    fim_semana = None
+
+    if semana:
+        try:
+            ano_str, semana_str = semana.split('-W')
+            inicio_semana = datetime.strptime(
+                f'{ano_str}-W{semana_str}-1',
+                '%G-W%V-%u'
+            ).date()
+            fim_semana = inicio_semana + timedelta(days=6)
+        except Exception:
+            inicio_semana = hoje - timedelta(days=hoje.weekday())
+            fim_semana = inicio_semana + timedelta(days=6)
+    else:
+        inicio_semana = hoje - timedelta(days=hoje.weekday())
+        fim_semana = inicio_semana + timedelta(days=6)
+
+    # =========================
+    # PERÍODO DO MÊS
+    # =========================
+    ano_mes = hoje.year
+    mes_num = hoje.month
+
+    if mes:
+        try:
+            ano_mes, mes_num = map(int, mes.split('-'))
+        except Exception:
+            ano_mes = hoje.year
+            mes_num = hoje.month
+
+    # =========================
+    # CONTADORES GERAIS
+    # =========================
+    total_agendamentos = Agendamento.query.filter_by(
+        usuario_id=user_id
+    ).count()
+
+    agendamentos_semana = Agendamento.query.filter(
+        Agendamento.usuario_id == user_id,
+        Agendamento.data >= inicio_semana,
+        Agendamento.data <= fim_semana
+    ).count()
+
+    agendamentos_mes = Agendamento.query.filter(
+        Agendamento.usuario_id == user_id,
+        extract('year', Agendamento.data) == ano_mes,
+        extract('month', Agendamento.data) == mes_num
+    ).count()
+
+    # =========================
+    # ÚLTIMA VISITA E TOTAL POR CLIENTE
+    # =========================
+    resumo_agendamentos = (
+        db.session.query(
+            Agendamento.cliente_id.label('cliente_id'),
+            func.count(Agendamento.id).label('visitas'),
+            func.max(Agendamento.data).label('ultima_visita')
+        )
+        .filter(
+            Agendamento.usuario_id == user_id,
+            Agendamento.cliente_id.isnot(None)
+        )
+        .group_by(Agendamento.cliente_id)
+        .subquery()
+    )
+
+    query = (
+        db.session.query(
+            Cliente,
+            resumo_agendamentos.c.visitas,
+            resumo_agendamentos.c.ultima_visita
+        )
+        .outerjoin(
+            resumo_agendamentos,
+            Cliente.id == resumo_agendamentos.c.cliente_id
+        )
+        .filter(
+            Cliente.usuario_id == user_id,
+            Cliente.ativo_crm == True
+        )
+    )
+
+    registros = query.all()
+
+    clientes_lista = []
+    total_inativos = 0
+
+    for cliente, visitas, ultima_visita in registros:
+        visitas = int(visitas or 0)
+
+        if ultima_visita:
+            status = 'inativo' if ultima_visita < limite_inativo else 'ativo'
+        else:
+            status = 'inativo'
+
+        if status == 'inativo':
+            total_inativos += 1
+
+        if filtro == 'ativos' and status != 'ativo':
+            continue
+
+        if filtro == 'inativos' and status != 'inativo':
+            continue
+
+        if filtro == 'recorrentes' and cliente.recorrente != 'sim':
+            continue
+
+        clientes_lista.append({
+            'id': cliente.id,
+            'nome': cliente.nome,
+            'telefone': cliente.telefone,
+            'recorrente': cliente.recorrente or 'nao',
+            'visitas': visitas,
+            'ultima_visita': ultima_visita.strftime('%Y-%m-%d') if ultima_visita else None,
+            'status': status
+        })
+
+    clientes_lista.sort(
+        key=lambda c: c['ultima_visita'] or '',
+        reverse=True
+    )
+
+    return jsonify({
+        'success': True,
+        'total_agendamentos': total_agendamentos,
+        'agendamentos_semana': agendamentos_semana,
+        'agendamentos_mes': agendamentos_mes,
+        'total_inativos': total_inativos,
+        'clientes': clientes_lista
+    })
+
+
+@main.route('/api/crm/editar/<int:id>', methods=['POST'])
+@login_required
+def api_crm_editar(id):
+    user_id = session['user_id']
+    data_json = request.get_json() or {}
+
+    cliente = Cliente.query.filter_by(
+        id=id,
+        usuario_id=user_id,
+        ativo_crm=True
+    ).first_or_404()
+
+    nome = (data_json.get('nome') or '').strip()
+    telefone = ''.join(filter(str.isdigit, data_json.get('telefone') or ''))
+    recorrente = data_json.get('recorrente') or 'nao'
+
+    if not nome:
+        return jsonify({
+            'success': False,
+            'erro': 'Nome é obrigatório.'
+        }), 400
+
+    if len(telefone) < 10 or len(telefone) > 11:
+        return jsonify({
+            'success': False,
+            'erro': 'Telefone inválido. Use DDD + número.'
+        }), 400
+
+    if recorrente not in ['sim', 'nao']:
+        recorrente = 'nao'
+
+    cliente.nome = nome
+    cliente.telefone = telefone
+    cliente.recorrente = recorrente
+
+    # Mantém os agendamentos vinculados sincronizados visualmente
+    Agendamento.query.filter_by(
+        usuario_id=user_id,
+        cliente_id=cliente.id
+    ).update({
+        'nome': nome,
+        'telefone': telefone
+    })
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'mensagem': 'Cliente atualizado com sucesso.'
+    })
+
+
+@main.route('/api/crm/excluir/<int:id>', methods=['DELETE'])
+@login_required
+def api_crm_excluir(id):
+    user_id = session['user_id']
+
+    cliente = Cliente.query.filter_by(
+        id=id,
+        usuario_id=user_id,
+        ativo_crm=True
+    ).first_or_404()
+
+    # Não apaga histórico de agendamentos.
+    # Apenas remove/inativa o cliente do CRM.
+    cliente.ativo_crm = False
+
+    db.session.commit()
+
+    return jsonify({
+        'success': True,
+        'mensagem': 'Cliente removido do CRM.'
+    })
+
+@main.route('/api/crm/historico/<int:id>')
+@login_required
+def api_crm_historico(id):
+    user_id = session['user_id']
+
+    cliente = Cliente.query.filter_by(
+        id=id,
+        usuario_id=user_id,
+        ativo_crm=True
+    ).first_or_404()
+
+    hoje = date.today()
+    ano_atual = hoje.year
+    mes_atual = hoje.month
+
+    total_agendamentos = Agendamento.query.filter_by(
+        usuario_id=user_id,
+        cliente_id=cliente.id
+    ).count()
+
+    total_mes_atual = Agendamento.query.filter(
+        Agendamento.usuario_id == user_id,
+        Agendamento.cliente_id == cliente.id,
+        extract('year', Agendamento.data) == ano_atual,
+        extract('month', Agendamento.data) == mes_atual
+    ).count()
+
+    agendamentos_por_mes = (
+        db.session.query(
+            extract('year', Agendamento.data).label('ano'),
+            extract('month', Agendamento.data).label('mes'),
+            func.count(Agendamento.id).label('total')
+        )
+        .filter(
+            Agendamento.usuario_id == user_id,
+            Agendamento.cliente_id == cliente.id
+        )
+        .group_by('ano', 'mes')
+        .order_by('ano', 'mes')
+        .all()
+    )
+
+    meses = []
+
+    for item in agendamentos_por_mes:
+        meses.append({
+            'ano': int(item.ano),
+            'mes': int(item.mes),
+            'label': f"MES{int(item.mes):02d}",
+            'total': int(item.total)
+        })
+
+    return jsonify({
+        'success': True,
+        'cliente': {
+            'id': cliente.id,
+            'nome': cliente.nome,
+            'telefone': cliente.telefone,
+            'recorrente': cliente.recorrente or 'nao',
+            'total_agendamentos': total_agendamentos,
+            'mes_atual': f"MES{mes_atual:02d}",
+            'total_mes_atual': total_mes_atual,
+            'limite_mensal_referencia': 4,
+            'passou_limite_mes': total_mes_atual > 4,
+            'agendamentos_por_mes': meses
+        }
+    })
+
 from collections import defaultdict
 from datetime import date
 
@@ -1638,3 +1962,70 @@ def excluir_servico(id):
         return jsonify({
             'erro': str(e)
         }), 500
+
+@main.route('/financeiro')
+@login_required
+def financeiro():
+    user_id = session["user_id"]
+
+    hoje = date.today()
+
+    inicio_semana = hoje - timedelta(days=hoje.weekday())
+    fim_semana = inicio_semana + timedelta(days=6)
+
+    inicio_mes = hoje.replace(day=1)
+
+    faturamento_hoje = 0
+    faturamento_semana = 0
+    faturamento_mes = 0
+    qtd_agendamentos_mes = 0
+
+    agendamentos = (
+        Agendamento.query
+        .filter_by(usuario_id=user_id)
+        .order_by(Agendamento.data.desc(), Agendamento.horario.desc())
+        .all()
+    )
+
+    movimentacoes = []
+
+    for ag in agendamentos:
+        valor = 0
+
+        if ag.servico and ag.servico.preco:
+            valor = float(ag.servico.preco)
+
+        if ag.data == hoje:
+            faturamento_hoje += valor
+
+        if inicio_semana <= ag.data <= fim_semana:
+            faturamento_semana += valor
+
+        if ag.data >= inicio_mes:
+            faturamento_mes += valor
+            qtd_agendamentos_mes += 1
+
+        movimentacoes.append({
+            "data": ag.data.strftime("%d/%m/%Y"),
+            "horario": ag.horario.strftime("%H:%M") if ag.horario else "",
+            "cliente": ag.nome,
+            "servico": ag.servico.titulo if ag.servico else "Serviço removido",
+            "valor": valor,
+            "status": "Agendado"
+        })
+
+    ticket_medio = (
+        faturamento_mes / qtd_agendamentos_mes
+        if qtd_agendamentos_mes > 0
+        else 0
+    )
+
+    return render_template(
+        "financeiro.html",
+        total_hoje=faturamento_hoje,
+        total_semana=faturamento_semana,
+        total_mes=faturamento_mes,
+        ticket_medio=ticket_medio,
+        total_agendamentos_mes=qtd_agendamentos_mes,
+        movimentacoes=movimentacoes
+    )

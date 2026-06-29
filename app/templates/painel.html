@@ -17,8 +17,11 @@
       --primary: #3b82f6;
       --border: rgba(255, 255, 255, 0.08);
       --accent-gradient: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      /* Gradiente específico para o Banco/Financeiro */
-      --bank-gradient: linear-gradient(135deg, #f59e0b, #d97706);
+
+      /* Gradientes específicos exigidos */
+      --financeiro-gradient: linear-gradient(135deg, #f59e0b, #d97706);
+      --vip-gradient: linear-gradient(135deg, #fcd34d, #b45309);
+      --estoque-gradient: linear-gradient(135deg, #34d399, #047857);
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
@@ -90,7 +93,7 @@
     /* WHATSAPP COR */
     .icon-btn.whatsapp i { color: #25D366; }
 
-    /* BANK COR ICONE TOPO */
+    /* FINANCEIRO COR ICONE TOPO */
     .icon-btn.bank-top i { color: #f59e0b; }
 
     /* TOOLTIPS */
@@ -154,9 +157,19 @@
       transition: transform 0.3s ease;
     }
 
-    /* Estilo Especial para o Botão Bank */
-    .btn.btn-bank i {
-      background: var(--bank-gradient);
+    /* Aplicando Gradientes Específicos nos Ícones */
+    .btn.btn-vip i {
+      background: var(--vip-gradient);
+      -webkit-background-clip: text;
+    }
+
+    .btn.btn-estoque i {
+      background: var(--estoque-gradient);
+      -webkit-background-clip: text;
+    }
+
+    .btn.btn-financeiro i {
+      background: var(--financeiro-gradient);
       -webkit-background-clip: text;
     }
 
@@ -192,7 +205,7 @@
   <div class="top-actions">
 
     <a href="/financeiro" class="icon-btn bank-top" data-tooltip="Financeiro">
-      <i class="fas fa-university"></i>
+      <i class="fa-solid fa-wallet"></i>
     </a>
 
     <a href="/whatsapp" class="icon-btn whatsapp" data-tooltip="WhatsApp">
@@ -221,9 +234,14 @@
     <span>Disponibilidade</span>
   </a>
 
-  <a href="/financeiro" class="btn btn-bank">
-    <i class="fas fa-university"></i>
-    <span>Bank</span>
+  <a href="/clientes" class="btn">
+    <i class="fas fa-list-ul"></i>
+    <span>Clientes</span>
+  </a>
+
+  <a href="/clientes-vip" class="btn btn-vip">
+    <i class="fa-solid fa-crown"></i>
+    <span>Cliente VIP</span>
   </a>
 
   <a href="/servicos" class="btn">
@@ -231,14 +249,19 @@
     <span>Serviços</span>
   </a>
 
+  <a href="/estoque" class="btn btn-estoque">
+    <i class="fa-solid fa-boxes-stacked"></i>
+    <span>Estoque</span>
+  </a>
+
+  <a href="/financeiro" class="btn btn-financeiro">
+    <i class="fa-solid fa-wallet"></i>
+    <span>Financeiro</span>
+  </a>
+
   <a href="/relatorio" class="btn">
     <i class="fas fa-chart-line"></i>
     <span>Relatórios</span>
-  </a>
-
-  <a href="/clientes" class="btn">
-    <i class="fas fa-list-ul"></i>
-    <span>Clientes</span>
   </a>
 
   <a href="/eventos" class="btn">

@@ -47,6 +47,30 @@ class Usuario(db.Model):
     def check_password(self, senha):
         return check_password_hash(self.password_hash, senha)
 
+# =========================
+# CLIENTE
+# =========================
+class Cliente(db.Model):
+    __tablename__ = 'cliente'
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
+
+    nome = db.Column(db.String(100), nullable=False)
+    telefone = db.Column(db.String(20), nullable=False)
+
+    recorrente = db.Column(db.String(10), default='nao')  # sim / nao
+    ativo_crm = db.Column(db.Boolean, default=True)
+
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    usuario = db.relationship('Usuario', backref='clientes')
+
+    __table_args__ = (
+        db.UniqueConstraint('usuario_id', 'telefone', name='uq_cliente_usuario_telefone'),
+    )
 
 # =========================
 # AGENDAMENTO (ATUALIZADO)
@@ -58,6 +82,9 @@ class Agendamento(db.Model):
 
     usuario_id = db.Column(db.Integer, db.ForeignKey('usuario.id'), nullable=False)
 
+    cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=True)
+    cliente = db.relationship('Cliente')
+    
     nome = db.Column(db.String(100), nullable=False)
     telefone = db.Column(db.String(20), nullable=False)
 
@@ -69,6 +96,7 @@ class Agendamento(db.Model):
     horario = db.Column(db.Time, nullable=False)
 
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 
 # =========================

@@ -17,6 +17,7 @@
       --success: #10b981;
       --success-glow: rgba(16, 185, 129, 0.3);
       --border: rgba(255, 255, 255, 0.08);
+      --danger: #ef4444;
     }
 
     * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
@@ -148,6 +149,27 @@
       color: var(--primary);
     }
 
+    /* VALIDAÇÃO DE ERRO */
+    form input.input-error {
+      border-color: var(--danger);
+      background: rgba(239, 68, 68, 0.05);
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    }
+
+    form input.input-error + i {
+      color: var(--danger);
+    }
+
+    .error-msg {
+      color: var(--danger);
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 6px;
+      margin-left: 4px;
+      display: none;
+      animation: fadeIn 0.2s ease-out;
+    }
+
     button {
       width: 100%;
       padding: 16px;
@@ -215,10 +237,11 @@
       </div>
     </div>
 
-    <form method="POST" action="/salvar_agendamento">
+    <form id="form-agendamento" method="POST" action="/salvar_agendamento">
       <div class="field-wrap">
-        <input type="text" name="nome" placeholder="Seu nome completo" required>
+        <input type="text" id="input-nome" name="nome" placeholder="Seu nome completo" required>
         <i class="fa-regular fa-user"></i>
+        <div class="error-msg" id="error-nome">Informe nome e sobrenome.</div>
       </div>
 
       <div class="field-wrap">
@@ -242,6 +265,50 @@
       <i class="fa-solid fa-chevron-left"></i> Alterar horário ou serviço
     </a>
   </div>
+
+  <script>
+    const form = document.getElementById('form-agendamento');
+    const inputNome = document.getElementById('input-nome');
+    const errorNome = document.getElementById('error-nome');
+
+    // Função interna auxiliar para tratar e testar se há nome + sobrenome
+    function validarNomeCompleto(valor) {
+      // Remove espaços no início/fim e colapsa múltiplos espaços internos em um único ' '
+      const limpo = valor.trim().replace(/\s+/g, ' ');
+
+      // Divide pelas strings de espaço para validar se há 2 ou mais blocos preenchidos
+      const partes = limpo.split(' ').filter(part => part.length > 0);
+      return {
+        valido: partes.length >= 2,
+        textoFormatado: limpo
+      };
+    }
+
+    // Validação reativa em tempo real (Input)
+    inputNome.addEventListener('input', function() {
+      const { valido } = validarNomeCompleto(this.value);
+
+      if (valido || this.value.trim() === "") {
+        inputNome.classList.remove('input-error');
+        errorNome.style.display = 'none';
+      }
+    });
+
+    // Validação rígida no ato do clique (Submit)
+    form.addEventListener('submit', function(e) {
+      const resultado = validarNomeCompleto(inputNome.value);
+
+      if (!resultado.valido) {
+        e.preventDefault(); // Impede o envio do formulário
+        inputNome.classList.add('input-error');
+        errorNome.style.display = 'block';
+        inputNome.focus();
+      } else {
+        // Envia o input limpo sem os espaços excessivos
+        inputNome.value = resultado.textoFormatado;
+      }
+    });
+  </script>
 
 </body>
 </html>
