@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>👑 Gestão de Clientes VIP</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f111a 0%, #151824 100%);
+      --glass-bg: rgba(255, 255, 255, 0.03);
+      --glass-border: rgba(255, 255, 255, 0.07);
+      --glass-focus: rgba(255, 255, 255, 0.12);
+
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+
+      --color-vip: #3b82f6;
+      --color-premium: #a855f7;
+      --color-super: #eab308;
+      --color-comum: #64748b;
+
+      --glow-vip: rgba(59, 130, 246, 0.15);
+      --glow-premium: rgba(168, 85, 247, 0.15);
+      --glow-super: rgba(234, 179, 8, 0.15);
+
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    /* Glassmorphism Utility */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      transition: var(--transition);
+    }
+
+    .glass-card:hover {
+      border-color: rgba(255, 255, 255, 0.12);
+      transform: translateY(-2px);
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2.5rem;
+      gap: 1.5rem;
+    }
+
+    .header-info h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #fff, var(--text-muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-info p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Buttons */
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      color: var(--text-main);
+      padding: 0.75rem 1.25rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      background: var(--glass-focus);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      border: none;
+      color: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      font-family: inherit;
+      width: 100%;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+      transition: var(--transition);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+      filter: brightness(1.1);
+    }
+
+    /* Top Cards Grid */
+    .top-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .metric-card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .metric-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; width: 4px; height: 100%;
+      background: var(--card-color, var(--text-muted));
+    }
+
+    .metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.75rem;
+    }
+
+    .metric-header i {
+      font-size: 1.25rem;
+      color: var(--card-color, var(--text-muted));
+    }
+
+    .metric-value {
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      letter-spacing: -0.03em;
+    }
+
+    .metric-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* Main Grid Structure */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      align-items: start;
+      margin-bottom: 2.5rem;
+    }
+
+    .left-column {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Forms */
+    .form-group-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper i {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+      font-size: 0.95rem;
+    }
+
+    .select-wrapper select {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      padding: 0.85rem 1rem 0.85rem 2.5rem;
+      color: var(--text-main);
+      font-family: inherit;
+      font-size: 0.95rem;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .select-wrapper select:focus {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .select-wrapper::after {
+      content: '\f107';
+      font-family: 'Font Awesome 6 Free';
+      font-weight: 900;
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .custom-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .custom-table th {
+      padding: 1rem 1.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .custom-table td {
+      padding: 1.25rem;
+      font-size: 0.95rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+    }
+
+    .custom-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .custom-table tbody tr:hover td {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge-comum { background: rgba(100, 116, 139, 0.15); color: #cbd5e1; border: 1px solid rgba(100, 116, 139, 0.3); }
+    .badge-vip { background: rgba(59, 130, 246, 0.15); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-premium { background: rgba(168, 85, 247, 0.15); color: #e9d5ff; border: 1px solid rgba(168, 85, 247, 0.3); }
+    .badge-super { background: rgba(234, 179, 8, 0.15); color: #fef08a; border: 1px solid rgba(234, 179, 8, 0.3); }
+
+    .action-badge {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+    }
+
+    /* Sidebar Panels */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .sidebar-block {
+      margin-bottom: 1.25rem;
+    }
+
+    .sidebar-block:last-child {
+      margin-bottom: 0;
+    }
+
+    .sidebar-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+    }
+
+    .sidebar-value {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .rule-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    .rule-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .rule-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .placeholder-text {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-style: italic;
+      text-align: center;
+      padding: 1.5rem 0;
+    }
+
+    /* Footer */
+    footer {
+      display: flex;
+      justify-content: flex-start;
+      margin-top: 1rem;
+    }
+
+    /* Responsiveness */
+    @media (max-width: 1024px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 1.5rem 1rem;
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+      .form-group-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="header-info">
+      <h1>👑 Gestão de Clientes VIP</h1>
+      <p>Gerencie clientes especiais, categorias de fidelização e acompanhe os indicadores do relacionamento.</p>
+    </div>
+    <a href="{{ url_for('main.painel') }}" class="btn-secondary">
+      <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+    </a>
+  </header>
+
+  <section class="top-cards">
+    <div class="glass-card metric-card" style="--card-color: var(--text-muted);">
+      <div class="metric-header">
+        <span>Clientes Totais</span>
+        <i class="fa-solid fa-users"></i>
+      </div>
+      <div class="metric-value">{{ total_clientes }}</div>
+      <div class="metric-desc">Base total de clientes</div>
+    </div>
+
+    <div class="glass-card metric-card" style="--card-color: var(--color-vip);">
+      <div class="metric-header">
+        <span>VIP</span>
+        <i class="fa-solid fa-star"></i>
+      </div>
+      <div class="metric-value">{{ total_vip }}</div>
+      <div class="metric-desc">Clientes recorrentes</div>
+    </div>
+
+    <div class="glass-card metric-card" style="--card-color: var(--color-premium);">
+      <div class="metric-header">
+        <span>Premium</span>
+        <i class="fa-solid fa-gem"></i>
+      </div>
+      <div class="metric-value">{{ total_premium }}</div>
+      <div class="metric-desc">Clientes de alto valor</div>
+    </div>
+
+    <div class="glass-card metric-card" style="--card-color: var(--color-super);">
+      <div class="metric-header">
+        <span>Super Premium</span>
+        <i class="fa-solid fa-crown"></i>
+      </div>
+      <div class="metric-value">{{ total_super_premium }}</div>
+      <div class="metric-desc">Parceiros estratégicos</div>
+    </div>
+  </section>
+
+  <div class="main-grid">
+
+    <div class="left-column">
+
+      <section class="glass-card">
+        <h2 class="section-title"><i class="fa-solid fa-sliders" style="color: var(--color-vip);"></i> Alterar Classificação</h2>
+
+        <form method="POST" action="{{ url_for('main.atualizar_cliente_vip') }}">
+          <div class="form-group-container">
+            <div class="form-group">
+              <label>Cliente</label>
+              <div class="select-wrapper">
+                <i class="fa-solid fa-user"></i>
+                <select name="cliente_id" required>
+                  <option value="">Selecione...</option>
+                  {% for cliente in clientes %}
+                    <option value="{{ cliente.id }}">{{ cliente.nome }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Categoria VIP</label>
+              <div class="select-wrapper">
+                <i class="fa-solid fa-ranking-star"></i>
+                <select name="nivel_vip" required>
+                  <option value="0">Cliente Comum</option>
+                  <option value="1">VIP</option>
+                  <option value="2">Premium</option>
+                  <option value="3">Super Premium</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Salvar Classificação
+          </button>
+        </form>
+      </section>
+
+      <section class="glass-card">
+        <h2 class="section-title"><i class="fa-solid fa-list" style="color: var(--color-premium);"></i> Lista de Clientes</h2>
+
+        <div class="table-container">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Categoria</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cliente in clientes_vip %}
+              <tr>
+                <td style="font-weight: 500;">{{ cliente.nome }}</td>
+                <td>
+                  {% if cliente.nivel_vip == 1 %}
+                    <span class="badge badge-vip"><i class="fa-solid fa-star"></i> VIP</span>
+                  {% elif cliente.nivel_vip == 2 %}
+                    <span class="badge badge-premium"><i class="fa-solid fa-gem"></i> Premium</span>
+                  {% elif cliente.nivel_vip == 3 %}
+                    <span class="badge badge-super"><i class="fa-solid fa-crown"></i> Super Premium</span>
+                  {% else %}
+                    <span class="badge badge-comum"><i class="fa-solid fa-user"></i> Cliente Comum</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge badge-comum" style="border: none; background: rgba(34, 197, 94, 0.1); color: #4ade80;">Ativo</span>
+                </td>
+                <td>
+                  <span class="action-badge">Reservado</span>
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                  <i class="fa-solid fa-folder-open" style="font-size: 1.5rem; display: block; margin-bottom: 0.5rem; color: rgba(255,255,255,0.1);"></i>
+                  Nenhum cliente VIP cadastrado.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+    <aside class="sidebar">
+
+      <div class="glass-card">
+        <h3 class="section-title" style="font-size: 1.1rem; margin-bottom: 1rem;"><i class="fa-solid fa-circle-info" style="color: var(--color-vip);"></i> Regras VIP</h3>
+        <div class="rule-item">
+          <span class="badge badge-vip"><i class="fa-solid fa-star"></i> VIP</span>
+          <span class="rule-desc">Cliente frequente</span>
+        </div>
+        <div class="rule-item">
+          <span class="badge badge-premium"><i class="fa-solid fa-gem"></i> Premium</span>
+          <span class="rule-desc">Cliente de alto valor</span>
+        </div>
+        <div class="rule-item">
+          <span class="badge badge-super"><i class="fa-solid fa-crown"></i> Super Premium</span>
+          <span class="rule-desc">Cliente estratégico</span>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h3 class="section-title" style="font-size: 1.1rem; margin-bottom: 1rem;"><i class="fa-solid fa-chart-pie" style="color: var(--color-premium);"></i> Resumo</h3>
+
+        <div class="sidebar-block">
+          <div class="sidebar-label">Categorias Utilizadas</div>
+          <div class="sidebar-value" style="color: var(--color-vip);">4 Ativas</div>
+        </div>
+
+        <div class="sidebar-block">
+          <div class="sidebar-label">Maior Categoria</div>
+          <div class="sidebar-value" style="color: var(--color-super);">Super Premium</div>
+        </div>
+
+        <div class="sidebar-block">
+          <div class="sidebar-label">Última Atualização</div>
+          <div class="sidebar-value" style="font-size: 0.9rem; font-weight: 500; color: var(--text-muted);">Sincronizado agora</div>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h3 class="section-title" style="font-size: 1.1rem; margin-bottom: 0.5rem;"><i class="fa-solid fa-compass" style="color: var(--color-super);"></i> Planejamento</h3>
+        <div class="placeholder-text">
+          <i class="fa-solid fa-chart-line" style="display:block; font-size: 1.25rem; margin-bottom: 0.5rem; opacity: 0.5;"></i>
+          Espaço reservado para futuras estatísticas e gráficos de evolução.
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+
+  <footer>
+    <a href="{{ url_for('main.painel') }}" class="btn-secondary">
+      <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+    </a>
+  </footer>
+
+</div>
+
+</body>
+</html>

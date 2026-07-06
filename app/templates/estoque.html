@@ -1,0 +1,778 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Controle de Estoque | Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-main: #070a13;
+      --bg-surface: rgba(16, 23, 38, 0.6);
+      --bg-card: rgba(30, 41, 59, 0.4);
+      --border-color: rgba(255, 255, 255, 0.06);
+      --text-main: #f8fafc;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --primary: #3b82f6;
+      --accent: #6366f1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --glass-blur: blur(12px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-main);
+      background-image:
+        radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 40%),
+        radial-gradient(circle at 100% 100%, rgba(16, 185, 129, 0.04) 0px, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .layout-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    /* HEADER */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .header-title h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-title p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+
+    /* BOTÕES */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-decoration: none;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 12px 22px;
+      border-radius: 14px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: #2563eb; transform: translateY(-1px); }
+    
+    .btn-success { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); color: var(--success); }
+    .btn-success:hover { background: var(--success); color: #fff; transform: translateY(-1px); }
+
+    .btn-secondary { background: var(--bg-card); border-color: var(--border-color); color: var(--text-light); }
+    .btn-secondary:hover { color: #fff; border-color: rgba(255, 255, 255, 0.15); }
+
+    /* BOTÕES DA TABELA DE AÇÕES */
+    .btn-action-edit {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+    .btn-action-edit:hover { background: var(--primary); color: #fff; }
+
+    .btn-action-delete {
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+    .btn-action-delete:hover { background: var(--danger); color: #fff; }
+
+    .actions-cell {
+      display: flex;
+      gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .actions-cell {
+        flex-direction: column;
+        gap: 6px;
+      }
+    }
+
+    /* CARDS DE RESUMO (GLASSMORPHISM) */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .metric-info span {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    .metric-info strong {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .metric-info strong.green-text { color: var(--success); }
+
+    .metric-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      background: rgba(255, 255, 255, 0.02);
+      color: var(--text-light);
+    }
+
+    /* GRID DE ÁREAS EXTRAS & FILTROS */
+    .inventory-utilities {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .inventory-utilities { grid-template-columns: 1fr; }
+    }
+
+    .panel-box {
+      background: var(--bg-surface);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 24px;
+    }
+
+    .panel-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* FILTROS */
+    .filter-group {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .search-wrapper i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 12px 16px 12px 44px;
+      border-radius: 12px;
+      font-family: inherit;
+      outline: none;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus { border-color: var(--primary); }
+
+    .select-field {
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-family: inherit;
+      outline: none;
+      font-size: 0.9rem;
+      min-width: 160px;
+      cursor: pointer;
+    }
+
+    /* WIDGETS LATERAIS */
+    .widgets-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .mini-widget {
+      background: rgba(255,255,255,0.01);
+      border: 1px dashed rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .mini-widget-header {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .placeholder-text {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* TABELA RESPONSIVA */
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      min-width: 1000px;
+    }
+
+    th {
+      padding: 16px 20px;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.01);
+    }
+
+    td {
+      padding: 16px 20px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-light);
+      vertical-align: middle;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .prod-name { font-weight: 600; color: #fff; }
+    .numeric-bold { font-weight: 700; font-family: monospace; font-size: 0.95rem; }
+    .green-highlight { color: var(--success); font-weight: 700; }
+
+    /* STATUS BADGES */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-success { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.15); }
+    .badge-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.15); }
+    .badge-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.15); }
+
+    /* MODAL VISUAL */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(7, 10, 19, 0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-box {
+      background: #101726;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      width: 100%;
+      max-width: 480px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      animation: modalFade 0.2s ease;
+    }
+
+    @keyframes modalFade {
+      from { transform: translateY(10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-header {
+      padding: 24px 24px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header h2 { font-size: 1.25rem; font-weight: 800; color: #fff; }
+    .modal-close { color: var(--text-muted); cursor: pointer; font-size: 1.2rem; transition: color 0.2s; }
+    .modal-close:hover { color: #fff; }
+
+    .modal-body { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+    
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 0.85rem; font-weight: 600; color: var(--text-light); }
+    
+    .modal-footer { padding: 16px 24px 24px; display: flex; justify-content: flex-end; gap: 12px; }
+
+    /* VOLTAR */
+    .footer-nav { text-align: center; margin-top: 20px; }
+    .footer-nav a {
+      color: var(--text-muted); text-decoration: none; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
+    }
+    .footer-nav a:hover { color: #fff; transform: translateX(-4px); }
+  </style>
+</head>
+<body>
+
+<div class="layout-container">
+
+  <header class="dashboard-header">
+    <div class="header-title">
+      <h1>Almoxarifado & Estoque</h1>
+      <p>Gerencie insumos, inspecione volumes e projete rendimentos primários</p>
+    </div>
+    <div class="action-buttons">
+      <button class="btn btn-primary" onclick="openModal('modalAdd')">
+        <i class="fa-solid fa-plus"></i> Adicionar Produto
+      </button>
+      <button class="btn btn-success" onclick="openModal('modalSale')">
+        <i class="fa-solid fa-cart-shopping"></i> Venda de Produto
+      </button>
+      <a href="{{ url_for('main.movimentacoes_estoque') }}" class="btn btn-secondary">
+        <i class="fa-solid fa-arrow-right-arrow-left"></i>
+        Movimentações
+      </a>
+    </div>
+  </header>
+
+  <section class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-info">
+        <span>Produtos Cadastrados</span>
+        <strong>{{ total_produtos }}</strong>
+      </div>
+      <div class="metric-icon"><i class="fa-solid fa-box"></i></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-info">
+        <span>Itens em Estoque</span>
+        <strong>{{ total_itens }}</strong>
+      </div>
+      <div class="metric-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-info">
+        <span>Valor Investido</span>
+        <strong>R$ {{ "%.2f"|format(valor_investido) }}</strong>
+      </div>
+      <div class="metric-icon"><i class="fa-solid fa-receipt"></i></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-info">
+        <span>Potencial de Venda</span>
+        <strong class="green-text">R$ {{ "%.2f"|format(valor_potencial) }}</strong>
+      </div>
+      <div class="metric-icon"><i class="fa-solid fa-chart-line"></i></div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-info">
+        <span>Lucro Estimado</span>
+        <strong class="green-text">R$ {{ "%.2f"|format(lucro_estimado) }}</strong>
+      </div>
+      <div class="metric-icon"><i class="fa-solid fa-coins"></i></div>
+    </div>
+  </section>
+
+  <div class="inventory-utilities">
+    
+    <main class="panel-box">
+      <div class="panel-title">
+        <i class="fa-solid fa-list-check" style="color: var(--primary);"></i> Itens Cadastrados
+      </div>
+
+      <div class="filter-group" style="margin-bottom: 24px;">
+        <div class="search-wrapper">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" class="input-field" placeholder="Buscar por nome do produto...">
+        </div>
+        <select class="select-field">
+          <option value="todos">Todos os Status</option>
+          <option value="disponivel">Disponível</option>
+          <option value="baixo">Baixo Estoque</option>
+          <option value="esgotado">Esgotado</option>
+        </select>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Nome do Produto</th>
+              <th>Quantidade</th>
+              <th>Val. Compra</th>
+              <th>Val. Venda</th>
+              <th>Total em Estoque</th>
+              <th>Lucro Estimado</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for produto in produtos %}
+            <tr>
+              <td class="prod-name">{{ produto.nome }}</td>
+              <td class="numeric-bold">{{ produto.quantidade }}</td>
+              <td class="numeric-bold">R$ {{ "%.2f"|format(produto.valor_compra) }}</td>
+              <td class="numeric-bold">R$ {{ "%.2f"|format(produto.valor_venda) }}</td>
+              <td class="numeric-bold text-white">R$ {{ "%.2f"|format(produto.total_estoque) }}</td>
+              <td class="green-highlight">R$ {{ "%.2f"|format(produto.lucro) }}</td>
+              <td>
+                {% if produto.quantidade > 5 %}
+                <span class="badge badge-success"><i class="fa-solid fa-circle-check"></i> Disponível</span>
+                {% elif produto.quantidade >= 1 and produto.quantidade <= 5 %}
+                <span class="badge badge-warning"><i class="fa-solid fa-triangle-exclamation"></i> Baixo Estoque</span>
+                {% else %}
+                <span class="badge badge-danger"><i class="fa-solid fa-circle-xmark"></i> Esgotado</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="actions-cell">
+                  <button class="btn-action-edit" 
+                          onclick="openEditModal('{{ produto.id }}', '{{ produto.nome }}', '{{ produto.quantidade }}', '{{ produto.valor_compra }}', '{{ produto.valor_venda }}')">
+                    <i class="fa-solid fa-pen-to-square"></i> Editar
+                  </button>
+                  <button class="btn-action-delete" 
+                          onclick="openDeleteModal('{{ produto.id }}', '{{ produto.nome }}')">
+                    <i class="fa-solid fa-trash-can"></i> Excluir
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 32px 0;">
+                Nenhum produto cadastrado no estoque.
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+    <aside class="widgets-stack">
+      
+      <div class="panel-box">
+        <div class="panel-title" style="margin-bottom: 14px;">
+          <i class="fa-solid fa-bell" style="color: var(--danger);"></i> Alertas Rápidos
+        </div>
+        <div class="mini-widget" style="border-color: rgba(239, 68, 68, 0.2); background: rgba(239, 68, 68, 0.02);">
+          <div class="mini-widget-header" style="color: var(--danger);">Verificação Automática</div>
+          <p class="placeholder-text">Itens com quantidade menor ou igual a 5 acenderão o alerta amarelo instantaneamente na tabela.</p>
+        </div>
+      </div>
+
+      <div class="panel-box">
+        <div class="panel-title" style="margin-bottom: 16px;">
+          <i class="fa-solid fa-clock-rotate-left" style="color: var(--accent);"></i> Movimentações Próximas
+        </div>
+        <div class="widgets-stack" style="gap: 12px;">
+          <div class="mini-widget">
+            <div class="mini-widget-header"><span>Histórico de Vendas</span> <i class="fa-solid fa-arrow-up-right-from-square"></i></div>
+            <p class="placeholder-text">Módulo para auditoria de saídas PDV automática em desenvolvimento.</p>
+          </div>
+          <div class="mini-widget">
+            <div class="mini-widget-header"><span>Entradas & Ajustes Manuais</span> <i class="fa-solid fa-layer-group"></i></div>
+            <p class="placeholder-text">Área reservada para reabastecimento em lote e conferências físicas.</p>
+          </div>
+          <div class="mini-widget">
+            <div class="mini-widget-header"><span>Mais Vendido do Mês</span> <i class="fa-solid fa-crown" style="color: var(--warning);"></i></div>
+            <p class="placeholder-text" style="font-style: italic;">Aguardando computação de dados.</p>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+  <div class="footer-nav">
+    <a href="/painel">
+      <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+    </a>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalAdd">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Novo Produto</h2>
+      <i class="fa-solid fa-xmark modal-close" onclick="closeModal('modalAdd')"></i>
+    </div>
+    <form method="POST" action="{{ url_for('main.estoque') }}">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nome do Produto</label>
+          <input type="text" name="nome" class="input-field" style="padding-left: 16px;" placeholder="Ex: Gel Cola Forte 500g" required>
+        </div>
+        <div class="form-group">
+          <label>Quantidade Inicial</label>
+          <input type="number" name="quantidade" class="input-field" style="padding-left: 16px;" min="0" placeholder="0" required>
+        </div>
+        <div class="form-group">
+          <label>Valor de Compra (R$)</label>
+          <input type="number" step="0.01" name="valor_compra" class="input-field" style="padding-left: 16px;" placeholder="0.00" required>
+        </div>
+        <div class="form-group">
+          <label>Valor de Venda (R$)</label>
+          <input type="number" step="0.01" name="valor_venda" class="input-field" style="padding-left: 16px;" placeholder="0.00" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalAdd')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar no Estoque</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalSale">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Registrar Saída / Venda</h2>
+      <i class="fa-solid fa-xmark modal-close" onclick="closeModal('modalSale')"></i>
+    </div>
+    <form method="POST" action="{{ url_for('main.vender_produto_estoque') }}">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Selecione o Produto</label>
+          <select name="produto_id" class="select-field" style="width: 100%;" required>
+            <option value="">Selecione...</option>
+            {% for produto in produtos %}
+              {% if produto.quantidade > 0 %}
+                <option value="{{ produto.id }}">{{ produto.nome }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Quantidade Vendida</label>
+          <input type="number" name="quantidade_vendida" class="input-field" style="padding-left: 16px;" min="1" value="1" required>
+        </div>
+        <div class="form-group">
+          <label>Valor de Venda Unitário (R$)</label>
+          <input type="number" step="0.01" name="valor_venda_real" class="input-field" style="padding-left: 16px;" placeholder="Preço padrão auto-preenchido">
+        </div>
+        <div class="form-group">
+          <label>Observação / Destino</label>
+          <input type="text" name="observacao" class="input-field" style="padding-left: 16px;" placeholder="Ex: Consumo na bancada ou Venda Direta">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalSale')">Voltar</button>
+        <button type="submit" class="btn btn-primary" style="background: var(--success);">Confirmar Saída</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalEdit">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Editar Produto</h2>
+      <i class="fa-solid fa-xmark modal-close" onclick="closeModal('modalEdit')"></i>
+    </div>
+    <form id="formEditProduct" method="POST" action="">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nome do Produto</label>
+          <input type="text" id="edit_nome" name="nome" class="input-field" style="padding-left: 16px;" required>
+        </div>
+        <div class="form-group">
+          <label>Quantidade Atual</label>
+          <input type="number" id="edit_quantidade" name="quantidade" class="input-field" style="padding-left: 16px;" min="0" required>
+        </div>
+        <div class="form-group">
+          <label>Valor de Compra (R$)</label>
+          <input type="number" step="0.01" id="edit_valor_compra" name="valor_compra" class="input-field" style="padding-left: 16px;" required>
+        </div>
+        <div class="form-group">
+          <label>Valor de Venda (R$)</label>
+          <input type="number" step="0.01" id="edit_valor_venda" name="valor_venda" class="input-field" style="padding-left: 16px;" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalEdit')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalDelete">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Remover Produto</h2>
+      <i class="fa-solid fa-xmark modal-close" onclick="closeModal('modalDelete')"></i>
+    </div>
+    <form id="formDeleteProduct" method="POST" action="">
+      <div class="modal-body">
+        <p style="color: var(--text-main); font-size: 0.95rem; line-height: 1.5;">
+          Deseja realmente remover o produto <strong id="delete_nome_prod" style="color: var(--danger);"></strong> do estoque?
+        </p>
+        <p style="color: var(--text-muted); font-size: 0.825rem; font-style: italic; margin-top: 4px;">
+          Esta ação apenas inativará o produto e poderá ser revertida futuramente.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal('modalDelete')">Cancelar</button>
+        <button type="submit" class="btn btn-primary" style="background: var(--danger);">Remover</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'flex';
+  }
+
+  function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+  }
+
+  /* FUNÇÃO DINÂMICA DE EDIÇÃO */
+  function openEditModal(id, nome, quantidade, valorCompra, valorVenda) {
+    document.getElementById('edit_nome').value = nome;
+    document.getElementById('edit_quantidade').value = quantidade;
+    document.getElementById('edit_valor_compra').value = parseFloat(valorCompra).toFixed(2);
+    document.getElementById('edit_valor_venda').value = parseFloat(valorVenda).toFixed(2);
+    
+    // Define a rota dinâmica para a action do form de edição
+    document.getElementById('formEditProduct').action = '/estoque/produto/' + id + '/editar';
+    
+    openModal('modalEdit');
+  }
+
+  /* FUNÇÃO DINÂMICA DE REMOÇÃO */
+  function openDeleteModal(id, nome) {
+    document.getElementById('delete_nome_prod').innerText = nome;
+    
+    // Define a rota dinâmica para a action do form de exclusão
+    document.getElementById('formDeleteProduct').action = '/estoque/produto/' + id + '/excluir';
+    
+    openModal('modalDelete');
+  }
+
+  window.onclick = function(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+      event.target.style.display = 'none';
+    }
+  }
+</script>
+
+</body>
+</html>
+

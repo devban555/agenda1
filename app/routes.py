@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlalchemy import extract, func
 from flask import current_app
 from . import db
-from .models import Agendamento, Cliente
+from .models import Agendamento, Cliente, Produto, MovimentacaoProduto
 from app.models import Servico, Usuario, ConfiguracaoAgenda, ExcecaoAgenda
 
 main = Blueprint('main', __name__)
@@ -2167,3 +2167,313 @@ def financeiro():
         total_agendamentos_mes=qtd_agendamentos_mes,
         movimentacoes=movimentacoes
     )
+
+@main.route("/estoque", methods=["GET", "POST"])
+@login_required
+def estoque():
+    user_id = session["user_id"]
+
+    if request.method == "POST":
+
+        nome = (request.form.get("nome") or "").strip()
+        quantidade = request.form.get("quantidade") or 0
+        valor_compra = request.form.get("valor_compra") or 0
+        valor_venda = request.form.get("valor_venda") or 0
+
+        if not nome:
+            flash("Informe o nome do produto.")
+            return redirect(url_for("main.estoque"))
+
+        try:
+            quantidade = int(quantidade)
+            valor_compra = float(valor_compra)
+            valor_venda = float(valor_venda)
+        except Exception:
+            flash("Dados inválidos para quantidade ou valores.")
+            return redirect(url_for("main.estoque"))
+
+        if quantidade < 0:
+            flash("A quantidade não pode ser negativa.")
+            return redirect(url_for("main.estoque"))
+
+        novo_produto = Produto(
+            usuario_id=user_id,
+            nome=nome,
+            quantidade_atual=quantidade,
+            valor_compra=valor_compra,
+            valor_venda=valor_venda,
+            estoque_minimo=5,
+            ativo=True
+        )
+
+        db.session.add(novo_produto)
+        db.session.commit()
+
+        movimentacao = MovimentacaoProduto(
+            produto_id=novo_produto.id,
+            usuario_id=user_id,
+            tipo="ENTRADA",
+            quantidade=quantidade,
+            valor_unitario=valor_compra,
+            observacao="Cadastro inicial"
+        )
+
+        db.session.add(movimentacao)
+        db.session.commit()
+
+        flash("Produto cadastrado com sucesso.")
+        return redirect(url_for("main.estoque"))
+
+    produtos_db = (
+        Produto.query
+        .filter_by(
+            usuario_id=user_id,
+            ativo=True
+        )
+        .order_by(Produto.nome)
+        .all()
+    )
+
+    produtos = []
+
+    for p in produtos_db:
+        quantidade = int(p.quantidade_atual or 0)
+        valor_compra = float(p.valor_compra or 0)
+        valor_venda = float(p.valor_venda or 0)
+
+        total_estoque = quantidade * valor_compra
+        lucro = (valor_venda - valor_compra) * quantidade
+
+        produtos.append({
+            "id": p.id,
+            "nome": p.nome,
+            "quantidade": quantidade,
+            "valor_compra": valor_compra,
+            "valor_venda": valor_venda,
+            "total_estoque": total_estoque,
+            "lucro": lucro,
+            "status": (
+                "Esgotado"
+                if quantidade <= 0
+                else "Baixo Estoque"
+                if quantidade <= p.estoque_minimo
+                else "Disponível"
+            )
+        })
+
+    total_produtos = len(produtos)
+
+    total_itens = sum(
+        p["quantidade"]
+        for p in produtos
+    )
+
+    valor_investido = sum(
+        p["quantidade"] * p["valor_compra"]
+        for p in produtos
+    )
+
+    valor_potencial = sum(
+        p["quantidade"] * p["valor_venda"]
+        for p in produtos
+    )
+
+    lucro_estimado = valor_potencial - valor_investido
+
+    return render_template(
+        "estoque.html",
+        produtos=produtos,
+        total_produtos=total_produtos,
+        total_itens=total_itens,
+        valor_investido=valor_investido,
+        valor_potencial=valor_potencial,
+        lucro_estimado=lucro_estimado
+    )
+
+@main.route("/estoque/produto/<int:id>/editar", methods=["POST"])
+@login_required
+def editar_produto_estoque(id):
+    user_id = session["user_id"]
+
+    produto = Produto.query.filter_by(
+        id=id,
+        usuario_id=user_id,
+        ativo=True
+    ).first_or_404()
+
+    nome = (request.form.get("nome") or "").strip()
+    quantidade = request.form.get("quantidade") or 0
+    valor_compra = request.form.get("valor_compra") or 0
+    valor_venda = request.form.get("valor_venda") or 0
+
+    if not nome:
+        flash("Informe o nome do produto.")
+        return redirect(url_for("main.estoque"))
+
+    try:
+        quantidade = int(quantidade)
+        valor_compra = float(valor_compra)
+        valor_venda = float(valor_venda)
+    except Exception:
+        flash("Dados inválidos para quantidade ou valores.")
+        return redirect(url_for("main.estoque"))
+
+    if quantidade < 0:
+        flash("A quantidade não pode ser negativa.")
+        return redirect(url_for("main.estoque"))
+
+    produto.nome = nome
+    produto.quantidade_atual = quantidade
+    produto.valor_compra = valor_compra
+    produto.valor_venda = valor_venda
+
+    db.session.commit()
+
+    flash("Produto atualizado com sucesso.")
+    return redirect(url_for("main.estoque"))
+
+
+@main.route("/estoque/produto/<int:id>/excluir", methods=["POST"])
+@login_required
+def excluir_produto_estoque(id):
+    user_id = session["user_id"]
+
+    produto = Produto.query.filter_by(
+        id=id,
+        usuario_id=user_id,
+        ativo=True
+    ).first_or_404()
+
+    produto.ativo = False
+
+    db.session.commit()
+
+    flash("Produto removido do estoque.")
+    return redirect(url_for("main.estoque"))
+
+
+@main.route("/estoque/produto/vender", methods=["POST"])
+@login_required
+def vender_produto_estoque():
+    user_id = session["user_id"]
+
+    produto_id = request.form.get("produto_id")
+    quantidade_vendida = request.form.get("quantidade_vendida") or 0
+    valor_venda_real = request.form.get("valor_venda_real") or 0
+    observacao = (request.form.get("observacao") or "").strip()
+
+    try:
+        produto_id = int(produto_id)
+        quantidade_vendida = int(quantidade_vendida)
+    except Exception:
+        flash("Dados inválidos para venda.")
+        return redirect(url_for("main.estoque"))
+
+    if quantidade_vendida <= 0:
+        flash("A quantidade vendida deve ser maior que zero.")
+        return redirect(url_for("main.estoque"))
+
+    produto = Produto.query.filter_by(
+        id=produto_id,
+        usuario_id=user_id,
+        ativo=True
+    ).first_or_404()
+
+    if quantidade_vendida > int(produto.quantidade_atual or 0):
+        flash("Quantidade vendida maior que o estoque disponível.")
+        return redirect(url_for("main.estoque"))
+
+    try:
+        if valor_venda_real:
+            valor_venda_real = float(valor_venda_real)
+        else:
+            valor_venda_real = float(produto.valor_venda or 0)
+    except Exception:
+        flash("Valor de venda inválido.")
+        return redirect(url_for("main.estoque"))
+
+    produto.quantidade_atual = int(produto.quantidade_atual or 0) - quantidade_vendida
+
+    movimentacao = MovimentacaoProduto(
+        produto_id=produto.id,
+        usuario_id=user_id,
+        tipo="SAIDA",
+        quantidade=quantidade_vendida,
+        valor_unitario=valor_venda_real,
+        observacao=observacao or "Venda / saída de produto"
+    )
+
+    db.session.add(movimentacao)
+    db.session.commit()
+
+    flash("Saída registrada com sucesso.")
+    return redirect(url_for("main.estoque"))
+
+@main.route("/estoque/movimentacoes")
+@login_required
+def movimentacoes_estoque():
+    user_id = session["user_id"]
+
+    movimentacoes = (
+        MovimentacaoProduto.query
+        .filter_by(usuario_id=user_id)
+        .order_by(MovimentacaoProduto.criado_em.desc())
+        .all()
+    )
+
+    total_entradas = sum(
+        m.quantidade for m in movimentacoes if m.tipo == "ENTRADA"
+    )
+
+    total_saidas = sum(
+        m.quantidade for m in movimentacoes if m.tipo == "SAIDA"
+    )
+
+    valor_entradas = sum(
+        m.quantidade * float(m.valor_unitario or 0)
+        for m in movimentacoes
+        if m.tipo == "ENTRADA"
+    )
+
+    valor_saidas = sum(
+        m.quantidade * float(m.valor_unitario or 0)
+        for m in movimentacoes
+        if m.tipo == "SAIDA"
+    )
+
+    return render_template(
+        "movimentacoes_estoque.html",
+        movimentacoes=movimentacoes,
+        total_entradas=total_entradas,
+        total_saidas=total_saidas,
+        valor_entradas=valor_entradas,
+        valor_saidas=valor_saidas
+    )
+
+@main.route("/clientes-vip")
+@login_required
+def clientes_vip():
+    user_id = session["user_id"]
+
+    clientes = (
+        Cliente.query
+        .filter_by(usuario_id=user_id)
+        .order_by(Cliente.nome)
+        .all()
+    )
+
+    return render_template(
+        "clientes_vip.html",
+        clientes=clientes,
+        clientes_vip=[],
+        total_clientes=len(clientes),
+        total_vip=0,
+        total_premium=0,
+        total_super_premium=0
+    )
+
+@main.route("/clientes-vip/atualizar", methods=["POST"])
+@login_required
+def atualizar_cliente_vip():
+    flash("Função em desenvolvimento.")
+    return redirect(url_for("main.clientes_vip"))

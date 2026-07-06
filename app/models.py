@@ -84,7 +84,7 @@ class Agendamento(db.Model):
 
     cliente_id = db.Column(db.Integer, db.ForeignKey('cliente.id'), nullable=True)
     cliente = db.relationship('Cliente')
-    
+
     nome = db.Column(db.String(100), nullable=False)
     telefone = db.Column(db.String(20), nullable=False)
 
@@ -150,7 +150,39 @@ class Servico(db.Model):
         else:
             self.preco = value
 
+# =========================
+# PRODUTO / ESTOQUE
+# =========================
+class Produto(db.Model):
+    __tablename__ = 'produto'
 
+    id = db.Column(db.Integer, primary_key=True)
+
+    usuario_id = db.Column(
+        db.Integer,
+        db.ForeignKey('usuario.id'),
+        nullable=False
+    )
+
+    nome = db.Column(db.String(150), nullable=False)
+
+    quantidade_atual = db.Column(db.Integer, default=0)
+
+    valor_compra = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    valor_venda = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+
+    estoque_minimo = db.Column(db.Integer, default=5)
+
+    ativo = db.Column(db.Boolean, default=True)
+
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+    atualizado_em = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
+
+    usuario = db.relationship('Usuario', backref='produtos')
 # =========================
 # CONFIGURAÇÃO
 # =========================
@@ -191,3 +223,35 @@ class ExcecaoAgenda(db.Model):
     __table_args__ = (
         db.UniqueConstraint('usuario_id', 'data'),
     )
+
+class MovimentacaoProduto(db.Model):
+    __tablename__ = "movimentacao_produto"
+
+    id = db.Column(db.Integer, primary_key=True)
+
+    produto_id = db.Column(
+        db.Integer,
+        db.ForeignKey("produto.id"),
+        nullable=False
+    )
+
+    usuario_id = db.Column(
+        db.Integer,
+        db.ForeignKey("usuario.id"),
+        nullable=False
+    )
+
+    tipo = db.Column(db.String(20), nullable=False)
+
+    quantidade = db.Column(db.Integer, nullable=False)
+
+    valor_unitario = db.Column(db.Float, nullable=False)
+
+    observacao = db.Column(db.Text)
+
+    criado_em = db.Column(
+        db.DateTime,
+        default=datetime.now
+    )
+
+    produto = db.relationship("Produto")
