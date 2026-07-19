@@ -2,6 +2,7 @@
 
 {% block meta_extra %}
   <meta name="color-scheme" content="dark">
+  {% include "includes/pwa_meta.html" %}
 {% endblock %}
 
 {% block styles %}
@@ -13,4 +14,5 @@
 
 {% block scripts %}
   {% block extra_js %}{% endblock %}
+  <script src="{{ url_for('static', filename='js/pwa-register.js') }}" defer></script>
 {% endblock %}
