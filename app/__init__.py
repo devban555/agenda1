@@ -1,5 +1,5 @@
 from flask import Flask
-from config import Config
+from config import Config, MASTERADM_KEY
 from .models import db
 import logging
 import os
@@ -7,6 +7,12 @@ import os
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    if not app.config.get('SECRET_KEY'):
+        raise RuntimeError('SECRET_KEY não configurada no ambiente.')
+
+    if not MASTERADM_KEY:
+        raise RuntimeError('MASTERADM_KEY não configurada no ambiente.')
 
     # =========================
     # LOGS (NOVO)

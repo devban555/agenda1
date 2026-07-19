@@ -1,0 +1,26 @@
+:root {
+  /* Compatibilidade e identidade das páginas de autenticação */
+  --auth-bg: var(--color-background);
+  --auth-card: var(--color-surface);
+  --auth-card-strong: var(--color-surface-strong);
+  --auth-text: var(--color-text);
+  --auth-muted: var(--color-muted);
+  --auth-primary: var(--color-primary);
+  --auth-primary-hover: var(--color-primary-hover);
+  --auth-success: var(--color-success);
+  --auth-warning: var(--color-warning);
+  --auth-danger: var(--color-danger);
+  --auth-border: var(--color-border);
+  --auth-focus: var(--color-focus);
+  --auth-input-bg: var(--color-input);
+  --auth-on-primary: var(--color-on-primary);
+  --auth-shadow: var(--shadow-md);
+  --auth-radius-sm: var(--radius-sm);
+  --auth-radius-md: var(--radius-md);
+  --auth-radius-lg: var(--radius-lg);
+}
+
+body.auth-body {
+  color: var(--auth-text);
+  background-color: var(--auth-bg);
+}

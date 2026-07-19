@@ -1,269 +1,97 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Serviços Disponíveis</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&family=Montserrat:wght@600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.5);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #3b82f6;
-      --accent: #60a5fa;
-      --success: #10b981;
-      --border: rgba(255, 255, 255, 0.08);
-      --glass: rgba(255, 255, 255, 0.03);
-    }
+{% extends "base_public.html" %}
 
-    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+{% block title %}Serviços Disponíveis{% endblock %}
+{% block body_class %}public-body service-page{% endblock %}
 
-    body {
-      margin: 0;
-      font-family: 'Poppins', system-ui, sans-serif;
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
-      color: var(--text);
-      min-height: 100vh;
-      line-height: 1.5;
-    }
+{% block font_stylesheets %}
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Montserrat:wght@600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+{% endblock %}
 
-    /* Header & Branding */
-    .brand-section {
-      text-align: center;
-      padding: 40px 20px 20px;
-    }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/service.css') }}">
+{% endblock %}
 
-    .titulo {
-      margin: 0;
-      font-size: clamp(1.8rem, 5vw, 2.5rem);
-      font-weight: 800;
-      background: linear-gradient(to right, #fff, var(--muted));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      letter-spacing: -0.02em;
-    }
+{% block body %}
+<section class="service-brand" aria-labelledby="tituloServico">
+  <h1
+    id="tituloServico"
+    class="service-title"
+    data-title-font="{{ usuario.fonte_titulo or 'poppins' }}"
+  >
+    {{ usuario.nome_fantasia or usuario.username }}
+  </h1>
+</section>
 
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      background: rgba(11, 15, 26, 0.7);
-      border-bottom: 1px solid var(--border);
-      padding: 15px 0;
-      text-align: center;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 2px;
-    }
+<header class="service-page-header">
+  {% if profissional is defined and profissional %}
+    Serviços de {{ profissional.nome }}
+  {% else %}
+    Serviços Disponíveis
+  {% endif %}
+</header>
 
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 30px 20px;
-    }
-
-    /* Toolbar/Nav */
-    .toolbar {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 40px;
-    }
-
-    .btn-outline {
-      padding: 12px 24px;
-      border-radius: 50px;
-      border: 1px solid var(--border);
-      background: var(--glass);
-      color: var(--text);
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: all 0.3s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .btn-outline:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--primary);
-      transform: translateY(-2px);
-    }
-
-    /* Grid de Serviços */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 24px;
-    }
-
-    .card {
-      background: var(--card);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 24px;
-      display: flex;
-      flex-direction: column;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      animation: fadeIn 0.5s ease backwards;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card:hover {
-      transform: translateY(-8px);
-      border-color: rgba(59, 130, 246, 0.4);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-      background: rgba(30, 41, 59, 0.7);
-    }
-
-    .card h3 {
-      margin: 0 0 16px 0;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .meta {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-
-    .tag {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 0.9rem;
-    }
-
-    .tag-price {
-      color: var(--success);
-      font-weight: 700;
-      font-size: 1.1rem;
-    }
-
-    .tag-time {
-      color: var(--muted);
-    }
-
-    .actions { margin-top: auto; }
-
-    .btn-primary {
-      width: 100%;
-      padding: 14px;
-      border-radius: 16px;
-      border: none;
-      background: linear-gradient(135deg, var(--primary), #2563eb);
-      color: white;
-      font-weight: 700;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: opacity 0.2s;
-    }
-
-    .btn-primary:hover {
-      opacity: 0.9;
-      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
-    }
-
-    .empty {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 60px;
-      background: var(--glass);
-      border-radius: 24px;
-      border: 1px dashed var(--border);
-      color: var(--muted);
-    }
-
-    /* Mobile */
-    @media (max-width: 600px) {
-      .grid { grid-template-columns: 1fr; }
-      .titulo { font-size: 1.5rem; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="brand-section">
-    <h2 id="tituloServico" class="titulo">
-      {{ usuario.nome_fantasia or usuario.username }}
-    </h2>
-  </div>
-
-  <header>Serviços Disponíveis</header>
-
-  <div class="container">
-    <div class="toolbar">
-      <a class="btn-outline" href="{{ url_for('main.consultar_publico', slug=usuario.slug) }}">
-        <i class="fa-regular fa-calendar-check"></i> Consultar Agenda Completa
+<main class="service-page-content">
+  <nav class="service-toolbar" aria-label="Consulta de agendamentos">
+    {% if possui_selecao_profissional|default(false) %}
+      <a class="service-outline-button" href="{{ url_for('main.agenda_publica_slug', slug=usuario.slug) }}">
+        <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+        Trocar profissional
       </a>
-    </div>
-
-    {% if servicos and servicos|length > 0 %}
-    <div class="grid">
-      {% for servico in servicos %}
-      <div class="card" style="animation-delay: {{ loop.index0 * 0.1 }}s">
-        <h3>{{ servico.titulo }}</h3>
-
-        <div class="meta">
-          <div class="tag tag-price">
-            <i class="fa-solid fa-coins"></i> R$ {{ servico.valor }}
-          </div>
-          <div class="tag tag-time">
-            <i class="fa-regular fa-clock"></i> {{ servico.tempo }} min de duração
-          </div>
-        </div>
-
-        <div class="actions">
-          <a class="btn-primary" href="{{ url_for('main.agendar_por_id', servico_id=servico.id) }}">
-            <span>Agendar Agora</span>
-            <i class="fa-solid fa-arrow-right"></i>
-          </a>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-    {% else %}
-      <div class="empty">
-        <i class="fa-regular fa-calendar-xmark" style="font-size: 2rem; margin-bottom: 15px; display: block;"></i>
-        <p>Nenhum serviço disponível no momento.</p>
-      </div>
     {% endif %}
-  </div>
+    <a class="service-outline-button" href="{{ url_for('main.consultar_publico', slug=usuario.slug) }}">
+      <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+      Consultar Agenda Completa
+    </a>
+  </nav>
 
-  <script>
-    const titulo = document.getElementById('tituloServico');
-    const fonteTitulo = "{{ usuario.fonte_titulo }}"; // Pegando direto do template se possível
+  {% if servicos and servicos|length > 0 %}
+    <section class="services-grid" aria-label="Serviços disponíveis">
+      {% for servico in servicos %}
+        <article class="service-card service-card--delay-{{ loop.index0 % 6 }}">
+          <h2>{{ servico.titulo }}</h2>
 
-    const fontes = {
-      'poppins': "'Poppins', sans-serif",
-      'montserrat': "'Montserrat', sans-serif",
-      'playfair': "'Playfair Display', serif"
-    };
+          <div class="service-meta">
+            <div class="service-tag service-tag--price">
+              <i class="fa-solid fa-coins" aria-hidden="true"></i>
+              R$ {{ servico.valor }}
+            </div>
+            <div class="service-tag service-tag--time">
+              <i class="fa-regular fa-clock" aria-hidden="true"></i>
+              {{ servico.tempo }} min de duração
+            </div>
+          </div>
 
-    if (fontes[fonteTitulo]) {
-      titulo.style.fontFamily = fontes[fonteTitulo];
-    }
-  </script>
-</body>
-</html>
+          <div class="service-actions">
+            <a class="service-primary-button" href="{{ url_for('main.agendar_por_id', servico_id=servico.id) }}">
+              <span>Agendar Agora</span>
+              <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+            </a>
+          </div>
+        </article>
+      {% endfor %}
+    </section>
+  {% else %}
+    <div class="service-empty-state">
+      <i class="fa-regular fa-calendar-xmark service-empty-icon" aria-hidden="true"></i>
+      <p>Nenhum serviço disponível no momento.</p>
+    </div>
+  {% endif %}
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const titulo = document.getElementById("tituloServico");
+  const fonteTitulo = titulo.dataset.titleFont;
+
+  const fontes = {
+    poppins: "'Poppins', sans-serif",
+    montserrat: "'Montserrat', sans-serif",
+    playfair: "'Playfair Display', serif"
+  };
+
+  if (fontes[fonteTitulo]) {
+    titulo.style.fontFamily = fontes[fonteTitulo];
+  }
+</script>
+{% endblock %}

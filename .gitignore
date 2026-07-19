@@ -6,11 +6,24 @@ __pycache__/
 
 # Virtual environment
 venv/
-.env/
+.venv/
+.env
+.env.*
+!.env.example
 
 # SQLite database
+agendamento/instance/*
+!agendamento/instance/.gitkeep
+*.db*
+*.sqlite
+*.sqlite-*
 *.sqlite3
-*.db
+
+# Backups locais e artefatos de migração
+*.backup*
+*.bak
+*.bak_*
+*_antes_migracao
 
 # Logs
 *.log

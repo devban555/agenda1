@@ -1,296 +1,66 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agendar: {{ servico.nome }}</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+{% extends "base_public.html" %}
 
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.4);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-glow: rgba(59, 130, 246, 0.3);
-      --border: rgba(255, 255, 255, 0.08);
-      --accent: #10b981; /* Verde para o valor/preço */
-    }
+{% block title %}Agendar: {{ servico.titulo }}{% endblock %}
+{% block body_class %}public-body schedule-service-page{% endblock %}
 
-    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/agendar-servico.css') }}">
+{% endblock %}
 
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 580px;
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 32px;
-      padding: 32px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    }
-
-    /* HEADER DO SERVIÇO */
-    .service-header {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    h2 {
-      margin: 0 0 16px;
-      font-weight: 800;
-      font-size: 1.6rem;
-      letter-spacing: -0.5px;
-    }
-
-    .info-bar {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .info-tag {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border);
-      padding: 8px 16px;
-      border-radius: 12px;
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .info-tag i { color: var(--primary); }
-    .info-tag.price i { color: var(--accent); }
-
-    /* FORMULÁRIO */
-    label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--muted);
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    input[type="date"] {
-      width: 100%;
-      padding: 14px 18px;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      color: #fff;
-      font-family: inherit;
-      font-size: 1rem;
-      margin-bottom: 24px;
-      outline: none;
-      transition: 0.3s;
-    }
-
-    input[type="date"]:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-    }
-
-    /* GRID DE HORÁRIOS */
-    h3 {
-      font-size: 0.9rem;
-      color: var(--muted);
-      margin-bottom: 12px;
-    }
-
-    .horarios-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-      gap: 10px;
-      margin-bottom: 30px;
-    }
-
-    .horario-btn {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border);
-      padding: 12px 10px;
-      border-radius: 14px;
-      color: #fff;
-      font-weight: 700;
-      font-size: 0.9rem;
-      cursor: pointer;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .horario-btn:hover {
-      background: var(--primary);
-      border-color: var(--primary);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 20px var(--primary-glow);
-    }
-
-    .horario-btn small {
-      font-weight: 400;
-      font-size: 0.7rem;
-      opacity: 0.7;
-    }
-
-    /* EMPTY STATE / LOADING */
-    .empty-state {
-      grid-column: 1 / -1;
-      text-align: center;
-      padding: 20px;
-      color: var(--muted);
-      font-size: 0.9rem;
-      background: rgba(0,0,0,0.1);
-      border-radius: 16px;
-      border: 1px dashed var(--border);
-    }
-
-    /* VOLTAR */
-    .btn-back {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      text-decoration: none;
-      color: var(--muted);
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: 0.3s;
-    }
-
-    .btn-back:hover { color: #fff; }
-
-    @media (max-width: 480px) {
-      .container { padding: 24px; }
-      .info-bar { flex-wrap: wrap; }
-      .horarios-grid { grid-template-columns: repeat(3, 1fr); }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    <div class="service-header">
-      <h2>{{ servico.nome }}</h2>
-      <div class="info-bar">
-        <div class="info-tag price">
-          <i class="fa-solid fa-tag"></i> R$ {{ servico.valor }}
-        </div>
-        <div class="info-tag">
-          <i class="fa-solid fa-clock"></i> {{ servico.tempo }}
-        </div>
+{% block body %}
+<main class="schedule-service-card">
+  <header class="schedule-service-header">
+    <h1>{{ servico.titulo }}</h1>
+    <div class="schedule-service-info">
+      <div class="schedule-info-tag">
+        <i class="fa-solid fa-user" aria-hidden="true"></i>
+        {{ profissional.nome }}
+      </div>
+      <div class="schedule-info-tag schedule-info-tag--price">
+        <i class="fa-solid fa-tag" aria-hidden="true"></i>
+        R$ {{ servico.valor }}
+      </div>
+      <div class="schedule-info-tag">
+        <i class="fa-solid fa-clock" aria-hidden="true"></i>
+        {{ servico.tempo }}
       </div>
     </div>
+  </header>
 
-    <form method="POST" id="form-confirmar" action="/confirmar_agendamento">
-      <input type="hidden" name="servico_id" value="{{ servico.id }}">
-      <input type="hidden" name="hora" id="hora-escolhida">
+  <form
+    method="POST"
+    id="form-confirmar"
+    action="{{ url_for('main.confirmar_agendamento') }}"
+    data-service-id="{{ servico.id }}"
+    data-schedules-url="{{ url_for('main.verificar_horarios') }}"
+  >
+    <input type="hidden" name="servico_id" value="{{ servico.id }}">
+    <input type="hidden" name="hora" id="hora-escolhida">
 
-      <label for="data"><i class="fa-regular fa-calendar-check"></i> Selecione o dia:</label>
-      <input type="date" id="data" name="data" required>
+    <label for="data">
+      <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+      Selecione o dia:
+    </label>
+    <input type="date" id="data" name="data" required>
 
-      <div id="section-horarios" style="display:none;">
-        <h3><i class="fa-regular fa-clock"></i> Horários disponíveis:</h3>
-        <div class="horarios-grid" id="horarios-container"></div>
-      </div>
-    </form>
+    <section id="section-horarios" class="schedule-times" hidden>
+      <h2>
+        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+        Horários disponíveis:
+      </h2>
+      <div class="schedule-times-grid" id="horarios-container" aria-live="polite"></div>
+    </section>
+  </form>
 
-    <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
-      <a href="/service" class="btn-back">
-        <i class="fa-solid fa-chevron-left"></i> Voltar aos serviços
-      </a>
-    </div>
-  </div>
+  <footer class="schedule-service-footer">
+    <a href="{{ url_for('main.agenda_profissional_publica', slug=usuario.slug, profissional_slug=profissional.slug) }}" class="schedule-back-button">
+      <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+      Voltar aos serviços
+    </a>
+  </footer>
+</main>
+{% endblock %}
 
-  <script>
-    const inputData = document.getElementById('data')
-    const container = document.getElementById('horarios-container')
-    const sectionHorarios = document.getElementById('section-horarios')
-    const form = document.getElementById('form-confirmar')
-    const servicoId = "{{ servico.id }}"
-
-    inputData.addEventListener('change', () => {
-      container.innerHTML = '<div class="empty-state">Buscando horários...</div>'
-      sectionHorarios.style.display = 'block'
-
-      fetch('/verificar_horarios', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-          data: inputData.value,
-          servico_id: servicoId
-        })
-      })
-      .then(r => r.json())
-      .then(horarios => {
-        container.innerHTML = ''
-
-        if (horarios.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <div style="font-size:48px;margin-bottom:12px;"></div>
-
-                    <strong>
-                        Não há tempo disponível para este serviço nesta data.
-                    </strong>
-
-                    <p style="margin-top:10px;">
-                        Este serviço exige um período maior de atendimento e os horários livres já não comportam sua duração.
-                    </p>
-
-                    <p style="margin-top:8px;">
-                        Escolha outra data ou selecione um serviço diferente.
-                    </p>
-                </div>
-          `
-          return
-        }
-
-        horarios.forEach(h => {
-          const btn = document.createElement('button')
-          btn.type = 'button'
-          btn.className = 'horario-btn'
-          btn.innerHTML = `<span>${h}</span><small>Disponível</small>`
-
-          btn.onclick = () => {
-            // Pequeno efeito visual antes de enviar
-            btn.style.transform = 'scale(0.95)'
-            btn.style.background = 'var(--accent)'
-
-            setTimeout(() => {
-              document.getElementById('hora-escolhida').value = h
-              form.submit()
-            }, 150)
-          }
-          container.appendChild(btn)
-        })
-      })
-      .catch(err => {
-        container.innerHTML = '<div class="empty-state">Erro ao carregar. Tente novamente.</div>'
-      })
-    })
-  </script>
-
-</body>
-</html>
+{% block extra_js %}
+  <script src="{{ url_for('static', filename='js/pages/agendar-servico.js') }}" defer></script>
+{% endblock %}

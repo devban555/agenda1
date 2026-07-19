@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block meta_extra %}
+  <meta name="color-scheme" content="dark">
+{% endblock %}
+
+{% block styles %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/public-base.css') }}">
+  {% block extra_css %}{% endblock %}
+{% endblock %}
+
+{% block body_class %}public-body{% endblock %}
+
+{% block scripts %}
+  {% block extra_js %}{% endblock %}
+{% endblock %}

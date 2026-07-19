@@ -1,382 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Gestão de Clientes</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+{% extends "base_admin.html" %}
 
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.4);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #3b82f6;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --border: rgba(255, 255, 255, 0.08);
-      --glass: rgba(255, 255, 255, 0.03);
-    }
+{% block title %}Gestão de Clientes{% endblock %}
+{% block body_class %}admin-body clientes-page{% endblock %}
 
-    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/clientes.css') }}">
+{% endblock %}
 
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
-      color: var(--text);
-      min-height: 100vh;
-      padding: 40px 20px;
-    }
-
-    h1 {
-      text-align: center;
-      font-weight: 800;
-      font-size: clamp(1.8rem, 4vw, 2.2rem);
-      margin-bottom: 40px;
-      background: linear-gradient(to right, #fff, var(--muted));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .wrap { max-width: 1100px; margin: 0 auto; }
-
-    /* SEÇÃO DE ESTATÍSTICAS DO TOPO */
-    .crm-stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .crm-stat-card {
-      background: var(--card);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 20px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .crm-stat-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: rgba(59, 130, 246, 0.1);
-      color: var(--primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.3rem;
-    }
-
-    .crm-stat-card.active-card .crm-stat-icon {
-      background: rgba(16, 185, 129, 0.1);
-      color: var(--success);
-    }
-
-    .crm-stat-card.inactive-card .crm-stat-icon {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-    }
-
-    .crm-stat-info h3 {
-      margin: 0;
-      font-size: 0.8rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .crm-stat-info p {
-      margin: 4px 0 0;
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: #fff;
-      line-height: 1;
-    }
-
-    /* FILTROS E PESQUISA */
-    .controls-container {
-      background: var(--card);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 24px;
-      margin-bottom: 30px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .pesquisa-container {
-      display: flex;
-      gap: 12px;
-    }
-
-    .input-group {
-      position: relative;
-      flex: 1;
-    }
-
-    .input-group i {
-      position: absolute;
-      left: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-    }
-
-    .input {
-      width: 100%;
-      padding: 14px 15px 14px 45px;
-      background: rgba(0,0,0,0.2);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      color: white;
-      font-family: inherit;
-      transition: 0.3s;
-    }
-
-    .input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
-
-    .btn-search {
-      padding: 0 25px;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .btn-search:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); }
-
-    /* SEGMENTOS FILTROS */
-    .segmentos-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 15px;
-    }
-
-    .btn-segmento {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      padding: 8px 16px;
-      border-radius: 10px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.85rem;
-      transition: all 0.2s;
-    }
-
-    .btn-segmento:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-    }
-
-    .btn-segmento.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-    }
-
-    .btn-crm-action.history {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--warning);
-      border-color: rgba(245, 158, 11, 0.2);
-    }
-
-    .btn-crm-action.history:hover {
-      background: var(--warning);
-      color: #fff;
-    }
-
-    /* TABELA */
-    .table-card {
-      background: var(--card);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      overflow: hidden;
-    }
-
-    .table-wrap { overflow-x: auto; }
-
-    table { width: 100%; border-collapse: collapse; min-width: 900px; }
-
-    th {
-      background: rgba(255,255,255,0.03);
-      padding: 18px 20px;
-      text-align: left;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      border-bottom: 1px solid var(--border);
-    }
-
-    td { padding: 18px 20px; border-bottom: 1px solid var(--border); font-size: 0.9rem; vertical-align: middle; }
-
-    tbody tr:hover { background: rgba(59, 130, 246, 0.03); }
-
-    .contact-name { font-weight: 700; color: #fff; }
-
-    .contact-phone {
-      color: var(--text);
-      text-decoration: none;
-      font-family: monospace;
-      font-size: 0.95rem;
-    }
-
-    .contact-phone:hover { color: var(--primary); }
-
-    .badge-count {
-      background: rgba(255,255,255,0.05);
-      padding: 4px 12px;
-      border-radius: 8px;
-      font-weight: 700;
-      border: 1px solid var(--border);
-    }
-
-    .status {
-      display: inline-block;
-      padding: 5px 12px;
-      border-radius: 8px;
-      font-size: 0.7rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
-    }
-
-    .status-ativo { background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.2); }
-    .status-inativo { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
-
-    /* BOTÕES DE AÇÃO VISUAIS */
-    .crm-actions { display: flex; gap: 8px; }
-
-    .btn-crm-action {
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.2s;
-      border: 1px solid transparent;
-      cursor: pointer;
-    }
-
-    .btn-crm-action.edit {
-      background: rgba(59, 130, 246, 0.1);
-      color: var(--primary);
-      border-color: rgba(59, 130, 246, 0.2);
-    }
-
-    .btn-crm-action.edit:hover { background: var(--primary); color: #fff; }
-
-    .btn-crm-action.delete {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-      border-color: rgba(239, 68, 68, 0.2);
-    }
-
-    .btn-crm-action.delete:hover { background: var(--danger); color: #fff; }
-
-    /* CARD ESTADO VAZIO */
-    .empty-state { text-align: center; padding: 60px 40px; }
-    .empty-state i { font-size: 3rem; color: var(--muted); margin-bottom: 16px; }
-    .empty-state p { color: var(--muted); font-size: 1.05rem; margin: 0; }
-
-    /* MODAL DE EDIÇÃO / HISTÓRICO */
-    .crm-modal {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(11, 15, 26, 0.8);
-      backdrop-filter: blur(8px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      opacity: 0; pointer-events: none;
-      transition: all 0.3s ease;
-    }
-
-    .crm-modal.open { opacity: 1; pointer-events: auto; }
-
-    .crm-modal-content {
-      background: #1e293b;
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      width: 100%;
-      max-width: 500px;
-      padding: 30px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-      max-height: 85vh;
-      overflow-y: auto;
-    }
-
-    .crm-modal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-
-    .crm-modal-header h2 { margin: 0; font-size: 1.3rem; font-weight: 800; }
-
-    .crm-modal-close {
-      background: transparent; border: none; color: var(--muted);
-      font-size: 1.2rem; cursor: pointer;
-    }
-
-    .crm-modal-close:hover { color: #fff; }
-
-    .form-group { margin-bottom: 16px; }
-    .form-group label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
-
-    .select-input {
-      width: 100%; padding: 12px;
-      background: rgba(0,0,0,0.3); border: 1px solid var(--border);
-      border-radius: 10px; color: #fff; font-family: inherit;
-    }
-
-    .crm-modal-footer {
-      display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px;
-    }
-
-    .voltar { text-align: center; margin-top: 40px; }
-    .voltar a {
-      color: var(--muted); text-decoration: none; font-weight: 600;
-      display: inline-flex; align-items: center; gap: 8px; transition: 0.3s;
-    }
-    .voltar a:hover { color: #fff; transform: translateX(-5px); }
-
-    @media (max-width: 768px) {
-      .pesquisa-container { flex-direction: column; }
-      .btn-search { padding: 14px; }
-    }
-  </style>
-</head>
-<body>
+{% block body %}
 
   <div class="wrap">
     <h1>Gestão de Clientes</h1>
@@ -496,247 +127,248 @@
       </div>
     </div>
   </div>
+{% endblock %}
 
-  <script>
-    let cacheClientes = []; // Cache local para busca em tempo real em tela
-    let filtroAtivo = null;
+{% block extra_js %}
+<script>
+let cacheClientes = []; // Cache local para busca em tempo real em tela
+let filtroAtivo = null;
 
-    // Carrega dados agregados e atualiza a tabela vinda do backend Flask
-    async function carregarDadosCrm() {
-      if (!filtroAtivo) return;
+// Carrega dados agregados e atualiza a tabela vinda do backend Flask
+async function carregarDadosCrm() {
+  if (!filtroAtivo) return;
 
-      try {
-        // Envia apenas o filtro, delegando o cálculo do período atual ao backend
-        const resposta = await fetch(`/api/crm/dados?filtro=${filtroAtivo}`);
-        const dados = await resposta.json();
+  try {
+    // Envia apenas o filtro, delegando o cálculo do período atual ao backend
+    const resposta = await fetch(`/api/crm/dados?filtro=${filtroAtivo}`);
+    const dados = await resposta.json();
 
-        // Atualizar Contadores do Topo
-        document.getElementById('stat-total-agendamentos').innerText = dados.total_agendamentos;
-        document.getElementById('stat-semana-count').innerText = dados.agendamentos_semana;
-        document.getElementById('stat-mes-count').innerText = dados.agendamentos_mes;
-        document.getElementById('stat-inativos-count').innerText = dados.total_inativos;
+    // Atualizar Contadores do Topo
+    document.getElementById('stat-total-agendamentos').innerText = dados.total_agendamentos;
+    document.getElementById('stat-semana-count').innerText = dados.agendamentos_semana;
+    document.getElementById('stat-mes-count').innerText = dados.agendamentos_mes;
+    document.getElementById('stat-inativos-count').innerText = dados.total_inativos;
 
-        cacheClientes = dados.clientes;
-        renderizarTabela(cacheClientes);
+    cacheClientes = dados.clientes;
+    renderizarTabela(cacheClientes);
 
-      } catch (erro) {
-        console.error("Erro ao buscar dados do CRM:", erro);
-      }
+  } catch (erro) {
+    console.error("Erro ao buscar dados do CRM:", erro);
+  }
+}
+
+function renderizarTabela(clientes) {
+  const container = document.getElementById('table-container');
+  const termoBusca = document.getElementById('crm-search-input').value.toLowerCase();
+
+  // Filtragem por texto em tempo real do cache local
+  let filtrados = clientes;
+  if (termoBusca) {
+    filtrados = clientes.filter(c =>
+      c.nome.toLowerCase().includes(termoBusca) ||
+      c.telefone.toLowerCase().includes(termoBusca)
+    );
+  }
+
+  if (filtrados.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <i class="fa-regular fa-folder-open"></i>
+        <p>Nenhum cliente correspondente encontrado para este segmento.</p>
+      </div>`;
+    return;
+  }
+
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Telefone</th>
+          <th>Recorrente</th>
+          <th>Visitas Realizadas</th>
+          <th>Última Visita</th>
+          <th>Status (60d)</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+  filtrados.forEach(c => {
+    const dataFormatada = c.ultima_visita ? c.ultima_visita.split('-').reverse().join('/') : '—';
+    const badgeRecorrente = c.recorrente === 'sim' ?
+      `<span class="status status-ativo"><i class="fa-solid fa-rotate"></i> Sim</span>` :
+      `<span class="status history" style="border:1px solid var(--border)">Não</span>`;
+
+    const statusTag = c.status === 'ativo' ?
+      `<span class="status status-ativo">🟢 ATIVO</span>` :
+      `<span class="status status-inativo">🔴 INATIVO</span>`;
+
+    html += `
+      <tr>
+        <td class="contact-name">${c.nome}</td>
+        <td><a href="tel:${c.telefone}" class="contact-phone">${c.telefone}</a></td>
+        <td>${badgeRecorrente}</td>
+        <td><span class="badge-count">${c.visitas}</span></td>
+        <td style="color: var(--muted)">${dataFormatada}</td>
+        <td>${statusTag}</td>
+        <td>
+          <div class="crm-actions">
+            <button class="btn-crm-action edit" onclick="abrirEdicao(${c.id})">
+              <i class="fa-solid fa-pen"></i> Editar
+            </button>
+            <button class="btn-crm-action history" onclick="abrirHistorico(${c.id})">
+              <i class="fa-solid fa-clock-rotate-left"></i> Histórico
+            </button>
+            <button class="btn-crm-action delete" onclick="excluirClienteBackend(${c.id})">
+              <i class="fa-solid fa-trash"></i> Excluir
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  });
+
+  html += `</tbody></table>`;
+  container.innerHTML = html;
+}
+
+// Eventos dos botões de segmento
+document.querySelectorAll('.btn-segmento').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.btn-segmento').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    filtroAtivo = this.getAttribute('data-filter');
+    carregarDadosCrm();
+  });
+});
+
+// Ouvintes para pesquisa
+document.getElementById('crm-search-btn').addEventListener('click', () => renderizarTabela(cacheClientes));
+document.getElementById('crm-search-input').addEventListener('keyup', () => renderizarTabela(cacheClientes));
+
+// Funções do Modal de Edição (Envio para o Backend)
+function abrirEdicao(id) {
+  const cliente = cacheClientes.find(c => c.id === id);
+  if (!cliente) return;
+
+  document.getElementById('edit-client-id').value = cliente.id;
+  document.getElementById('edit-client-name').value = cliente.nome;
+  document.getElementById('edit-client-phone').value = cliente.telefone;
+  document.getElementById('edit-client-recorrente').value = cliente.recorrente;
+
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function fecharModal() { document.getElementById('edit-modal').classList.remove('open'); }
+document.getElementById('close-modal-btn').addEventListener('click', fecharModal);
+document.getElementById('cancel-modal-btn').addEventListener('click', fecharModal);
+
+document.getElementById('crm-edit-form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const id = document.getElementById('edit-client-id').value;
+
+  const payload = {
+    nome: document.getElementById('edit-client-name').value,
+    telefone: document.getElementById('edit-client-phone').value,
+    recorrente: document.getElementById('edit-client-recorrente').value
+  };
+
+  try {
+    const resposta = await fetch(`/api/crm/editar/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const resultado = await resposta.json();
+    if(resultado.success) {
+      fecharModal();
+      carregarDadosCrm();
     }
+  } catch (erro) { console.error("Erro ao salvar alterações:", erro); }
+});
 
-    function renderizarTabela(clientes) {
-      const container = document.getElementById('table-container');
-      const termoBusca = document.getElementById('crm-search-input').value.toLowerCase();
-
-      // Filtragem por texto em tempo real do cache local
-      let filtrados = clientes;
-      if (termoBusca) {
-        filtrados = clientes.filter(c =>
-          c.nome.toLowerCase().includes(termoBusca) ||
-          c.telefone.toLowerCase().includes(termoBusca)
-        );
-      }
-
-      if (filtrados.length === 0) {
-        container.innerHTML = `
-          <div class="empty-state">
-            <i class="fa-regular fa-folder-open"></i>
-            <p>Nenhum cliente correspondente encontrado para este segmento.</p>
-          </div>`;
-        return;
-      }
-
-      let html = `
-        <table>
-          <thead>
-            <tr>
-              <th>Nome</th>
-              <th>Telefone</th>
-              <th>Recorrente</th>
-              <th>Visitas Realizadas</th>
-              <th>Última Visita</th>
-              <th>Status (60d)</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody>`;
-
-      filtrados.forEach(c => {
-        const dataFormatada = c.ultima_visita ? c.ultima_visita.split('-').reverse().join('/') : '—';
-        const badgeRecorrente = c.recorrente === 'sim' ?
-          `<span class="status status-ativo"><i class="fa-solid fa-rotate"></i> Sim</span>` :
-          `<span class="status history" style="border:1px solid var(--border)">Não</span>`;
-
-        const statusTag = c.status === 'ativo' ?
-          `<span class="status status-ativo">🟢 ATIVO</span>` :
-          `<span class="status status-inativo">🔴 INATIVO</span>`;
-
-        html += `
-          <tr>
-            <td class="contact-name">${c.nome}</td>
-            <td><a href="tel:${c.telefone}" class="contact-phone">${c.telefone}</a></td>
-            <td>${badgeRecorrente}</td>
-            <td><span class="badge-count">${c.visitas}</span></td>
-            <td style="color: var(--muted)">${dataFormatada}</td>
-            <td>${statusTag}</td>
-            <td>
-              <div class="crm-actions">
-                <button class="btn-crm-action edit" onclick="abrirEdicao(${c.id})">
-                  <i class="fa-solid fa-pen"></i> Editar
-                </button>
-                <button class="btn-crm-action history" onclick="abrirHistorico(${c.id})">
-                  <i class="fa-solid fa-clock-rotate-left"></i> Histórico
-                </button>
-                <button class="btn-crm-action delete" onclick="excluirClienteBackend(${c.id})">
-                  <i class="fa-solid fa-trash"></i> Excluir
-                </button>
-              </div>
-            </td>
-          </tr>`;
-      });
-
-      html += `</tbody></table>`;
-      container.innerHTML = html;
-    }
-
-    // Eventos dos botões de segmento
-    document.querySelectorAll('.btn-segmento').forEach(btn => {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.btn-segmento').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        filtroAtivo = this.getAttribute('data-filter');
+// Exclusão Real via API
+async function excluirClienteBackend(id) {
+  if (confirm("Tem certeza que deseja remover permanentemente este cadastro do CRM?")) {
+    try {
+      const resposta = await fetch(`/api/crm/excluir/${id}`, { method: 'DELETE' });
+      const resultado = await resposta.json();
+      if(resultado.success) {
         carregarDadosCrm();
-      });
-    });
-
-    // Ouvintes para pesquisa
-    document.getElementById('crm-search-btn').addEventListener('click', () => renderizarTabela(cacheClientes));
-    document.getElementById('crm-search-input').addEventListener('keyup', () => renderizarTabela(cacheClientes));
-
-    // Funções do Modal de Edição (Envio para o Backend)
-    function abrirEdicao(id) {
-      const cliente = cacheClientes.find(c => c.id === id);
-      if (!cliente) return;
-
-      document.getElementById('edit-client-id').value = cliente.id;
-      document.getElementById('edit-client-name').value = cliente.nome;
-      document.getElementById('edit-client-phone').value = cliente.telefone;
-      document.getElementById('edit-client-recorrente').value = cliente.recorrente;
-
-      document.getElementById('edit-modal').classList.add('open');
-    }
-
-    function fecharModal() { document.getElementById('edit-modal').classList.remove('open'); }
-    document.getElementById('close-modal-btn').addEventListener('click', fecharModal);
-    document.getElementById('cancel-modal-btn').addEventListener('click', fecharModal);
-
-    document.getElementById('crm-edit-form').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      const id = document.getElementById('edit-client-id').value;
-
-      const payload = {
-        nome: document.getElementById('edit-client-name').value,
-        telefone: document.getElementById('edit-client-phone').value,
-        recorrente: document.getElementById('edit-client-recorrente').value
-      };
-
-      try {
-        const resposta = await fetch(`/api/crm/editar/${id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const resultado = await resposta.json();
-        if(resultado.success) {
-          fecharModal();
-          carregarDadosCrm();
-        }
-      } catch (erro) { console.error("Erro ao salvar alterações:", erro); }
-    });
-
-    // Exclusão Real via API
-    async function excluirClienteBackend(id) {
-      if (confirm("Tem certeza que deseja remover permanentemente este cadastro do CRM?")) {
-        try {
-          const resposta = await fetch(`/api/crm/excluir/${id}`, { method: 'DELETE' });
-          const resultado = await resposta.json();
-          if(resultado.success) {
-            carregarDadosCrm();
-          }
-        } catch (erro) { console.error("Erro ao deletar cliente:", erro); }
       }
+    } catch (erro) { console.error("Erro ao deletar cliente:", erro); }
+  }
+}
+
+// --- FUNÇÕES COMPLEMENTARES DE HISTÓRICO ---
+async function abrirHistorico(id) {
+  const modal = document.getElementById('historico-modal');
+  const content = document.getElementById('historico-content');
+
+  modal.classList.add('open');
+
+  content.innerHTML = `
+    <div class="empty-state">
+      <i class="fa-solid fa-spinner"></i>
+      <p>Carregando histórico...</p>
+    </div>
+  `;
+
+  try {
+    const resposta = await fetch(`/api/crm/historico/${id}`);
+    const dados = await resposta.json();
+
+    if (!dados.success) {
+      content.innerHTML = `<p style="color: var(--danger)">Erro ao carregar histórico.</p>`;
+      return;
     }
 
-    // --- FUNÇÕES COMPLEMENTARES DE HISTÓRICO ---
-    async function abrirHistorico(id) {
-      const modal = document.getElementById('historico-modal');
-      const content = document.getElementById('historico-content');
+    const c = dados.cliente;
 
-      modal.classList.add('open');
+    const alertaLimite = c.passou_limite_mes
+      ? `<span class="status status-inativo">Passou de 4 no mês</span>`
+      : `<span class="status status-ativo">Dentro do limite</span>`;
 
-      content.innerHTML = `
-        <div class="empty-state">
-          <i class="fa-solid fa-spinner"></i>
-          <p>Carregando histórico...</p>
+    let mesesHtml = '';
+
+    c.agendamentos_por_mes.forEach(m => {
+      mesesHtml += `
+        <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+          <span style="color:var(--muted)">${m.label}/${m.ano}</span>
+          <strong>${m.total}</strong>
         </div>
       `;
+    });
 
-      try {
-        const resposta = await fetch(`/api/crm/historico/${id}`);
-        const dados = await resposta.json();
+    content.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <p><strong>Nome:</strong> ${c.nome}</p>
+        <p><strong>Telefone:</strong> ${c.telefone}</p>
+        <p><strong>Recorrente:</strong> ${c.recorrente === 'sim' ? 'SIM' : 'NÃO'}</p>
+        <p><strong>Total agendamentos:</strong> ${c.total_agendamentos}</p>
 
-        if (!dados.success) {
-          content.innerHTML = `<p style="color: var(--danger)">Erro ao carregar histórico.</p>`;
-          return;
-        }
+        <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:14px; padding:16px;">
+          <p style="margin:0 0 8px;">
+            <strong>${c.mes_atual}:</strong> ${c.total_mes_atual} agendamento(s)
+          </p>
+          ${alertaLimite}
+        </div>
 
-        const c = dados.cliente;
+        <h3 style="margin:12px 0 0; font-size:1rem;">Agendamentos por mês</h3>
+        <div>
+          ${mesesHtml || '<p style="color:var(--muted)">Sem histórico mensal.</p>'}
+        </div>
+      </div>
+    `;
 
-        const alertaLimite = c.passou_limite_mes
-          ? `<span class="status status-inativo">Passou de 4 no mês</span>`
-          : `<span class="status status-ativo">Dentro do limite</span>`;
+  } catch (erro) {
+    console.error(erro);
+    content.innerHTML = `<p style="color: var(--danger)">Erro ao carregar histórico.</p>`;
+  }
+}
 
-        let mesesHtml = '';
-
-        c.agendamentos_por_mes.forEach(m => {
-          mesesHtml += `
-            <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
-              <span style="color:var(--muted)">${m.label}/${m.ano}</span>
-              <strong>${m.total}</strong>
-            </div>
-          `;
-        });
-
-        content.innerHTML = `
-          <div style="display:flex; flex-direction:column; gap:14px;">
-            <p><strong>Nome:</strong> ${c.nome}</p>
-            <p><strong>Telefone:</strong> ${c.telefone}</p>
-            <p><strong>Recorrente:</strong> ${c.recorrente === 'sim' ? 'SIM' : 'NÃO'}</p>
-            <p><strong>Total agendamentos:</strong> ${c.total_agendamentos}</p>
-
-            <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:14px; padding:16px;">
-              <p style="margin:0 0 8px;">
-                <strong>${c.mes_atual}:</strong> ${c.total_mes_atual} agendamento(s)
-              </p>
-              ${alertaLimite}
-            </div>
-
-            <h3 style="margin:12px 0 0; font-size:1rem;">Agendamentos por mês</h3>
-            <div>
-              ${mesesHtml || '<p style="color:var(--muted)">Sem histórico mensal.</p>'}
-            </div>
-          </div>
-        `;
-
-      } catch (erro) {
-        console.error(erro);
-        content.innerHTML = `<p style="color: var(--danger)">Erro ao carregar histórico.</p>`;
-      }
-    }
-
-    function fecharHistorico() {
-      document.getElementById('historico-modal').classList.remove('open');
-    }
-  </script>
-</body>
-</html>
+function fecharHistorico() {
+  document.getElementById('historico-modal').classList.remove('open');
+}
+</script>
+{% endblock %}

@@ -1,143 +1,17 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Logs do Sistema | Painel Pro</title>
+{% extends "base_admin.html" %}
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% block title %}Logs do Sistema | Painel Pro{% endblock %}
+{% block body_class %}admin-body logs-page{% endblock %}
+
+{% block font_stylesheets %}
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+{% endblock %}
 
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.45);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --border: rgba(255, 255, 255, 0.08);
-      --error: #ef4444;
-      --warning: #f59e0b;
-      --info: #3b82f6;
-    }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/logs.css') }}">
+{% endblock %}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
-      color: var(--text);
-      height: 100vh;
-      display: flex;
-      align-items: center; /* Centraliza verticalmente[cite: 1] */
-      justify-content: center; /* Centraliza horizontalmente[cite: 1] */
-      padding: 20px;
-    }
-
-    /* JANELA DO TERMINAL CENTRALIZADA */
-    .terminal-window {
-      width: 100%;
-      max-width: 1000px; /* Largura otimizada para logs[cite: 1] */
-      height: 80vh; /* Altura fixa para manter o centro[cite: 1] */
-      background: var(--card);
-      backdrop-filter: blur(16px); /* Efeito glassmorphism original[cite: 1] */
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      animation: fadeIn 0.6s ease-out; /* Animação original[cite: 1] */
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .terminal-header {
-      background: rgba(0, 0, 0, 0.3);
-      padding: 10px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .terminal-dots { display: flex; gap: 8px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-    .dot-red { background: #ff5f56; }
-    .dot-yellow { background: #ffbd2e; }
-    .dot-green { background: #27c93f; }
-
-    .terminal-title {
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    /* CONTEÚDO DENSO DOS LOGS */
-    .logs-container {
-      flex: 1;
-      padding: 15px;
-      overflow-y: auto;
-      font-family: 'Fira Code', monospace;
-      font-size: 0.8rem;
-      line-height: 1.3; /* Linhas mais juntas[cite: 1] */
-      background: rgba(0, 0, 0, 0.2);
-    }
-
-    .log-item {
-      padding: 2px 8px;
-      margin-bottom: 0px; /* Sem espaço entre blocos[cite: 1] */
-      border-left: 3px solid transparent;
-      display: flex;
-      align-items: flex-start;
-      transition: background 0.1s;
-    }
-
-    .log-item:hover { background: rgba(255, 255, 255, 0.03); }
-
-    /* CORES ORIGINAIS REAPLICADAS */
-    .log-error { color: #fca5a5; background: rgba(239, 68, 68, 0.1); border-left-color: var(--error); }
-    .log-warning { color: #fde68a; background: rgba(245, 158, 11, 0.1); border-left-color: var(--warning); }
-    .log-info { color: #93c5fd; background: rgba(59, 130, 246, 0.05); border-left-color: var(--info); }
-
-    .logs-container::-webkit-scrollbar { width: 6px; }
-    .logs-container::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
-
-    /* RODAPÉ COM BOTÃO PADRÃO */
-    .terminal-footer {
-        padding: 12px 20px;
-        background: rgba(0, 0, 0, 0.2);
-        border-top: 1px solid var(--border);
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
-    .btn-small {
-        background: linear-gradient(180deg, var(--primary), var(--primary-hover)); /* Gradiente original[cite: 1] */
-        color: white;
-        border: none;
-        padding: 8px 15px;
-        border-radius: 10px;
-        font-size: 0.75rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.3s;
-    }
-
-    .btn-small:hover { transform: translateY(-1px); filter: brightness(1.1); }
-  </style>
-</head>
-<body>
+{% block body %}
 
   <div class="terminal-window">
     <div class="terminal-header">
@@ -173,8 +47,10 @@
         <button class="btn-small" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border);" onclick="limparLogs()">LIMPAR</button>
     </div>
   </div>
+{% endblock %}
 
-  <script>
+{% block extra_js %}
+<script>
   const logBox = document.getElementById('logBox');
 
 // 🔥 render correto (SEM reverse)
@@ -231,6 +107,4 @@ function limparLogs() {
     logBox.innerHTML = '<div class="log-item log-info"><span>Buffer limpo. Aguardando novos eventos...</span></div>';
 }
 </script>
-
-</body>
-</html>
+{% endblock %}

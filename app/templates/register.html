@@ -1,287 +1,122 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadastro de Usuário | Admin Pro</title>
+{% extends "base_auth.html" %}
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+{% block title %}Cadastro de Usuário | Admin Pro{% endblock %}
+{% block body_class %}auth-body register-page{% endblock %}
 
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.45);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --border: rgba(255, 255, 255, 0.08);
-      --input-bg: rgba(0, 0, 0, 0.2);
-    }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/register.css') }}">
+{% endblock %}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 40px 20px;
-    }
-
-    /* CONTAINER DO FORMULÁRIO */
-    .form-container {
-      width: 100%;
-      max-width: 850px;
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      padding: 40px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      animation: fadeIn 0.6s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .header { text-align: left; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-    .header h2 { font-weight: 800; font-size: 1.8rem; letter-spacing: -0.5px; }
-    .header p { color: var(--muted); font-size: 0.9rem; margin-top: 5px; }
-
-    /* GRID DO FORMULÁRIO */
-    .styled-form {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-    }
-
-    .full-width { grid-column: span 2; }
-
-    /* SEÇÕES */
-    .form-section-title {
-      grid-column: span 2;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      color: var(--primary);
-      letter-spacing: 1.5px;
-      margin-top: 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .form-section-title::after {
-      content: "";
-      height: 1px;
-      flex: 1;
-      background: var(--border);
-    }
-
-    /* GRUPOS DE INPUT */
-    .group { display: flex; flex-direction: column; gap: 8px; }
-
-    label {
-      font-size: 0.75rem;
-      font-weight: 700;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-left: 4px;
-    }
-
-    .input-wrapper { position: relative; display: flex; align-items: center; }
-
-    .input-wrapper i {
-      position: absolute;
-      left: 16px;
-      color: var(--muted);
-      font-size: 0.9rem;
-      transition: 0.3s;
-      pointer-events: none;
-    }
-
-    .input {
-      width: 100%;
-      padding: 14px 16px 14px 45px;
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      color: #fff;
-      font-family: inherit;
-      font-size: 0.95rem;
-      outline: none;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    select.input { appearance: none; cursor: pointer; }
-
-    .input:focus {
-      border-color: var(--primary);
-      background: rgba(59, 130, 246, 0.05);
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
-
-    .input:focus + i { color: var(--primary); }
-
-    /* BOTÃO */
-    .btn-submit {
-      grid-column: span 2;
-      margin-top: 20px;
-      padding: 16px;
-      background: linear-gradient(180deg, var(--primary), var(--primary-hover));
-      color: white;
-      border: none;
-      border-radius: 14px;
-      font-weight: 800;
-      font-size: 1rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      transition: all 0.3s;
-      box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
-    }
-
-    .btn-submit:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 15px 25px rgba(59, 130, 246, 0.3);
-      filter: brightness(1.1);
-    }
-
-    /* RESPONSIVIDADE */
-    @media (max-width: 768px) {
-      .styled-form { grid-template-columns: 1fr; }
-      .full-width, .form-section-title, .btn-submit { grid-column: span 1; }
-      .form-container { padding: 30px 20px; }
-    }
-  </style>
-</head>
-
-<body>
-
-  <div class="form-container">
-    <div class="header">
-      <h2><i class="fa-solid fa-user-plus" style="color: var(--primary); margin-right: 10px;"></i> Novo Cadastro</h2>
-      <p>Preencha os campos para registrar um novo usuário no sistema.</p>
-    </div>
-
-    <form method="POST" action="{{ url_for('auth.register') }}" class="styled-form">
-
-      <!-- ACESSO -->
-      <div class="form-section-title">Credenciais de Acesso</div>
-
-      <div class="group">
-        <label>Usuário</label>
-        <div class="input-wrapper">
-          <input type="text" name="username" required class="input" placeholder="ex: joao.silva">
-          <i class="fa-regular fa-user"></i>
-        </div>
-      </div>
-
-      <div class="group">
-        <label>Senha</label>
-        <div class="input-wrapper">
-          <input type="password" name="password" required class="input" placeholder="••••••••">
-          <i class="fa-solid fa-lock"></i>
-        </div>
-      </div>
-
-      <!-- DADOS PESSOAIS -->
-      <div class="form-section-title">Dados Pessoais & Contato</div>
-
-      <div class="group full-width">
-        <label>Nome Completo</label>
-        <div class="input-wrapper">
-          <input type="text" name="nome" class="input" placeholder="Nome completo do titular">
-          <i class="fa-solid fa-id-card"></i>
-        </div>
-      </div>
-
-      <div class="group">
-        <label>Email Profissional</label>
-        <div class="input-wrapper">
-          <input type="email" name="email" class="input" placeholder="contato@empresa.com">
-          <i class="fa-solid fa-envelope"></i>
-        </div>
-      </div>
-
-      <div class="group">
-        <label>Telefone / WhatsApp</label>
-        <div class="input-wrapper">
-          <input type="text" name="telefone" class="input" placeholder="(00) 00000-0000">
-          <i class="fa-solid fa-phone"></i>
-        </div>
-      </div>
-
-      <div class="group">
-        <label>CPF</label>
-        <div class="input-wrapper">
-          <input type="text" name="cpf" class="input" placeholder="000.000.000-00">
-          <i class="fa-solid fa-fingerprint"></i>
-        </div>
-      </div>
-
-      <div class="group">
-        <label>Estabelecimento</label>
-        <div class="input-wrapper">
-          <input type="text" name="empresa" class="input" placeholder="Nome do negócio">
-          <i class="fa-solid fa-building"></i>
-        </div>
-      </div>
-
-      <!-- ASSINATURA -->
-      <div class="form-section-title">Configurações de Conta</div>
-
-      <div class="group">
-        <label>Plano</label>
-        <div class="input-wrapper">
-          <select name="plano" class="input">
-            <option value="basico">Plano Básico</option>
-            <option value="premium">Plano Premium</option>
-            <option value="vip">Plano VIP</option>
-          </select>
-          <i class="fa-solid fa-layer-group"></i>
-        </div>
-      </div>
-
-      <div class="group">
-        <label>Status</label>
-        <div class="input-wrapper">
-          <select name="status" class="input">
-            <option value="ativo">Ativo</option>
-            <option value="inativo">Inativo</option>
-          </select>
-          <i class="fa-solid fa-circle-check"></i>
-        </div>
-      </div>
-
-      <div class="group full-width">
-        <label>Observações</label>
-        <div class="input-wrapper">
-          <input type="text" name="obs" class="input" placeholder="Notas internas ou lembretes">
-          <i class="fa-solid fa-comment-dots"></i>
-        </div>
-      </div>
-
-      <!-- BOTÃO FINAL -->
-      <button type="submit" class="btn-submit">
-        <i class="fa-solid fa-shield-check"></i> Finalizar Cadastro Completo
-      </button>
-
-    </form>
+{% block body %}
+<div class="form-container">
+  <div class="header">
+    <h2><i class="fa-solid fa-user-plus header-icon" aria-hidden="true"></i> Novo Cadastro</h2>
+    <p>Preencha os campos para registrar um novo usuário no sistema.</p>
   </div>
 
-</body>
-</html>
+  <form method="POST" action="{{ url_for('auth.register') }}" class="styled-form">
+
+    <!-- ACESSO -->
+    <div class="form-section-title">Credenciais de Acesso</div>
+
+    <div class="group">
+      <label>Usuário</label>
+      <div class="input-wrapper">
+        <input type="text" name="username" required class="input" placeholder="ex: joao.silva">
+        <i class="fa-regular fa-user"></i>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>Senha</label>
+      <div class="input-wrapper">
+        <input type="password" name="password" required class="input" placeholder="••••••••">
+        <i class="fa-solid fa-lock"></i>
+      </div>
+    </div>
+
+    <!-- DADOS PESSOAIS -->
+    <div class="form-section-title">Dados Pessoais & Contato</div>
+
+    <div class="group full-width">
+      <label>Nome Completo</label>
+      <div class="input-wrapper">
+        <input type="text" name="nome" class="input" placeholder="Nome completo do titular">
+        <i class="fa-solid fa-id-card"></i>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>Email Profissional</label>
+      <div class="input-wrapper">
+        <input type="email" name="email" class="input" placeholder="contato@empresa.com">
+        <i class="fa-solid fa-envelope"></i>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>Telefone / WhatsApp</label>
+      <div class="input-wrapper">
+        <input type="text" name="telefone" class="input" placeholder="(00) 00000-0000">
+        <i class="fa-solid fa-phone"></i>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>CPF</label>
+      <div class="input-wrapper">
+        <input type="text" name="cpf" class="input" placeholder="000.000.000-00">
+        <i class="fa-solid fa-fingerprint"></i>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>Estabelecimento</label>
+      <div class="input-wrapper">
+        <input type="text" name="empresa" class="input" placeholder="Nome do negócio">
+        <i class="fa-solid fa-building"></i>
+      </div>
+    </div>
+
+    <!-- ASSINATURA -->
+    <div class="form-section-title">Configurações de Conta</div>
+
+    <div class="group">
+      <label>Plano</label>
+      <div class="input-wrapper">
+        <select name="plano" class="input">
+          <option value="basico">Plano Básico</option>
+          <option value="premium">Plano Premium</option>
+          <option value="vip">Plano VIP</option>
+        </select>
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+    </div>
+
+    <div class="group">
+      <label>Status</label>
+      <div class="input-wrapper">
+        <select name="status" class="input">
+          <option value="ativo">Ativo</option>
+          <option value="inativo">Inativo</option>
+        </select>
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+    </div>
+
+    <div class="group full-width">
+      <label>Observações</label>
+      <div class="input-wrapper">
+        <input type="text" name="obs" class="input" placeholder="Notas internas ou lembretes">
+        <i class="fa-solid fa-comment-dots"></i>
+      </div>
+    </div>
+
+    <!-- BOTÃO FINAL -->
+    <button type="submit" class="btn-submit">
+      <i class="fa-solid fa-shield-check"></i> Finalizar Cadastro Completo
+    </button>
+
+  </form>
+</div>
+{% endblock %}

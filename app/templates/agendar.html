@@ -1,162 +1,56 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agendamento | Reserve seu Horário</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+{% extends "base_public.html" %}
 
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.5);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-glow: rgba(59, 130, 246, 0.4);
-      --border: rgba(255, 255, 255, 0.08);
-      --success: #10b981;
-    }
+{% block title %}Agendamento | Reserve seu Horário{% endblock %}
+{% block body_class %}public-body legacy-schedule-page{% endblock %}
 
-    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/agendar.css') }}">
+{% endblock %}
 
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0px, transparent 50%);
-      color: var(--text);
-      min-height: 100dvh;
-      display: grid;
-      place-items: center;
-      padding: 20px;
-    }
+{% block body %}
+<main class="legacy-schedule-wrapper">
+  <section class="legacy-schedule-card" aria-labelledby="legacyScheduleTitle">
+    <h1 id="legacyScheduleTitle">Reserve seu Horário</h1>
 
-    .container {
-      width: 100%;
-      max-width: 480px;
-      perspective: 1000px;
-    }
+    <form method="POST">
+      <div class="legacy-schedule-field">
+        <i class="fa-regular fa-user" aria-hidden="true"></i>
+        <input type="text" name="nome" placeholder="Seu nome completo" aria-label="Nome completo" required>
+      </div>
 
-    .card {
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 32px;
-      padding: 40px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      animation: fadeIn 0.6s ease-out;
-    }
+      <div class="legacy-schedule-field">
+        <i class="fa-solid fa-phone" aria-hidden="true"></i>
+        <input
+          type="text"
+          name="telefone"
+          id="telefone"
+          placeholder="Somente 9 dígitos"
+          aria-label="Telefone com nove dígitos"
+          pattern="[0-9]{9}"
+          maxlength="9"
+          inputmode="numeric"
+          required
+        >
+      </div>
 
-    h1 {
-      margin: 0 0 10px;
-      text-align: center;
-      font-weight: 800;
-      font-size: 1.8rem;
-    }
+      <div class="legacy-schedule-field">
+        <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+        <input type="date" name="data" id="data" aria-label="Data" required>
+      </div>
 
-    .input-group {
-      position: relative;
-      margin-bottom: 20px;
-    }
+      <div class="legacy-schedule-field">
+        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+        <input type="time" name="hora" aria-label="Horário" required>
+      </div>
 
-    .input-group i {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--primary);
-    }
+      <button type="submit" class="legacy-schedule-submit">
+        Confirmar Agendamento
+      </button>
+    </form>
+  </section>
+</main>
+{% endblock %}
 
-    .input-group input {
-      width: 100%;
-      padding: 14px 16px 14px 48px;
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      color: #fff;
-      font-size: 1rem;
-      outline: none;
-    }
-
-    button {
-      width: 100%;
-      padding: 16px;
-      border: none;
-      border-radius: 16px;
-      background: var(--primary);
-      color: white;
-      font-weight: 800;
-      cursor: pointer;
-    }
-  </style>
-</head>
-
-<body>
-  <div class="container">
-    <section class="card">
-
-      <h1>Reserve seu Horário</h1>
-
-      <form method="POST">
-
-        <div class="input-group">
-          <i class="fa-regular fa-user"></i>
-          <input type="text" name="nome" placeholder="Seu nome completo" required>
-        </div>
-
-        <!-- TELEFONE CORRIGIDO -->
-        <div class="input-group">
-          <i class="fa-solid fa-phone"></i>
-          <input
-            type="text"
-            name="telefone"
-            id="telefone"
-            placeholder="Somente 9 dígitos"
-            pattern="[0-9]{9}"
-            maxlength="9"
-            inputmode="numeric"
-            required>
-        </div>
-
-        <!-- DATA COM BLOQUEIO -->
-        <div class="input-group">
-          <i class="fa-regular fa-calendar"></i>
-          <input type="date" name="data" id="data" required>
-        </div>
-
-        <div class="input-group">
-          <i class="fa-regular fa-clock"></i>
-          <input type="time" name="hora" required>
-        </div>
-
-        <button type="submit">
-          Confirmar Agendamento
-        </button>
-
-      </form>
-
-    </section>
-  </div>
-
-  <!-- JS VALIDAÇÕES -->
-  <script>
-
-    // 🔒 BLOQUEAR DATA PASSADA
-    const hoje = new Date().toISOString().split('T')[0];
-    document.getElementById("data").setAttribute("min", hoje);
-
-    // 🔒 TELEFONE APENAS NÚMEROS
-    const tel = document.getElementById("telefone");
-
-    tel.addEventListener("input", function () {
-      this.value = this.value.replace(/\D/g, '').slice(0, 9);
-    });
-
-  </script>
-
-</body>
-</html>
+{% block extra_js %}
+  <script src="{{ url_for('static', filename='js/pages/agendar.js') }}" defer></script>
+{% endblock %}

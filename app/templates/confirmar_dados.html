@@ -1,314 +1,86 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Confirmar Dados | Finalizar Agendamento</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+{% extends "base_public.html" %}
 
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.4);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #3b82f6;
-      --success: #10b981;
-      --success-glow: rgba(16, 185, 129, 0.3);
-      --border: rgba(255, 255, 255, 0.08);
-      --danger: #ef4444;
-    }
+{% block title %}Confirmar Dados | Finalizar Agendamento{% endblock %}
+{% block body_class %}public-body confirm-booking-page{% endblock %}
 
-    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/confirmar-dados.css') }}">
+{% endblock %}
 
-    body {
-      margin: 0;
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
+{% block body %}
+<main class="confirm-booking-card">
+  <h1>Quase lá...</h1>
 
-    .container {
-      width: 100%;
-      max-width: 480px;
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      border: 1px solid var(--border);
-      border-radius: 32px;
-      padding: 40px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      animation: fadeIn 0.5s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(15px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    h2 {
-      text-align: center;
-      margin: 0 0 24px;
-      font-weight: 800;
-      font-size: 1.5rem;
-      letter-spacing: -0.5px;
-    }
-
-    /* CARD DE TICKET/RESUMO */
-    .ticket {
-      background: rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 24px;
-      position: relative;
-    }
-
-    .ticket-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .ticket-row:last-child { margin-bottom: 0; }
-
-    .ticket-row i {
-      width: 32px;
-      height: 32px;
-      background: rgba(255,255,255,0.05);
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary);
-      font-size: 0.9rem;
-    }
-
-    .ticket-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .ticket-info span:first-child {
-      font-size: 0.75rem;
-      color: var(--muted);
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .ticket-info span:last-child {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #fff;
-    }
-
-    /* FORMULÁRIO */
-    .field-wrap {
-      position: relative;
-      margin-bottom: 16px;
-    }
-
-    .field-wrap i {
-      position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--muted);
-      transition: 0.3s;
-    }
-
-    form input {
-      width: 100%;
-      padding: 14px 16px 14px 48px;
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: rgba(0, 0, 0, 0.2);
-      color: #fff;
-      font-family: inherit;
-      outline: none;
-      transition: all 0.3s;
-    }
-
-    form input:focus {
-      border-color: var(--primary);
-      background: rgba(59, 130, 246, 0.05);
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-    }
-
-    form input:focus + i {
-      color: var(--primary);
-    }
-
-    /* VALIDAÇÃO DE ERRO */
-    form input.input-error {
-      border-color: var(--danger);
-      background: rgba(239, 68, 68, 0.05);
-      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
-    }
-
-    form input.input-error + i {
-      color: var(--danger);
-    }
-
-    .error-msg {
-      color: var(--danger);
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-top: 6px;
-      margin-left: 4px;
-      display: none;
-      animation: fadeIn 0.2s ease-out;
-    }
-
-    button {
-      width: 100%;
-      padding: 16px;
-      border: none;
-      border-radius: 16px;
-      background: var(--success);
-      color: #fff;
-      font-weight: 800;
-      font-size: 1rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: all 0.3s;
-      box-shadow: 0 10px 20px var(--success-glow);
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-      filter: brightness(1.1);
-      box-shadow: 0 15px 30px var(--success-glow);
-    }
-
-    button:active { transform: translateY(0); }
-
-    /* VOLTAR */
-    .voltar { margin-top: 24px; text-align: center; }
-    .voltar a {
-      text-decoration: none;
-      color: var(--muted);
-      font-size: 0.85rem;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: 0.3s;
-    }
-    .voltar a:hover { color: #fff; }
-
-    @media (max-width: 480px) {
-      .container { padding: 30px 20px; }
-    }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    <h2>Quase lá...</h2>
-
-    <div class="ticket">
-      <div class="ticket-row">
-        <i class="fa-solid fa-scissors"></i>
-        <div class="ticket-info">
-          <span>Serviço Selecionado</span>
-          <span>{{ servico }}</span>
-        </div>
+  <section class="booking-ticket" aria-label="Resumo do agendamento">
+    <div class="booking-ticket-row">
+      <i class="fa-solid fa-user" aria-hidden="true"></i>
+      <div class="booking-ticket-info">
+        <span>Profissional</span>
+        <strong>{{ profissional.nome }}</strong>
       </div>
-      <div class="ticket-row">
-        <i class="fa-regular fa-calendar-check"></i>
-        <div class="ticket-info">
-          <span>Data e Horário</span>
-          <span>{{ data }} às {{ hora }}</span>
-        </div>
+    </div>
+    <div class="booking-ticket-row">
+      <i class="fa-solid fa-scissors" aria-hidden="true"></i>
+      <div class="booking-ticket-info">
+        <span>Serviço selecionado</span>
+        <strong>{{ servico }}</strong>
+      </div>
+    </div>
+    <div class="booking-ticket-row">
+      <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+      <div class="booking-ticket-info">
+        <span>Data e horário</span>
+        <strong>{{ data }} às {{ hora }}</strong>
+      </div>
+    </div>
+  </section>
+
+  <form
+    id="form-agendamento"
+    class="booking-details-form"
+    method="POST"
+    action="{{ url_for('main.salvar_agendamento') }}"
+  >
+    <div class="booking-field">
+      <input
+        type="text"
+        id="input-nome"
+        name="nome"
+        placeholder="Seu nome completo"
+        aria-describedby="error-nome"
+        required
+      >
+      <i class="fa-regular fa-user" aria-hidden="true"></i>
+      <div class="booking-field-error" id="error-nome" role="alert" hidden>
+        Informe nome e sobrenome.
       </div>
     </div>
 
-    <form id="form-agendamento" method="POST" action="/salvar_agendamento">
-      <div class="field-wrap">
-        <input type="text" id="input-nome" name="nome" placeholder="Seu nome completo" required>
-        <i class="fa-regular fa-user"></i>
-        <div class="error-msg" id="error-nome">Informe nome e sobrenome.</div>
-      </div>
+    <div class="booking-field">
+      <input type="text" name="telefone" placeholder="Seu WhatsApp" required>
+      <i class="fa-solid fa-phone" aria-hidden="true"></i>
+    </div>
 
-      <div class="field-wrap">
-        <input type="text" name="telefone" placeholder="Seu WhatsApp" required>
-        <i class="fa-solid fa-phone"></i>
-      </div>
+    <input type="hidden" name="servico" value="{{ servico }}">
+    <input type="hidden" name="servico_id" value="{{ servico_id }}">
+    <input type="hidden" name="data" value="{{ data }}">
+    <input type="hidden" name="hora" value="{{ hora }}">
 
-      <input type="hidden" name="servico" value="{{ servico }}">
-      <input type="hidden" name="servico_id" value="{{ servico_id }}">
-      <input type="hidden" name="data" value="{{ data }}">
-      <input type="hidden" name="hora" value="{{ hora }}">
+    <button type="submit" class="confirm-booking-button">
+      Finalizar Agendamento
+      <i class="fa-solid fa-check-double" aria-hidden="true"></i>
+    </button>
+  </form>
 
-      <button type="submit">
-        Finalizar Agendamento <i class="fa-solid fa-check-double"></i>
-      </button>
-    </form>
-  </div>
-
-  <div class="voltar">
-    <a href="/service">
-      <i class="fa-solid fa-chevron-left"></i> Alterar horário ou serviço
+  <nav class="confirm-booking-back" aria-label="Alterar horário">
+    <a href="{{ url_for('main.agendar_por_id', servico_id=servico_id) }}">
+      <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+      Alterar horário
     </a>
-  </div>
+  </nav>
+</main>
+{% endblock %}
 
-  <script>
-    const form = document.getElementById('form-agendamento');
-    const inputNome = document.getElementById('input-nome');
-    const errorNome = document.getElementById('error-nome');
-
-    // Função interna auxiliar para tratar e testar se há nome + sobrenome
-    function validarNomeCompleto(valor) {
-      // Remove espaços no início/fim e colapsa múltiplos espaços internos em um único ' '
-      const limpo = valor.trim().replace(/\s+/g, ' ');
-
-      // Divide pelas strings de espaço para validar se há 2 ou mais blocos preenchidos
-      const partes = limpo.split(' ').filter(part => part.length > 0);
-      return {
-        valido: partes.length >= 2,
-        textoFormatado: limpo
-      };
-    }
-
-    // Validação reativa em tempo real (Input)
-    inputNome.addEventListener('input', function() {
-      const { valido } = validarNomeCompleto(this.value);
-
-      if (valido || this.value.trim() === "") {
-        inputNome.classList.remove('input-error');
-        errorNome.style.display = 'none';
-      }
-    });
-
-    // Validação rígida no ato do clique (Submit)
-    form.addEventListener('submit', function(e) {
-      const resultado = validarNomeCompleto(inputNome.value);
-
-      if (!resultado.valido) {
-        e.preventDefault(); // Impede o envio do formulário
-        inputNome.classList.add('input-error');
-        errorNome.style.display = 'block';
-        inputNome.focus();
-      } else {
-        // Envia o input limpo sem os espaços excessivos
-        inputNome.value = resultado.textoFormatado;
-      }
-    });
-  </script>
-
-</body>
-</html>
+{% block extra_js %}
+  <script src="{{ url_for('static', filename='js/pages/confirmar-dados.js') }}" defer></script>
+{% endblock %}

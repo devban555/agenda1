@@ -1,0 +1,102 @@
+{% extends "base_admin.html" %}
+
+{% block title %}Profissionais | Agenda1{% endblock %}
+{% block body_class %}admin-body professionals-admin-page{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/profissionais.css') }}">
+{% endblock %}
+
+{% block body %}
+<main class="professionals-admin-shell">
+  <header class="professionals-admin-header">
+    <div>
+      <p class="professionals-eyebrow">Equipe</p>
+      <h1>Profissionais</h1>
+      <p>Cadastre as pessoas que atendem no estabelecimento.</p>
+    </div>
+    <a href="{{ url_for('main.painel') }}" class="professionals-back-button">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+      Voltar ao painel
+    </a>
+  </header>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div class="professionals-message" role="status">
+        {% for message in messages %}<p>{{ message }}</p>{% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <section class="professionals-form-card" aria-labelledby="novoProfissional">
+    <div class="professionals-section-heading">
+      <i class="fa-solid fa-user-plus" aria-hidden="true"></i>
+      <div>
+        <h2 id="novoProfissional">Novo profissional</h2>
+        <p>Serviços e horários individuais serão vinculados na próxima etapa.</p>
+      </div>
+    </div>
+
+    <form method="POST" class="professionals-form">
+      <label>
+        <span>Nome *</span>
+        <input type="text" name="nome" minlength="2" maxlength="120" required placeholder="Ex: Ana Martins">
+      </label>
+      <label>
+        <span>Especialidade</span>
+        <input type="text" name="especialidade" maxlength="120" placeholder="Ex: Coloração e cortes">
+      </label>
+      <label class="professionals-form-wide">
+        <span>URL da foto <small>(opcional)</small></span>
+        <input type="url" name="foto_url" maxlength="255" placeholder="https://exemplo.com/foto.jpg">
+      </label>
+      <button type="submit" class="professionals-submit-button">
+        <i class="fa-solid fa-plus" aria-hidden="true"></i>
+        Cadastrar profissional
+      </button>
+    </form>
+  </section>
+
+  <section aria-labelledby="equipeCadastrada">
+    <div class="professionals-list-heading">
+      <div>
+        <h2 id="equipeCadastrada">Equipe cadastrada</h2>
+        <p>{{ profissionais|length }} profissional(is)</p>
+      </div>
+    </div>
+
+    <div class="professionals-admin-grid">
+      {% for profissional in profissionais %}
+        <article class="professional-admin-card{% if not profissional.ativo %} is-inactive{% endif %}">
+          <div class="professional-avatar">
+            {% if profissional.foto_url %}
+              <img src="{{ profissional.foto_url }}" alt="Foto de {{ profissional.nome }}">
+            {% else %}
+              <span aria-hidden="true">{{ profissional.nome[:1]|upper }}</span>
+            {% endif %}
+          </div>
+          <div class="professional-admin-info">
+            <div class="professional-name-line">
+              <h3>{{ profissional.nome }}</h3>
+              {% if profissional.principal %}<span class="professional-main-badge">Principal</span>{% endif %}
+            </div>
+            <p>{{ profissional.especialidade or 'Especialidade não informada' }}</p>
+            <small>/{{ profissional.slug }}</small>
+          </div>
+          <div class="professional-admin-footer">
+            <span class="professional-status{% if profissional.ativo %} is-active{% endif %}">
+              {{ 'Ativo' if profissional.ativo else 'Inativo' }}
+            </span>
+            <form method="POST" action="{{ url_for('main.alternar_profissional', profissional_id=profissional.id) }}">
+              <button type="submit" class="professional-toggle-button">
+                {{ 'Desativar' if profissional.ativo else 'Ativar' }}
+              </button>
+            </form>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </section>
+</main>
+{% endblock %}

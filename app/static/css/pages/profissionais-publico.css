@@ -1,0 +1,129 @@
+.professionals-public-page {
+  padding: 48px 20px;
+}
+
+.professionals-public-shell {
+  width: min(100%, 900px);
+  margin: 0 auto;
+}
+
+.professionals-public-header {
+  max-width: 650px;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+
+.professionals-public-header h1 {
+  margin: 6px 0 10px;
+  color: var(--public-text);
+  font-size: clamp(1.8rem, 5vw, 2.55rem);
+}
+
+.professionals-public-header > p:last-child {
+  margin: 0;
+  color: var(--public-muted);
+}
+
+.professionals-public-eyebrow {
+  margin: 0;
+  color: var(--public-primary);
+  text-transform: uppercase;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.professionals-public-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.professional-public-card {
+  min-width: 0;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--public-border);
+  border-radius: var(--public-radius-lg);
+  color: var(--public-text);
+  background: var(--public-card);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  transition: transform var(--transition-normal), border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.professional-public-avatar {
+  width: 64px;
+  height: 64px;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  color: var(--public-on-primary);
+  background: var(--public-primary);
+  overflow: hidden;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.professional-public-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.professional-public-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.professional-public-info strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.professional-public-info small {
+  color: var(--public-muted);
+}
+
+.professional-public-arrow {
+  color: var(--public-primary);
+}
+
+.professionals-public-consult {
+  width: fit-content;
+  margin: 30px auto 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--public-muted);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .professional-public-card:hover {
+    border-color: var(--public-primary);
+    box-shadow: var(--public-shadow);
+    transform: translateY(-4px);
+  }
+
+  .professionals-public-consult:hover {
+    color: var(--public-primary);
+  }
+}
+
+@media (max-width: 560px) {
+  .professionals-public-page {
+    padding: 32px 16px;
+  }
+
+  .professionals-public-grid {
+    grid-template-columns: 1fr;
+  }
+}

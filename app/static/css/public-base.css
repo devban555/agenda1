@@ -1,0 +1,28 @@
+:root {
+  /* Identidade compartilhada pelas páginas públicas e de agendamento */
+  --public-bg: var(--color-background);
+  --public-card: var(--color-surface);
+  --public-card-strong: var(--color-surface-strong);
+  --public-card-hover: var(--color-surface-hover);
+  --public-text: var(--color-text);
+  --public-muted: var(--color-muted);
+  --public-primary: var(--color-primary);
+  --public-primary-hover: var(--color-primary-hover);
+  --public-success: var(--color-success);
+  --public-warning: var(--color-warning);
+  --public-danger: var(--color-danger);
+  --public-border: var(--color-border);
+  --public-focus: var(--color-focus);
+  --public-input-bg: var(--color-input);
+  --public-on-primary: var(--color-on-primary);
+  --public-shadow: var(--shadow-md);
+  --public-radius-sm: var(--radius-sm);
+  --public-radius-md: var(--radius-md);
+  --public-radius-lg: var(--radius-lg);
+  --public-content-width: var(--content-width);
+}
+
+body.public-body {
+  color: var(--public-text);
+  background-color: var(--public-bg);
+}

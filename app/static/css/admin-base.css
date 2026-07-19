@@ -1,0 +1,30 @@
+:root {
+  /* Compatibilidade com as páginas administrativas já migradas */
+  --admin-bg: var(--color-background);
+  --admin-surface: var(--color-surface);
+  --admin-surface-strong: var(--color-surface-strong);
+  --admin-surface-hover: var(--color-surface-hover);
+  --admin-text: var(--color-text);
+  --admin-muted: var(--color-muted);
+  --admin-primary: var(--color-primary);
+  --admin-primary-hover: var(--color-primary-hover);
+  --admin-primary-soft: var(--color-primary-soft);
+  --admin-primary-glow: var(--color-primary-glow);
+  --admin-success: var(--color-success);
+  --admin-warning: var(--color-warning);
+  --admin-danger: var(--color-danger);
+  --admin-border: var(--color-border);
+  --admin-focus: var(--color-focus);
+  --admin-shadow: var(--shadow-md);
+  --admin-radius-sm: var(--radius-sm);
+  --admin-radius-md: var(--radius-md);
+  --admin-radius-lg: var(--radius-lg);
+  --admin-content-width: var(--content-width);
+  --admin-input-bg: var(--color-input);
+  --admin-on-primary: var(--color-on-primary);
+}
+
+body.admin-body {
+  color: var(--admin-text);
+  background-color: var(--admin-bg);
+}
