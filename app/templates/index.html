@@ -10,40 +10,13 @@
 {% block body %}
 <header class="services-index-header">Agendamento de Serviços</header>
 
-<nav class="services-index-actions" aria-label="Ações da agenda">
-  <a href="{{ url_for('main.consultar') }}">
-    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
-    Consultar Agenda
-  </a>
-</nav>
-
 <main class="services-index-grid">
   <article class="service-card">
-    <h2>Cabelo</h2>
-    <p><strong>Valor:</strong> R$ 45,00</p>
-    <p><strong>Tempo:</strong> 01:00</p>
-    <a href="/agendar/corte" class="btn-agendar">Agendar</a>
-  </article>
-
-  <article class="service-card">
-    <h2>Cabelo + Barba</h2>
-    <p><strong>Valor:</strong> R$ 65,00</p>
-    <p><strong>Tempo:</strong> 01:30</p>
-    <a href="/agendar/corte_barba" class="btn-agendar">Agendar</a>
-  </article>
-
-  <article class="service-card">
-    <h2>Cabelo + Sobrancelha</h2>
-    <p><strong>Valor:</strong> R$ 59,00</p>
-    <p><strong>Tempo:</strong> 01:00</p>
-    <a href="/agendar/corte_sobrancelha" class="btn-agendar">Agendar</a>
-  </article>
-
-  <article class="service-card">
-    <h2>Cabelo + Barba + Sobrancelha</h2>
-    <p><strong>Valor:</strong> R$ 70,00</p>
-    <p><strong>Tempo:</strong> 01:40</p>
-    <a href="/agendar/corte_barba_sobrancelha" class="btn-agendar">Agendar</a>
+    <h2>Agenda personalizada</h2>
+    <p>
+      Acesse o link público do estabelecimento para consultar profissionais,
+      serviços, valores e horários disponíveis.
+    </p>
   </article>
 </main>
 {% endblock %}

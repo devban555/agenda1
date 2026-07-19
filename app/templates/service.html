@@ -23,11 +23,12 @@
 </section>
 
 <header class="service-page-header">
-  {% if profissional is defined and profissional %}
-    Serviços de {{ profissional.nome }}
-  {% else %}
-    Serviços Disponíveis
-  {% endif %}
+  <span class="service-page-header__text">
+    Serviços disponíveis
+    {% if profissional is defined and profissional %}
+      <span class="service-page-header__professional">• {{ profissional.nome }}</span>
+    {% endif %}
+  </span>
 </header>
 
 <main class="service-page-content">
