@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Agenda1</title>
+  <defs>
+    <linearGradient id="background" x1="64" y1="48" x2="448" y2="464" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#60a5fa"/>
+      <stop offset="0.52" stop-color="#3b82f6"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#background)"/>
+  <rect x="112" y="126" width="288" height="274" rx="54" fill="#ffffff"/>
+  <path d="M112 206h288" stroke="#dbeafe" stroke-width="28"/>
+  <path d="M180 104v68M332 104v68" stroke="#ffffff" stroke-width="30" stroke-linecap="round"/>
+  <path d="m184 302 48 48 104-112" fill="none" stroke="#2563eb" stroke-width="34" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

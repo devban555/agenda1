@@ -1,0 +1,33 @@
+{
+  "id": "/painel",
+  "name": "Agenda1 - Gestão de Agendamentos",
+  "short_name": "Agenda1",
+  "description": "Painel administrativo do Agenda1.",
+  "lang": "pt-BR",
+  "start_url": "/painel",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0f1a",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/static/icons/agenda1-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/agenda1-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icons/agenda1-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

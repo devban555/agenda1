@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from config import Config, MASTERADM_KEY
 from .models import db
 import logging
@@ -50,5 +50,19 @@ def create_app():
 
     app.register_blueprint(main)
     app.register_blueprint(auth)
+
+    # O service worker precisa ser servido na raiz para controlar o painel
+    # inteiro. Nesta primeira versão ele não mantém páginas ou dados em cache.
+    @app.get('/service-worker.js')
+    def service_worker():
+        response = send_from_directory(
+            app.static_folder,
+            'service-worker.js',
+            mimetype='application/javascript',
+            max_age=0,
+        )
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Service-Worker-Allowed'] = '/'
+        return response
 
     return app
