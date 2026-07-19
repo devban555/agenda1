@@ -45,6 +45,19 @@
   background: var(--public-border);
 }
 
+.service-page-header__text {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.service-page-header__professional {
+  color: var(--public-text);
+  font-weight: 700;
+}
+
 .service-page-content {
   width: min(100%, 1000px);
   margin: 0 auto;
