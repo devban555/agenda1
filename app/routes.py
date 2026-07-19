@@ -1,11 +1,25 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session
 from functools import wraps
 from datetime import datetime
+from copy import deepcopy
+import re
+import unicodedata
 from sqlalchemy import extract, func
 from flask import current_app
 from . import db
-from .models import Agendamento, Cliente, Produto, MovimentacaoProduto
+from .models import (
+    Agendamento,
+    Cliente,
+    Produto,
+    MovimentacaoProduto,
+    Profissional,
+    ProfissionalServico,
+    AgendamentoProfissional,
+    ConfiguracaoProfissional,
+    ExcecaoProfissional,
+)
 from app.models import Servico, Usuario, ConfiguracaoAgenda, ExcecaoAgenda
+from .themes import TEMAS_VALIDOS, normalizar_tema
 
 main = Blueprint('main', __name__)
 
@@ -41,6 +55,185 @@ def login_required(f):
     return decorated_function
 
 
+def slug_profissional(nome):
+    texto = unicodedata.normalize('NFKD', str(nome or ''))
+    texto = texto.encode('ascii', 'ignore').decode('ascii').lower()
+    texto = re.sub(r'[^a-z0-9]+', '-', texto).strip('-')
+    return texto or 'profissional'
+
+
+def garantir_profissional_principal(usuario):
+    principal = Profissional.query.filter_by(
+        usuario_id=usuario.id,
+        principal=True
+    ).first()
+
+    if principal:
+        return principal
+
+    existente = Profissional.query.filter_by(usuario_id=usuario.id).first()
+    if existente:
+        existente.principal = True
+        db.session.commit()
+        return existente
+
+    nome = usuario.nome_fantasia or usuario.nome or usuario.username
+    principal = Profissional(
+        usuario_id=usuario.id,
+        nome=nome,
+        slug=slug_profissional(nome),
+        especialidade='Profissional principal',
+        ativo=True,
+        principal=True
+    )
+    db.session.add(principal)
+    db.session.commit()
+    return principal
+
+
+def garantir_servicos_profissional_principal(usuario, principal=None):
+    principal = principal or garantir_profissional_principal(usuario)
+
+    servicos_sem_profissional = (
+        Servico.query
+        .outerjoin(
+            ProfissionalServico,
+            ProfissionalServico.servico_id == Servico.id
+        )
+        .filter(
+            Servico.usuario_id == usuario.id,
+            ProfissionalServico.id.is_(None)
+        )
+        .all()
+    )
+
+    if not servicos_sem_profissional:
+        return principal
+
+    for servico in servicos_sem_profissional:
+        db.session.add(ProfissionalServico(
+            profissional_id=principal.id,
+            servico_id=servico.id
+        ))
+
+    db.session.commit()
+    return principal
+
+
+def garantir_configuracao_profissional(profissional):
+    if profissional.configuracao_agenda:
+        return profissional.configuracao_agenda
+
+    origem = None
+    if not profissional.principal:
+        principal = Profissional.query.filter_by(
+            usuario_id=profissional.usuario_id,
+            principal=True
+        ).first()
+        if principal and principal.configuracao_agenda:
+            origem = principal.configuracao_agenda
+
+    if origem is None:
+        origem = ConfiguracaoAgenda.query.filter_by(
+            usuario_id=profissional.usuario_id
+        ).first()
+
+    dias_semana = deepcopy(origem.dias_semana) if origem else []
+    horarios_base = deepcopy(origem.horarios_base) if origem else {
+        'semana': [],
+        'sabado': []
+    }
+
+    if isinstance(dias_semana, str):
+        try:
+            dias_semana = [
+                int(item.strip())
+                for item in dias_semana.split(',')
+                if item.strip()
+            ]
+        except ValueError:
+            dias_semana = []
+
+    if isinstance(horarios_base, str):
+        horarios_base = {
+            'semana': [
+                item.strip()
+                for item in horarios_base.split(',')
+                if item.strip()
+            ],
+            'sabado': []
+        }
+    elif isinstance(horarios_base, list):
+        horarios_base = {
+            'semana': horarios_base,
+            'sabado': []
+        }
+
+    configuracao = ConfiguracaoProfissional(
+        profissional_id=profissional.id,
+        dias_semana=dias_semana,
+        horarios_base=horarios_base
+    )
+    db.session.add(configuracao)
+    db.session.commit()
+    return configuracao
+
+
+def garantir_agendas_profissionais(usuario):
+    principal = garantir_servicos_profissional_principal(usuario)
+    profissionais = Profissional.query.filter_by(usuario_id=usuario.id).all()
+
+    for profissional in profissionais:
+        garantir_configuracao_profissional(profissional)
+
+    excecoes_legadas = ExcecaoAgenda.query.filter_by(usuario_id=usuario.id).all()
+    for excecao in excecoes_legadas:
+        existente = ExcecaoProfissional.query.filter_by(
+            profissional_id=principal.id,
+            data=excecao.data
+        ).first()
+        if not existente:
+            db.session.add(ExcecaoProfissional(
+                profissional_id=principal.id,
+                data=excecao.data,
+                dia_ativo=excecao.dia_ativo,
+                horarios_bloqueados=deepcopy(excecao.horarios_bloqueados or [])
+            ))
+
+    agendamentos_sem_profissional = (
+        Agendamento.query
+        .outerjoin(
+            AgendamentoProfissional,
+            AgendamentoProfissional.agendamento_id == Agendamento.id
+        )
+        .filter(
+            Agendamento.usuario_id == usuario.id,
+            AgendamentoProfissional.id.is_(None)
+        )
+        .all()
+    )
+
+    for agendamento in agendamentos_sem_profissional:
+        profissional_id = principal.id
+        if agendamento.servico and agendamento.servico.vinculo_profissional:
+            profissional_id = agendamento.servico.vinculo_profissional.profissional_id
+        db.session.add(AgendamentoProfissional(
+            profissional_id=profissional_id,
+            agendamento_id=agendamento.id
+        ))
+
+    db.session.commit()
+    return principal
+
+
+def profissional_do_servico(servico):
+    usuario = db.session.get(Usuario, servico.usuario_id)
+    garantir_agendas_profissionais(usuario)
+    if servico.vinculo_profissional:
+        return servico.vinculo_profissional.profissional
+    return garantir_profissional_principal(usuario)
+
+
 # =========================
 # ROTAS PÚBLICAS
 # =========================
@@ -53,11 +246,13 @@ def home():
 def agendar_por_id(servico_id):
     servico = Servico.query.get_or_404(servico_id)
     usuario = Usuario.query.get_or_404(servico.usuario_id)
+    profissional = profissional_do_servico(servico)
 
     return render_template(
         'agendar_servico.html',
         servico=servico,
-        usuario=usuario
+        usuario=usuario,
+        profissional=profissional
     )
 
 
@@ -71,6 +266,8 @@ def confirmar_agendamento():
         return "Dados insuficientes.", 400
 
     servico = Servico.query.get_or_404(int(servico_id))
+    usuario = Usuario.query.get_or_404(servico.usuario_id)
+    profissional = profissional_do_servico(servico)
 
     try:
         data_obj = datetime.strptime(data_str, '%Y-%m-%d').date()
@@ -81,8 +278,8 @@ def confirmar_agendamento():
     duracao = minutos_servico(servico)
     fim_novo = inicio_novo + timedelta(minutes=duracao)
 
-    horarios_base = obter_horarios_base_usuario(
-        servico.usuario_id,
+    horarios_base = obter_horarios_base_profissional(
+        profissional.id,
         data_obj
     )
 
@@ -102,6 +299,7 @@ def confirmar_agendamento():
 
     conflito = existe_conflito_agendamento(
         usuario_id=servico.usuario_id,
+        profissional_id=profissional.id,
         data=data_obj,
         inicio_novo=inicio_novo,
         fim_novo=fim_novo
@@ -115,7 +313,9 @@ def confirmar_agendamento():
         servico=servico.titulo,
         data=data_str,
         hora=hora_str,
-        servico_id=servico.id
+        servico_id=servico.id,
+        usuario=servico.usuario,
+        profissional=profissional
     )
 
 
@@ -170,13 +370,15 @@ def salvar_agendamento():
         return f"Erro ao processar dados: {e}", 400
 
     servico = Servico.query.get_or_404(sid)
+    usuario = Usuario.query.get_or_404(servico.usuario_id)
+    profissional = profissional_do_servico(servico)
 
     inicio_novo = datetime.combine(data, hora)
     duracao = minutos_servico(servico)
     fim_novo = inicio_novo + timedelta(minutes=duracao)
 
-    horarios_base = obter_horarios_base_usuario(
-        servico.usuario_id,
+    horarios_base = obter_horarios_base_profissional(
+        profissional.id,
         data
     )
 
@@ -196,6 +398,7 @@ def salvar_agendamento():
 
     conflito = existe_conflito_agendamento(
         usuario_id=servico.usuario_id,
+        profissional_id=profissional.id,
         data=data,
         inicio_novo=inicio_novo,
         fim_novo=fim_novo
@@ -238,6 +441,11 @@ def salvar_agendamento():
     )
 
     db.session.add(novo)
+    db.session.flush()
+    db.session.add(AgendamentoProfissional(
+        profissional_id=profissional.id,
+        agendamento_id=novo.id
+    ))
     db.session.commit()
 
     current_app.logger.info(
@@ -262,6 +470,7 @@ def salvar_agendamento():
         mensagem_cliente = f"""📅 *Agendamento Confirmado!*
 
 👤 Nome: {nome}
+💼 Profissional: {profissional.nome}
 🛠️ Serviço: {servico.titulo}
 📆 Data: {data.strftime('%d/%m/%Y')}
 ⏰ Hora: {hora.strftime('%H:%M')}
@@ -275,6 +484,7 @@ def salvar_agendamento():
 
 👤 {nome}
 📞 {telefone}
+💼 {profissional.nome}
 🛠️ {servico.titulo}
 📆 {data.strftime('%d/%m/%Y')}
 ⏰ {hora.strftime('%H:%M')}
@@ -303,6 +513,11 @@ def salvar_agendamento():
     # ==============================
 
     slug = servico.usuario.slug
+    retorno_url = url_for(
+        'main.agenda_profissional_publica',
+        slug=slug,
+        profissional_slug=profissional.slug
+    )
 
     return render_template(
         'confirmacao.html',
@@ -310,7 +525,10 @@ def salvar_agendamento():
         servico=servico.titulo,
         data_str=data.strftime('%d/%m'),
         hora_str=hora.strftime('%H:%M'),
-        slug=slug
+        slug=slug,
+        usuario=servico.usuario,
+        profissional=profissional,
+        retorno_url=retorno_url
     )
 
 @main.route('/cancelar/<int:id>', methods=['POST'])
@@ -406,6 +624,7 @@ from datetime import datetime, date
 def horarios_disponiveis():
     data_str = request.json.get('data')
     usuario_id = request.json.get('usuario_id')
+    profissional_id = request.json.get('profissional_id')
 
     if not data_str or not usuario_id:
         return jsonify([])
@@ -421,9 +640,22 @@ def horarios_disponiveis():
 
     dia_semana = data.weekday()
 
-    config = ConfiguracaoAgenda.query.filter_by(
-        usuario_id=usuario_id
-    ).first()
+    usuario = db.session.get(Usuario, int(usuario_id))
+    if not usuario:
+        return jsonify([])
+    garantir_agendas_profissionais(usuario)
+
+    profissional = None
+    if profissional_id:
+        profissional = Profissional.query.filter_by(
+            id=int(profissional_id),
+            usuario_id=usuario.id,
+            ativo=True
+        ).first()
+    if profissional is None:
+        profissional = garantir_profissional_principal(usuario)
+
+    config = garantir_configuracao_profissional(profissional)
 
     if not config:
         return jsonify([])
@@ -459,8 +691,8 @@ def horarios_disponiveis():
         # compatibilidade com registros antigos
         horarios = horarios_cfg
 
-    excecao = ExcecaoAgenda.query.filter_by(
-        usuario_id=usuario_id,
+    excecao = ExcecaoProfissional.query.filter_by(
+        profissional_id=profissional.id,
         data=data
     ).first()
 
@@ -567,11 +799,43 @@ def obter_horarios_base_usuario(usuario_id, data):
 
     return horarios_cfg or []
 
-def existe_conflito_agendamento(usuario_id, data, inicio_novo, fim_novo, ignorar_agendamento_id=None):
+
+def obter_horarios_base_profissional(profissional_id, data):
+    profissional = db.session.get(Profissional, profissional_id)
+    if not profissional:
+        return []
+
+    config = garantir_configuracao_profissional(profissional)
+    dia_semana = data.weekday()
+    dias_permitidos = carregar_json_campo(config.dias_semana, [])
+
+    if dia_semana not in dias_permitidos:
+        return []
+
+    horarios_cfg = carregar_json_campo(config.horarios_base, {})
+    if isinstance(horarios_cfg, dict):
+        chave = 'sabado' if dia_semana == 5 else 'semana'
+        return horarios_cfg.get(chave, [])
+
+    return horarios_cfg or []
+
+def existe_conflito_agendamento(
+    usuario_id,
+    data,
+    inicio_novo,
+    fim_novo,
+    ignorar_agendamento_id=None,
+    profissional_id=None
+):
     query = Agendamento.query.filter_by(
         usuario_id=usuario_id,
         data=data
     )
+
+    if profissional_id is not None:
+        query = query.join(AgendamentoProfissional).filter(
+            AgendamentoProfissional.profissional_id == profissional_id
+        )
 
     if ignorar_agendamento_id:
         query = query.filter(Agendamento.id != ignorar_agendamento_id)
@@ -618,13 +882,12 @@ def verificar_horarios():
         servico = Servico.query.get_or_404(int(servico_id))
 
         usuario_id = servico.usuario_id
+        profissional = profissional_do_servico(servico)
         duracao_novo = minutos_servico(servico)
 
         dia_semana = data.weekday()
 
-        config = ConfiguracaoAgenda.query.filter_by(
-            usuario_id=usuario_id
-        ).first()
+        config = garantir_configuracao_profissional(profissional)
 
         if not config:
             return jsonify([])
@@ -650,8 +913,8 @@ def verificar_horarios():
         else:
             horarios_base = horarios_cfg
 
-        excecao = ExcecaoAgenda.query.filter_by(
-            usuario_id=usuario_id,
+        excecao = ExcecaoProfissional.query.filter_by(
+            profissional_id=profissional.id,
             data=data
         ).first()
 
@@ -704,6 +967,7 @@ def verificar_horarios():
 
             conflito = existe_conflito_agendamento(
                 usuario_id=usuario_id,
+                profissional_id=profissional.id,
                 data=data,
                 inicio_novo=inicio_novo,
                 fim_novo=fim_novo
@@ -901,6 +1165,7 @@ def consultar():
     agendamentos = None
     telefone = None
     slug = None
+    usuario = None
 
     if request.method == 'POST':
         telefone = request.form['telefone']
@@ -912,13 +1177,16 @@ def consultar():
         ).all()
 
         if agendamentos:
-            slug = agendamentos[0].usuario.slug
+            usuario = agendamentos[0].usuario
+            garantir_agendas_profissionais(usuario)
+            slug = usuario.slug
 
     return render_template(
         'consultar.html',
         agendamentos=agendamentos,
         telefone=telefone,
-        slug=slug
+        slug=slug,
+        usuario=usuario
     )
 
 
@@ -947,6 +1215,18 @@ def admin():
     from datetime import datetime, date, timedelta
 
     user_id = session["user_id"]
+    usuario = db.session.get(Usuario, user_id)
+    garantir_agendas_profissionais(usuario)
+    profissionais = Profissional.query.filter_by(
+        usuario_id=user_id,
+        ativo=True
+    ).order_by(
+        Profissional.principal.desc(),
+        Profissional.nome
+    ).all()
+    profissional_id = request.args.get('profissional_id', type=int)
+    if profissional_id and not any(p.id == profissional_id for p in profissionais):
+        profissional_id = None
 
     hoje = date.today()
     amanha = hoje + timedelta(days=1)
@@ -1081,49 +1361,59 @@ def admin():
                 .all()
             )
 
+    if profissional_id:
+        agendamentos = [
+            agendamento for agendamento in agendamentos
+            if agendamento.vinculo_profissional
+            and agendamento.vinculo_profissional.profissional_id == profissional_id
+        ]
+
     # ==========================================
     # CARDS SUPERIORES
     # ==========================================
 
-    total_hoje = (
-        Agendamento.query
-        .filter_by(
-            usuario_id=user_id,
-            data=hoje
-        )
-        .count()
+    def contar_agendamentos_profissional(*filtros):
+        query = Agendamento.query.filter(*filtros)
+        if profissional_id:
+            query = query.join(AgendamentoProfissional).filter(
+                AgendamentoProfissional.profissional_id == profissional_id
+            )
+        return query.count()
+
+    total_hoje = contar_agendamentos_profissional(
+        Agendamento.usuario_id == user_id,
+        Agendamento.data == hoje
     )
 
-    total_amanha = (
-        Agendamento.query
-        .filter_by(
-            usuario_id=user_id,
-            data=amanha
-        )
-        .count()
+    total_amanha = contar_agendamentos_profissional(
+        Agendamento.usuario_id == user_id,
+        Agendamento.data == amanha
     )
 
-    total_semana = (
-        Agendamento.query
-        .filter(
-            Agendamento.usuario_id == user_id,
-            Agendamento.data >= inicio_semana,
-            Agendamento.data <= fim_semana
-        )
-        .count()
+    total_semana = contar_agendamentos_profissional(
+        Agendamento.usuario_id == user_id,
+        Agendamento.data >= inicio_semana,
+        Agendamento.data <= fim_semana
     )
 
     # ==========================================
     # PRÓXIMO AGENDAMENTO
     # ==========================================
 
-    proximo_agendamento = (
+    proximo_query = (
         Agendamento.query
         .filter(
             Agendamento.usuario_id == user_id,
             Agendamento.data >= hoje
         )
-        .order_by(
+    )
+    if profissional_id:
+        proximo_query = proximo_query.join(AgendamentoProfissional).filter(
+            AgendamentoProfissional.profissional_id == profissional_id
+        )
+
+    proximo_agendamento = (
+        proximo_query.order_by(
             Agendamento.data,
             Agendamento.horario
         )
@@ -1138,6 +1428,8 @@ def admin():
 
         data_filtro=data_filtro,
         periodo=periodo,
+        profissionais=profissionais,
+        profissional_id=profissional_id,
 
         total_hoje=total_hoje,
         total_amanha=total_amanha,
@@ -1152,8 +1444,30 @@ def admin():
 @login_required
 def servicos():
     user_id = session["user_id"]
+    usuario = db.session.get(Usuario, user_id)
+    principal = garantir_profissional_principal(usuario)
+    garantir_servicos_profissional_principal(usuario, principal)
+
+    profissionais_ativos = Profissional.query.filter_by(
+        usuario_id=user_id,
+        ativo=True
+    ).order_by(
+        Profissional.principal.desc(),
+        Profissional.nome
+    ).all()
 
     if request.method == 'POST':
+        profissional_id = request.form.get('profissional_id', type=int)
+        profissional = Profissional.query.filter_by(
+            id=profissional_id,
+            usuario_id=user_id,
+            ativo=True
+        ).first()
+
+        if not profissional:
+            flash('Selecione um profissional válido para o serviço.')
+            return redirect(url_for('main.servicos'))
+
         novo_servico = Servico(
             usuario_id=user_id,
             titulo=request.form['titulo'],
@@ -1163,6 +1477,11 @@ def servicos():
             ativo=True
         )
         db.session.add(novo_servico)
+        db.session.flush()
+        db.session.add(ProfissionalServico(
+            profissional_id=profissional.id,
+            servico_id=novo_servico.id
+        ))
         db.session.commit()
         return redirect(url_for('main.servicos'))
 
@@ -1170,7 +1489,87 @@ def servicos():
         usuario_id=user_id
     ).all()
 
-    return render_template('servicos.html', servicos=servicos)
+    return render_template(
+        'servicos.html',
+        servicos=servicos,
+        profissionais=profissionais_ativos
+    )
+
+
+@main.route('/profissionais', methods=['GET', 'POST'])
+@login_required
+def profissionais():
+    usuario = db.session.get(Usuario, session['user_id'])
+    garantir_profissional_principal(usuario)
+
+    if request.method == 'POST':
+        nome = str(request.form.get('nome') or '').strip()
+        especialidade = str(request.form.get('especialidade') or '').strip()
+        foto_url = str(request.form.get('foto_url') or '').strip()
+
+        if len(nome) < 2:
+            flash('Informe o nome do profissional.')
+            return redirect(url_for('main.profissionais'))
+
+        slug_base = slug_profissional(nome)
+        slug = slug_base
+        contador = 2
+
+        while Profissional.query.filter_by(
+            usuario_id=usuario.id,
+            slug=slug
+        ).first():
+            slug = f'{slug_base}-{contador}'
+            contador += 1
+
+        profissional = Profissional(
+            usuario_id=usuario.id,
+            nome=nome,
+            slug=slug,
+            especialidade=especialidade or None,
+            foto_url=foto_url or None,
+            ativo=True,
+            principal=False
+        )
+        db.session.add(profissional)
+        db.session.commit()
+        flash('Profissional cadastrado com sucesso.')
+        return redirect(url_for('main.profissionais'))
+
+    lista = Profissional.query.filter_by(
+        usuario_id=usuario.id
+    ).order_by(
+        Profissional.principal.desc(),
+        Profissional.nome
+    ).all()
+
+    return render_template(
+        'profissionais.html',
+        profissionais=lista,
+        usuario=usuario
+    )
+
+
+@main.route('/profissionais/<int:profissional_id>/alternar', methods=['POST'])
+@login_required
+def alternar_profissional(profissional_id):
+    profissional = Profissional.query.filter_by(
+        id=profissional_id,
+        usuario_id=session['user_id']
+    ).first_or_404()
+
+    if profissional.principal and profissional.ativo:
+        flash('O profissional principal deve permanecer ativo.')
+        return redirect(url_for('main.profissionais'))
+
+    if profissional.ativo and profissional.servicos_vinculados:
+        flash('Mova os serviços deste profissional antes de desativá-lo.')
+        return redirect(url_for('main.profissionais'))
+
+    profissional.ativo = not profissional.ativo
+    db.session.commit()
+    flash('Status do profissional atualizado.')
+    return redirect(url_for('main.profissionais'))
 
 
 @main.route('/editar_servico/<int:id>', methods=['POST'])
@@ -1187,6 +1586,29 @@ def editar_servico(id):
     servico.preco = data.get('valor')
     servico.duracao_minutos = int(data.get('tempo') or 60)
     servico.cor = data.get('cor', servico.cor)
+
+    profissional_id = data.get('profissional_id')
+    try:
+        profissional_id = int(profissional_id)
+    except (TypeError, ValueError):
+        return jsonify({'erro': 'Profissional inválido.'}), 400
+
+    profissional = Profissional.query.filter_by(
+        id=profissional_id,
+        usuario_id=session['user_id'],
+        ativo=True
+    ).first()
+
+    if not profissional:
+        return jsonify({'erro': 'Profissional inválido.'}), 400
+
+    if servico.vinculo_profissional:
+        servico.vinculo_profissional.profissional_id = profissional.id
+    else:
+        db.session.add(ProfissionalServico(
+            profissional_id=profissional.id,
+            servico_id=servico.id
+        ))
 
     db.session.commit()
     return jsonify({'mensagem': 'Serviço atualizado com sucesso!'})
@@ -1206,20 +1628,77 @@ def service():
 def agenda_publica_slug(slug):
     usuario = Usuario.query.filter_by(slug=slug).first_or_404()
 
-    servicos = Servico.query.filter_by(
-        usuario_id=usuario.id
-    ).order_by(Servico.titulo).all()
+    principal = garantir_profissional_principal(usuario)
+    garantir_servicos_profissional_principal(usuario, principal)
+    profissionais_ativos = Profissional.query.filter_by(
+        usuario_id=usuario.id,
+        ativo=True
+    ).order_by(
+        Profissional.principal.desc(),
+        Profissional.nome
+    ).all()
+
+    if len(profissionais_ativos) > 1:
+        return render_template(
+            'profissionais_publico.html',
+            usuario=usuario,
+            profissionais=profissionais_ativos
+        )
+
+    profissional = profissionais_ativos[0] if profissionais_ativos else principal
+    servicos = (
+        Servico.query
+        .join(ProfissionalServico)
+        .filter(
+            Servico.usuario_id == usuario.id,
+            ProfissionalServico.profissional_id == profissional.id
+        )
+        .order_by(Servico.titulo)
+        .all()
+    )
 
     return render_template(
         "service.html",
         servicos=servicos,
-        usuario=usuario
+        usuario=usuario,
+        profissional=profissional
+    )
+
+
+@main.route('/agenda/<slug>/profissional/<profissional_slug>')
+def agenda_profissional_publica(slug, profissional_slug):
+    usuario = Usuario.query.filter_by(slug=slug).first_or_404()
+    garantir_servicos_profissional_principal(usuario)
+    profissional = Profissional.query.filter_by(
+        usuario_id=usuario.id,
+        slug=profissional_slug,
+        ativo=True
+    ).first_or_404()
+
+    servicos = (
+        Servico.query
+        .join(ProfissionalServico)
+        .filter(
+            Servico.usuario_id == usuario.id,
+            ProfissionalServico.profissional_id == profissional.id
+        )
+        .order_by(Servico.titulo)
+        .all()
+    )
+
+    return render_template(
+        'service.html',
+        servicos=servicos,
+        usuario=usuario,
+        profissional=profissional,
+        possui_selecao_profissional=True
     )
 
 
 @main.route('/agenda/<slug>/consultar', methods=['GET', 'POST'])
 def consultar_publico(slug):
     usuario = Usuario.query.filter_by(slug=slug).first_or_404()
+    garantir_agendas_profissionais(usuario)
 
     agendamentos = None
     telefone = None
@@ -1238,7 +1717,8 @@ def consultar_publico(slug):
         'consultar.html',
         agendamentos=agendamentos,
         telefone=telefone,
-        slug=slug
+        slug=slug,
+        usuario=usuario
     )
 
 
@@ -1310,14 +1790,31 @@ def salvar_configuracao_agenda():
 @main.route('/configuracoes')
 @login_required
 def configuracoes():
-    return render_template('setup.html')
+    usuario = db.session.get(Usuario, session['user_id'])
+    garantir_agendas_profissionais(usuario)
+    profissionais = Profissional.query.filter_by(
+        usuario_id=usuario.id,
+        ativo=True
+    ).order_by(
+        Profissional.principal.desc(),
+        Profissional.nome
+    ).all()
+    return render_template('setup.html', profissionais=profissionais)
 
 @main.route('/configuracao_base', methods=['GET'])
 @login_required
 def configuracao_base():
-    config = ConfiguracaoAgenda.query.filter_by(
-        usuario_id=session['user_id']
+    profissional_id = request.args.get('profissional_id', type=int)
+    profissional = Profissional.query.filter_by(
+        id=profissional_id,
+        usuario_id=session['user_id'],
+        ativo=True
     ).first()
+
+    if not profissional:
+        return jsonify({'erro': 'Profissional inválido.'}), 400
+
+    config = garantir_configuracao_profissional(profissional)
 
     if not config:
         return jsonify({
@@ -1339,17 +1836,17 @@ def configuracao_base():
 @main.route('/salvar_configuracao_base', methods=['POST'])
 @login_required
 def salvar_configuracao_base():
-    data = request.get_json()
-
-    config = ConfiguracaoAgenda.query.filter_by(
-        usuario_id=session['user_id']
+    data = request.get_json() or {}
+    profissional = Profissional.query.filter_by(
+        id=data.get('profissional_id'),
+        usuario_id=session['user_id'],
+        ativo=True
     ).first()
 
-    if not config:
-        config = ConfiguracaoAgenda(
-            usuario_id=session['user_id']
-        )
-        db.session.add(config)
+    if not profissional:
+        return jsonify({'erro': 'Profissional inválido.'}), 400
+
+    config = garantir_configuracao_profissional(profissional)
 
     dias_semana = data.get('dias_semana', [])
 
@@ -1373,18 +1870,27 @@ def salvar_configuracao_base():
 @main.route('/salvar_excecao_agenda', methods=['POST'])
 @login_required
 def salvar_excecao_agenda():
-    data = request.get_json()
+    data = request.get_json() or {}
+
+    profissional = Profissional.query.filter_by(
+        id=data.get('profissional_id'),
+        usuario_id=session['user_id'],
+        ativo=True
+    ).first()
+
+    if not profissional:
+        return jsonify({'erro': 'Profissional inválido.'}), 400
 
     data_obj = datetime.strptime(data['data'], '%Y-%m-%d').date()
 
-    excecao = ExcecaoAgenda.query.filter_by(
-        usuario_id=session['user_id'],
+    excecao = ExcecaoProfissional.query.filter_by(
+        profissional_id=profissional.id,
         data=data_obj
     ).first()
 
     if not excecao:
-        excecao = ExcecaoAgenda(
-            usuario_id=session['user_id'],
+        excecao = ExcecaoProfissional(
+            profissional_id=profissional.id,
             data=data_obj
         )
         db.session.add(excecao)
@@ -1396,7 +1902,7 @@ def salvar_excecao_agenda():
 
     # 🔥 LOG AQUI (após salvar)
     current_app.logger.info(
-        f"ExcecaoAgenda | usuario_id={session['user_id']} | data={data_obj} | ativo={excecao.dia_ativo} | bloqueados={excecao.horarios_bloqueados}"
+        f"ExcecaoProfissional | profissional_id={profissional.id} | data={data_obj} | ativo={excecao.dia_ativo} | bloqueados={excecao.horarios_bloqueados}"
     )
 
     return jsonify({'status':'ok'})
@@ -1404,16 +1910,36 @@ def salvar_excecao_agenda():
 @main.route('/salvar_identidade', methods=['POST'])
 @login_required
 def salvar_identidade():
-    data = request.get_json()
+    data = request.get_json(silent=True) or {}
 
-    usuario = Usuario.query.get(session['user_id'])
+    usuario = db.session.get(Usuario, session['user_id'])
+    if not usuario:
+        return jsonify({'status': 'erro', 'mensagem': 'Usuário não encontrado.'}), 404
 
-    usuario.nome_fantasia = data.get('nome_fantasia')
-    usuario.fonte_titulo = data.get('fonte_titulo', 'padrao')
-    usuario.tema = data.get('tema', 'principal')
+    if 'nome_fantasia' in data:
+        usuario.nome_fantasia = str(data.get('nome_fantasia') or '').strip() or None
+
+    if 'fonte_titulo' in data:
+        usuario.fonte_titulo = str(data.get('fonte_titulo') or 'padrao').strip()
+
+    if 'tema' in data:
+        tema_recebido = str(data.get('tema') or '').strip().lower()
+        if tema_recebido not in TEMAS_VALIDOS:
+            return jsonify({
+                'status': 'erro',
+                'mensagem': 'Paleta de cores inválida.'
+            }), 400
+
+        usuario.tema = tema_recebido
+        session['tema'] = tema_recebido
 
     db.session.commit()
-    return jsonify({'status': 'ok'})
+
+    tema_atual = normalizar_tema(usuario.tema)
+    return jsonify({
+        'status': 'ok',
+        'tema': tema_atual
+    })
 
 @main.route('/masteradm')
 @master_required
@@ -1610,13 +2136,26 @@ def api_logout(session):
 @main.route('/disponibilidade')
 @login_required
 def disponibilidade():
-    return render_template('disponibilidade.html')
+    usuario = db.session.get(Usuario, session['user_id'])
+    garantir_agendas_profissionais(usuario)
+    profissionais = Profissional.query.filter_by(
+        usuario_id=usuario.id,
+        ativo=True
+    ).order_by(
+        Profissional.principal.desc(),
+        Profissional.nome
+    ).all()
+    return render_template(
+        'disponibilidade.html',
+        profissionais=profissionais
+    )
 
 @main.route('/carregar_disponibilidade', methods=['POST'])
 @login_required
 def carregar_disponibilidade():
 
     data_str = request.json.get('data')
+    profissional_id = request.json.get('profissional_id')
 
     if not data_str:
         return jsonify({
@@ -1629,9 +2168,16 @@ def carregar_disponibilidade():
         '%Y-%m-%d'
     ).date()
 
-    config = ConfiguracaoAgenda.query.filter_by(
-        usuario_id=session['user_id']
+    profissional = Profissional.query.filter_by(
+        id=profissional_id,
+        usuario_id=session['user_id'],
+        ativo=True
     ).first()
+
+    if not profissional:
+        return jsonify({'erro': 'Profissional inválido.'}), 400
+
+    config = garantir_configuracao_profissional(profissional)
 
     if not config:
         return jsonify({
@@ -1659,8 +2205,8 @@ def carregar_disponibilidade():
     else:
         horarios = horarios_cfg
 
-    excecao = ExcecaoAgenda.query.filter_by(
-        usuario_id=session['user_id'],
+    excecao = ExcecaoProfissional.query.filter_by(
+        profissional_id=profissional.id,
         data=data
     ).first()
 
@@ -1682,6 +2228,7 @@ def carregar_disponibilidade():
 def salvar_disponibilidade():
 
     data_str = request.json.get('data')
+    profissional_id = request.json.get('profissional_id')
     bloqueados = request.json.get(
         'horarios_bloqueados',
         []
@@ -1697,15 +2244,24 @@ def salvar_disponibilidade():
         '%Y-%m-%d'
     ).date()
 
-    excecao = ExcecaoAgenda.query.filter_by(
+    profissional = Profissional.query.filter_by(
+        id=profissional_id,
         usuario_id=session['user_id'],
+        ativo=True
+    ).first()
+
+    if not profissional:
+        return jsonify({'status': 'erro', 'mensagem': 'Profissional inválido.'}), 400
+
+    excecao = ExcecaoProfissional.query.filter_by(
+        profissional_id=profissional.id,
         data=data
     ).first()
 
     if not excecao:
 
-        excecao = ExcecaoAgenda(
-            usuario_id=session['user_id'],
+        excecao = ExcecaoProfissional(
+            profissional_id=profissional.id,
             data=data,
             dia_ativo=True
         )

@@ -1,0 +1,16 @@
+.git
+.gitignore
+.env
+.env.*
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.log
+*.backup*
+*.bak*
+*.db*
+*.sqlite*
+agendamento/instance/*
+!agendamento/instance/.gitkeep

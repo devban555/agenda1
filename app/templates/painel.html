@@ -1,274 +1,112 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Área ADM | Profissional</title>
+{% extends "base_admin.html" %}
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+{% block title %}Área ADM | Profissional{% endblock %}
+{% block body_class %}admin-body painel-page{% endblock %}
 
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.4);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #3b82f6;
-      --border: rgba(255, 255, 255, 0.08);
-      --accent-gradient: linear-gradient(135deg, #3b82f6, #8b5cf6);
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/painel.css') }}">
+{% endblock %}
 
-      /* Gradientes específicos exigidos */
-      --financeiro-gradient: linear-gradient(135deg, #f59e0b, #d97706);
-      --vip-gradient: linear-gradient(135deg, #fcd34d, #b45309);
-      --estoque-gradient: linear-gradient(135deg, #34d399, #047857);
-    }
+{% block body %}
+<header class="painel-header">
+  <div class="painel-header__inner">
+    <h1 class="painel-title">Painel de Controle</h1>
 
-    * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+    <nav class="top-actions" aria-label="Ações rápidas">
+      <a
+        href="{{ url_for('main.financeiro') }}"
+        class="icon-btn bank-top"
+        data-tooltip="Financeiro"
+        aria-label="Abrir financeiro"
+        title="Financeiro"
+      >
+        <i class="fa-solid fa-wallet" aria-hidden="true"></i>
+      </a>
 
-    body {
-      margin: 0;
-      font-family: 'Poppins', system-ui, sans-serif;
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0px, transparent 50%),
-        radial-gradient(at 100% 0%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
-      color: var(--text);
-      min-height: 100vh;
-    }
+      <a
+        href="{{ url_for('main.whatsapp') }}"
+        class="icon-btn whatsapp"
+        data-tooltip="WhatsApp"
+        aria-label="Abrir integração com WhatsApp"
+        title="WhatsApp"
+      >
+        <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+      </a>
 
-    /* HEADER */
-    header {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 40px 20px;
-      background: rgba(11, 15, 26, 0.5);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-    }
+      <a
+        href="{{ url_for('main.suporte') }}"
+        class="icon-btn"
+        data-tooltip="Suporte Técnico"
+        aria-label="Abrir suporte técnico"
+        title="Suporte Técnico"
+      >
+        <i class="fa-solid fa-headset" aria-hidden="true"></i>
+      </a>
 
-    .header-title {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      text-transform: uppercase;
-      background: linear-gradient(to right, #fff, var(--muted));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    /* CONTAINER DOS ICONES */
-    .top-actions {
-      position: absolute;
-      right: 30px;
-      display: flex;
-      gap: 12px;
-    }
-
-    /* BOTÕES ICONES */
-    .icon-btn {
-      width: 45px;
-      height: 45px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 14px;
-      text-decoration: none;
-      color: var(--text);
-      background: var(--card);
-      border: 1px solid var(--border);
-      transition: all 0.3s ease;
-      position: relative;
-    }
-
-    .icon-btn:hover {
-      background: rgba(255, 255, 255, 0.1);
-      transform: translateY(-2px);
-      border-color: var(--primary);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
-    }
-
-    /* WHATSAPP COR */
-    .icon-btn.whatsapp i { color: #25D366; }
-
-    /* FINANCEIRO COR ICONE TOPO */
-    .icon-btn.bank-top i { color: #f59e0b; }
-
-    /* TOOLTIPS */
-    .icon-btn::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: -40px;
-      right: 0;
-      background: #1e293b;
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 11px;
-      font-weight: 600;
-      opacity: 0;
-      pointer-events: none;
-      transition: 0.2s;
-      white-space: nowrap;
-      border: 1px solid var(--border);
-      box-shadow: 0 5px 15px rgba(0,0,0,0.4);
-    }
-
-    .icon-btn:hover::after {
-      opacity: 1;
-      bottom: -45px;
-    }
-
-    /* GRID */
-    .container {
-      max-width: 1000px;
-      margin: 60px auto;
-      padding: 0 24px;
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 24px;
-    }
-
-    .btn {
-      background: var(--card);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 30px 20px;
-      text-align: center;
-      border-radius: 24px;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 15px;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 15px;
-    }
-
-    .btn i {
-      font-size: 32px;
-      background: var(--accent-gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      transition: transform 0.3s ease;
-    }
-
-    /* Aplicando Gradientes Específicos nos Ícones */
-    .btn.btn-vip i {
-      background: var(--vip-gradient);
-      -webkit-background-clip: text;
-    }
-
-    .btn.btn-estoque i {
-      background: var(--estoque-gradient);
-      -webkit-background-clip: text;
-    }
-
-    .btn.btn-financeiro i {
-      background: var(--financeiro-gradient);
-      -webkit-background-clip: text;
-    }
-
-    .btn:hover {
-      background: rgba(255, 255, 255, 0.05);
-      transform: translateY(-8px);
-      border-color: rgba(59, 130, 246, 0.5);
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    }
-
-    .btn:hover i {
-      transform: scale(1.1);
-    }
-
-    @media (max-width: 600px) {
-      header { justify-content: flex-start; padding: 30px 20px; }
-      .top-actions { position: relative; right: 0; margin-left: auto; }
-      .container {
-        grid-template-columns: repeat(2, 1fr);
-        margin-top: 30px;
-        gap: 15px;
-      }
-      .header-title { font-size: 18px; }
-    }
-  </style>
-</head>
-
-<body>
-
-<header>
-  <span class="header-title">Painel de Controle</span>
-
-  <div class="top-actions">
-
-    <a href="/financeiro" class="icon-btn bank-top" data-tooltip="Financeiro">
-      <i class="fa-solid fa-wallet"></i>
-    </a>
-
-    <a href="/whatsapp" class="icon-btn whatsapp" data-tooltip="WhatsApp">
-      <i class="fab fa-whatsapp"></i>
-    </a>
-
-    <a href="/suporte" class="icon-btn" data-tooltip="Suporte Técnico">
-      <i class="fas fa-headset"></i>
-    </a>
-
-    <a href="/configuracoes" class="icon-btn" data-tooltip="Configurações">
-      <i class="fas fa-gear"></i>
-    </a>
-
+      <a
+        href="{{ url_for('main.configuracoes') }}"
+        class="icon-btn"
+        data-tooltip="Configurações"
+        aria-label="Abrir configurações"
+        title="Configurações"
+      >
+        <i class="fa-solid fa-gear" aria-hidden="true"></i>
+      </a>
+    </nav>
   </div>
 </header>
 
-<div class="container">
-  <a href="/admin" class="btn">
-    <i class="fas fa-calendar-alt"></i>
-    <span>Agenda</span>
-  </a>
+<main class="painel-main">
+  <nav class="painel-grid" aria-label="Módulos administrativos">
+    <a href="{{ url_for('main.admin') }}" class="module-card">
+      <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>
+      <span>Agenda</span>
+    </a>
 
-  <a href="/disponibilidade" class="btn">
-    <i class="fas fa-calendar-check"></i>
-    <span>Disponibilidade</span>
-  </a>
+    <a href="{{ url_for('main.disponibilidade') }}" class="module-card">
+      <i class="fa-solid fa-calendar-check" aria-hidden="true"></i>
+      <span>Disponibilidade</span>
+    </a>
 
-  <a href="/clientes" class="btn">
-    <i class="fas fa-list-ul"></i>
-    <span>Clientes</span>
-  </a>
+    <a href="{{ url_for('main.clientes') }}" class="module-card">
+      <i class="fa-solid fa-list-ul" aria-hidden="true"></i>
+      <span>Clientes</span>
+    </a>
 
-  <a href="{{ url_for('main.clientes_vip') }}" class="btn btn-vip">
-    <i class="fa-solid fa-crown"></i>
-    <span>Cliente VIP</span>
-  </a>
+    <a href="{{ url_for('main.clientes_vip') }}" class="module-card module-card--vip">
+      <i class="fa-solid fa-crown" aria-hidden="true"></i>
+      <span>Cliente VIP</span>
+    </a>
 
-  <a href="/servicos" class="btn">
-    <i class="fas fa-cut"></i>
-    <span>Serviços</span>
-  </a>
+    <a href="{{ url_for('main.servicos') }}" class="module-card">
+      <i class="fa-solid fa-scissors" aria-hidden="true"></i>
+      <span>Serviços</span>
+    </a>
 
-  <a href="/estoque" class="btn btn-estoque">
-    <i class="fa-solid fa-boxes-stacked"></i>
-    <span>Estoque</span>
-  </a>
+    <a href="{{ url_for('main.profissionais') }}" class="module-card">
+      <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+      <span>Profissionais</span>
+    </a>
 
-  <a href="/financeiro" class="btn btn-financeiro">
-    <i class="fa-solid fa-wallet"></i>
-    <span>Financeiro</span>
-  </a>
+    <a href="{{ url_for('main.estoque') }}" class="module-card module-card--estoque">
+      <i class="fa-solid fa-boxes-stacked" aria-hidden="true"></i>
+      <span>Estoque</span>
+    </a>
 
-  <a href="/relatorio" class="btn">
-    <i class="fas fa-chart-line"></i>
-    <span>Relatórios</span>
-  </a>
+    <a href="{{ url_for('main.financeiro') }}" class="module-card module-card--financeiro">
+      <i class="fa-solid fa-wallet" aria-hidden="true"></i>
+      <span>Financeiro</span>
+    </a>
 
-  <a href="/eventos" class="btn">
-    <i class="fas fa-bullhorn"></i>
-    <span>Marketing</span>
-  </a>
-</div>
+    <a href="{{ url_for('main.relatorio') }}" class="module-card">
+      <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+      <span>Relatórios</span>
+    </a>
 
-</body>
-</html>
+    <a href="{{ url_for('main.eventos') }}" class="module-card">
+      <i class="fa-solid fa-bullhorn" aria-hidden="true"></i>
+      <span>Marketing</span>
+    </a>
+  </nav>
+</main>
+{% endblock %}

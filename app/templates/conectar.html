@@ -1,190 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conectar WhatsApp | Admin Pro</title>
+{% extends "base_admin.html" %}
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+{% block title %}Conectar WhatsApp | Admin Pro{% endblock %}
+{% block body_class %}admin-body conectar-page{% endblock %}
 
-    <style>
-        :root {
-            --bg: #0b0f1a;
-            --card: rgba(30, 41, 59, 0.45);
-            --text: #f8fafc;
-            --muted: #94a3b8;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --border: rgba(255, 255, 255, 0.08);
-            --success: #22c55e;
-            --danger: #ef4444;
-        }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/conectar.css') }}">
+{% endblock %}
 
-        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg);
-            background-image:
-                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .box {
-            width: 100%;
-            max-width: 400px;
-            background: var(--card);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--border);
-            border-radius: 28px;
-            padding: 40px;
-            text-align: center;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            animation: fadeIn 0.6s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Indicador Pulsante */
-        .status-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-            min-height: 24px;
-        }
-
-        .pulse-dot {
-            width: 10px;
-            height: 10px;
-            background-color: var(--success);
-            border-radius: 50%;
-            position: relative;
-            display: none; /* Oculto por padrão */
-        }
-
-        .pulse-dot::before {
-            content: "";
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: var(--success);
-            border-radius: 50%;
-            animation: pulse-animation 2s infinite;
-            left: 0;
-            top: 0;
-        }
-
-        @keyframes pulse-animation {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(3); opacity: 0; }
-        }
-
-        .icon-header {
-            width: 60px;
-            height: 60px;
-            background: rgba(34, 197, 94, 0.1);
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: var(--success);
-            margin: 0 auto 20px;
-            border: 1px solid rgba(34, 197, 94, 0.2);
-        }
-
-        h2 { font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px; margin-bottom: 8px; }
-
-        #statusText {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .info-box {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            border-radius: 14px;
-            font-size: 0.8rem;
-            color: var(--muted);
-            line-height: 1.5;
-            margin-bottom: 20px;
-            text-align: left;
-            border-left: 3px solid var(--primary);
-        }
-
-        .qr-wrapper {
-            background: white;
-            padding: 10px;
-            border-radius: 18px;
-            margin: 0 auto 25px;
-            width: 220px;
-            height: 220px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        #qr { width: 100%; height: auto; }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            border-radius: 14px;
-            border: none;
-            font-weight: 800;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .btn-connect {
-            background: linear-gradient(180deg, var(--primary), var(--primary-hover));
-            color: white;
-            box-shadow: 0 8px 15px rgba(59, 130, 246, 0.2);
-        }
-
-        .btn-logout {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #fca5a5;
-        }
-
-        .btn-back {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text);
-            border: 1px solid var(--border);
-            text-decoration: none;
-            margin-top: 10px;
-        }
-
-        button:hover:not(:disabled) { transform: translateY(-2px); filter: brightness(1.1); }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .spinner { animation: spin 1s linear infinite; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-    </style>
-</head>
-<body>
+{% block body %}
 
 <div class="box">
     <div class="icon-header">
@@ -219,7 +42,9 @@
         <button class="btn-back"><i class="fa-solid fa-arrow-left"></i> Voltar ao Painel</button>
     </a>
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
     window.SESSION_ID = "{{ session_id }}";
 
@@ -324,6 +149,4 @@
 
     setInterval(atualizar, 2000);
 </script>
-
-</body>
-</html>
+{% endblock %}

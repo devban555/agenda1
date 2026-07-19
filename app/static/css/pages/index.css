@@ -1,0 +1,87 @@
+.services-index-page {
+  background: var(--public-bg);
+}
+
+.services-index-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--public-border);
+  color: var(--public-text);
+  background-color: var(--public-card-strong);
+  text-align: center;
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+
+.services-index-actions {
+  margin: 20px;
+  text-align: center;
+}
+
+.services-index-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  color: #fff;
+  background-color: var(--public-primary);
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.services-index-grid {
+  width: min(100%, 1000px);
+  margin: 0 auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.service-card {
+  padding: 20px;
+  border: 1px solid var(--public-border);
+  border-radius: var(--public-radius-sm);
+  background-color: var(--public-card-strong);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform var(--transition-fast);
+}
+
+.service-card h2 {
+  margin: 10px 0 5px;
+  color: var(--public-text);
+  font-size: 1.25rem;
+}
+
+.service-card p {
+  margin: 4px 0;
+  color: var(--public-muted);
+}
+
+.btn-agendar {
+  margin-top: 10px;
+  padding: 10px 20px;
+  border-radius: 6px;
+  color: #fff;
+  background-color: var(--public-success);
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .services-index-actions a:hover {
+    background-color: var(--public-primary-hover);
+  }
+
+  .service-card:hover {
+    transform: translateY(-5px);
+  }
+
+  .btn-agendar:hover {
+    background-color: color-mix(in srgb, var(--public-success) 85%, #000);
+  }
+}

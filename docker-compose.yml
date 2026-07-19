@@ -1,0 +1,37 @@
+services:
+  agenda1-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agenda1-web
+    restart: unless-stopped
+
+    ports:
+      - "5001:5000"
+      - "127.0.0.1:3000:3000"
+
+    environment:
+      FLASK_ENV: production
+      FLASK_DEBUG: "0"
+      PYTHONUNBUFFERED: "1"
+      DATABASE_URL: "${DATABASE_URL:-sqlite:////app/agendamento/instance/local.db}"
+      SECRET_KEY: "${SECRET_KEY:?Defina SECRET_KEY no arquivo .env}"
+      MASTERADM_KEY: "${MASTERADM_KEY:?Defina MASTERADM_KEY no arquivo .env}"
+
+    volumes:
+      - ./agendamento/instance:/app/agendamento/instance
+
+  baileys-rest:
+    build:
+      context: ../baileys-rest
+      dockerfile: Dockerfile
+    container_name: baileys-rest
+    restart: unless-stopped
+
+    network_mode: "service:agenda1-web"
+
+    depends_on:
+      - agenda1-web
+
+    volumes:
+      - ../baileys-rest/sessions:/app/sessions

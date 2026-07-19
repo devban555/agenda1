@@ -1,330 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Configurações | Painel Pro</title>
+{% extends "base_admin.html" %}
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+{% block title %}Configurações | Painel Pro{% endblock %}
+{% block body_class %}admin-body setup-page{% endblock %}
 
-  <style>
-    :root {
-      --bg: #0b0f1a;
-      --card: rgba(30, 41, 59, 0.4);
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --primary: #3b82f6;
-      --primary-hover: #2563eb;
-      --border: rgba(255, 255, 255, 0.08);
-      --input-bg: rgba(2, 6, 23, 0.5);
-      --danger: #ef4444;
-      --danger-hover: #dc2626;
-    }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/setup.css') }}">
+{% endblock %}
 
-    * {
-      box-sizing: border-box;
-      -webkit-font-smoothing: antialiased;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      background-color: var(--bg);
-      background-image:
-        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
-        radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
-      color: var(--text);
-      padding-bottom: 60px;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(11, 15, 26, 0.8);
-      backdrop-filter: blur(12px);
-      padding: 20px;
-      text-align: center;
-      border-bottom: 1px solid var(--border);
-    }
-
-    header h1 {
-      font-size: 20px;
-      font-weight: 800;
-      letter-spacing: 1px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .container {
-      max-width: 800px;
-      margin: 30px auto;
-      padding: 0 16px;
-    }
-
-    .card {
-      background: var(--card);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      padding: 28px;
-      margin-bottom: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-
-    .card-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
-      border-left: 4px solid var(--primary);
-      padding-left: 12px;
-    }
-
-    .card-header h2 {
-      font-size: 18px;
-      font-weight: 700;
-      color: #fff;
-    }
-
-    .card-description {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 20px;
-      margin-top: -10px;
-      line-height: 1.5;
-    }
-
-    label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 8px;
-      color: var(--muted);
-    }
-
-    .field {
-      width: 100%;
-      padding: 12px 16px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: var(--input-bg);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 14px;
-      margin-bottom: 20px;
-      transition: all 0.3s;
-    }
-
-    .field:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-    }
-
-    .options {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
-      gap: 10px;
-    }
-
-    .option {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      background: rgba(255, 255, 255, 0.02);
-      padding: 12px 10px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      cursor: pointer;
-      font-size: 13px;
-      font-weight: 600;
-      transition: all 0.2s;
-      user-select: none;
-      margin-bottom: 0;
-    }
-
-    .option:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.15);
-    }
-
-    .option input {
-      display: none;
-    }
-
-    .option:has(input:checked) {
-      background: rgba(59, 130, 246, 0.12);
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    .horarios-wrapper {
-      background: rgba(2, 6, 23, 0.2);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    .horarios-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .horario-item {
-      display: flex;
-      align-items: center;
-      background: var(--input-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 4px 8px;
-      transition: all 0.2s;
-    }
-
-    .horario-item:focus-within {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
-    }
-
-    .horario-item input[type="time"] {
-      background: transparent;
-      border: none;
-      color: #fff;
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 500;
-      width: 100%;
-      outline: none;
-      padding: 6px 0;
-    }
-
-    .horario-item input[type="time"]::-webkit-calendar-picker-indicator {
-      filter: invert(1);
-      cursor: pointer;
-      opacity: 0.6;
-      transition: 0.2s;
-    }
-
-    .horario-item input[type="time"]::-webkit-calendar-picker-indicator:hover {
-      opacity: 1;
-    }
-
-    .btn-remove-hora {
-      background: transparent;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      padding: 6px;
-      font-size: 13px;
-      transition: color 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .btn-remove-hora:hover {
-      color: var(--danger);
-    }
-
-    .btn-add-hora {
-      background: rgba(59, 130, 246, 0.05);
-      border: 1px dashed rgba(59, 130, 246, 0.3);
-      color: var(--primary);
-      padding: 10px 16px;
-      border-radius: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-
-    .btn-add-hora:hover {
-      background: rgba(59, 130, 246, 0.1);
-      border-color: var(--primary);
-    }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 14px;
-      font-weight: 700;
-      font-size: 14px;
-      font-family: inherit;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: #fff;
-    }
-
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.04);
-      color: #fff;
-      border: 1px solid var(--border);
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-hover);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    .btn-voltar {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      text-decoration: none;
-      color: var(--muted);
-      font-weight: 600;
-      font-size: 14px;
-      margin-top: 30px;
-      transition: 0.2s;
-    }
-
-    .btn-voltar:hover {
-      color: #fff;
-    }
-
-    @media (max-width: 600px) {
-      .options {
-        grid-template-columns: repeat(3, 1fr);
-      }
-
-      .horarios-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-  </style>
-</head>
-
-<body>
+{% block body %}
 
 <header>
   <h1><i class="fas fa-sliders"></i> Painel de Configurações</h1>
@@ -354,6 +37,133 @@
     </button>
   </div>
 
+  <div
+    class="card theme-card"
+    id="themeCard"
+    data-save-theme-url="{{ url_for('main.salvar_identidade') }}"
+  >
+    <div class="card-header">
+      <i class="fas fa-palette"></i>
+      <h2>Paleta do Sistema</h2>
+    </div>
+
+    <p class="card-description">
+      Escolha uma combinação de cores. A prévia é aplicada imediatamente e só será mantida após salvar.
+    </p>
+
+    <div class="theme-options" id="themeOptions" role="radiogroup" aria-label="Paletas disponíveis">
+      <button type="button" class="theme-option" data-theme-option="principal" role="radio" aria-checked="false">
+        <span class="theme-preview" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="theme-option-text">
+          <strong>Azul Noturno</strong>
+          <small>Paleta original</small>
+        </span>
+        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="theme-option" data-theme-option="esmeralda" role="radio" aria-checked="false">
+        <span class="theme-preview" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="theme-option-text">
+          <strong>Esmeralda</strong>
+          <small>Verde sofisticado</small>
+        </span>
+        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="theme-option" data-theme-option="violeta" role="radio" aria-checked="false">
+        <span class="theme-preview" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="theme-option-text">
+          <strong>Violeta</strong>
+          <small>Moderno e criativo</small>
+        </span>
+        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="theme-option" data-theme-option="ambar" role="radio" aria-checked="false">
+        <span class="theme-preview" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="theme-option-text">
+          <strong>Âmbar</strong>
+          <small>Quente e marcante</small>
+        </span>
+        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="theme-option" data-theme-option="rose" role="radio" aria-checked="false">
+        <span class="theme-preview" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="theme-option-text">
+          <strong>Rosé</strong>
+          <small>Feminino e delicado</small>
+        </span>
+        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="theme-option" data-theme-option="lavanda" role="radio" aria-checked="false">
+        <span class="theme-preview" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="theme-option-text">
+          <strong>Lavanda</strong>
+          <small>Suave e elegante</small>
+        </span>
+        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="theme-option" data-theme-option="clinica" role="radio" aria-checked="false">
+        <span class="theme-preview" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="theme-option-text">
+          <strong>Clínica Clean</strong>
+          <small>Limpo e profissional</small>
+        </span>
+        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
+      </button>
+
+      <button type="button" class="theme-option" data-theme-option="champagne" role="radio" aria-checked="false">
+        <span class="theme-preview" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="theme-option-text">
+          <strong>Champagne</strong>
+          <small>Bege sofisticado</small>
+        </span>
+        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
+      </button>
+    </div>
+
+    <p class="theme-status" id="themeStatus" aria-live="polite"></p>
+
+    <button type="button" id="salvarTema" class="btn btn-primary">
+      <i class="fas fa-check"></i> Salvar Paleta
+    </button>
+  </div>
+
+  <div class="card professional-schedule-card">
+    <div class="card-header">
+      <i class="fas fa-user-clock"></i>
+      <h2>Agenda do Profissional</h2>
+    </div>
+    <p class="card-description">
+      Selecione quem terá os dias e horários configurados abaixo.
+    </p>
+    <label for="profissionalAgenda">Profissional</label>
+    <select id="profissionalAgenda" class="field">
+      {% for profissional in profissionais %}
+        <option value="{{ profissional.id }}">{{ profissional.nome }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
   <div class="card">
     <div class="card-header">
       <i class="fas fa-calendar-week"></i>
@@ -381,7 +191,7 @@
       Gerencie os horários de atendimento clínico/comercial para os dias úteis e finais de semana.
     </p>
 
-    <label style="color: #fff; font-size: 14px; margin-bottom: 12px;">
+    <label class="section-label">
       <i class="fas fa-calendar-days"></i> Segunda a Sexta
     </label>
 
@@ -393,7 +203,7 @@
       </button>
     </div>
 
-    <label style="color: #fff; font-size: 14px; margin-bottom: 12px;">
+    <label class="section-label">
       <i class="fas fa-calendar-day"></i> Sábado
     </label>
 
@@ -431,7 +241,9 @@
   </a>
 
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
   /* =========================================================
      CONFIGURAÇÃO PADRÃO
@@ -448,6 +260,7 @@
   ];
 
   const diasPadrao = [0, 1, 2, 3, 4, 5];
+  const profissionalAgenda = document.getElementById("profissionalAgenda");
 
 
   /* =========================================================
@@ -513,7 +326,10 @@
 
   async function carregarConfiguracaoBase() {
     try {
-      const resposta = await fetch("/configuracao_base", {
+      const params = new URLSearchParams({
+        profissional_id: profissionalAgenda.value
+      });
+      const resposta = await fetch(`/configuracao_base?${params.toString()}`, {
         method: "GET",
         headers: {
           "Accept": "application/json"
@@ -565,8 +381,7 @@
       },
       body: JSON.stringify({
         nome_fantasia: nome,
-        fonte_titulo: selectFonte.value,
-        tema: "principal"
+        fonte_titulo: selectFonte.value
       })
     })
     .then(r => r.json())
@@ -577,6 +392,78 @@
       console.error("Erro:", err);
       alert("Erro ao salvar identidade visual.");
     });
+  });
+
+
+  /* =========================================================
+     PALETA DO SISTEMA
+  ========================================================= */
+
+  const temasValidos = new Set([
+    "principal", "esmeralda", "violeta", "ambar",
+    "rose", "lavanda", "clinica", "champagne"
+  ]);
+  const themeRoot = document.documentElement;
+  const themeCard = document.getElementById("themeCard");
+  const themeButtons = [...document.querySelectorAll("[data-theme-option]")];
+  const themeStatus = document.getElementById("themeStatus");
+  const btnSalvarTema = document.getElementById("salvarTema");
+  const themeSaveUrl = themeCard.dataset.saveThemeUrl;
+  let temaSelecionado = temasValidos.has(themeRoot.dataset.theme)
+    ? themeRoot.dataset.theme
+    : "principal";
+
+  function selecionarTema(tema, mostrarPrevia = false) {
+    if (!temasValidos.has(tema)) return;
+
+    temaSelecionado = tema;
+    themeRoot.dataset.theme = tema;
+
+    themeButtons.forEach(button => {
+      const selecionado = button.dataset.themeOption === tema;
+      button.classList.toggle("is-selected", selecionado);
+      button.setAttribute("aria-checked", String(selecionado));
+    });
+
+    if (mostrarPrevia) {
+      themeStatus.textContent = "Prévia aplicada. Clique em Salvar Paleta para confirmar.";
+      themeStatus.className = "theme-status is-preview";
+    }
+  }
+
+  themeButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      selecionarTema(button.dataset.themeOption, true);
+    });
+  });
+
+  btnSalvarTema.addEventListener("click", async () => {
+    btnSalvarTema.disabled = true;
+    themeStatus.textContent = "Salvando paleta...";
+    themeStatus.className = "theme-status is-preview";
+
+    try {
+      const resposta = await fetch(themeSaveUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tema: temaSelecionado })
+      });
+      const resultado = await resposta.json();
+
+      if (!resposta.ok || resultado.status !== "ok") {
+        throw new Error(resultado.mensagem || "Não foi possível salvar a paleta.");
+      }
+
+      selecionarTema(resultado.tema || temaSelecionado);
+      themeStatus.textContent = "Paleta salva com sucesso!";
+      themeStatus.className = "theme-status is-success";
+    } catch (err) {
+      console.error("Erro ao salvar paleta:", err);
+      themeStatus.textContent = err.message || "Erro ao salvar a paleta.";
+      themeStatus.className = "theme-status is-error";
+    } finally {
+      btnSalvarTema.disabled = false;
+    }
   });
 
 
@@ -607,6 +494,7 @@
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
+        profissional_id: profissionalAgenda.value,
         dias_semana: dias,
         horarios_base: {
           semana: horariosSemana,
@@ -659,8 +547,8 @@
      INICIALIZAÇÃO
   ========================================================= */
 
+  profissionalAgenda.addEventListener("change", carregarConfiguracaoBase);
   carregarConfiguracaoBase();
+  selecionarTema(temaSelecionado);
 </script>
-
-</body>
-</html>
+{% endblock %}

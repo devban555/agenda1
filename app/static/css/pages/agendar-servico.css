@@ -1,0 +1,201 @@
+.schedule-service-page {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.12) 0, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.08) 0, transparent 50%);
+}
+
+.schedule-service-card {
+  width: min(100%, 580px);
+  padding: 32px;
+  border: 1px solid var(--public-border);
+  border-radius: 32px;
+  background: var(--public-card);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  box-shadow: var(--public-shadow);
+}
+
+.schedule-service-header {
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.schedule-service-header h1 {
+  margin: 0 0 16px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+
+.schedule-service-info {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.schedule-info-tag {
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--public-border);
+  border-radius: var(--public-radius-sm);
+  background: var(--public-card-hover);
+  font-size: 0.85rem;
+}
+
+.schedule-info-tag i {
+  color: var(--public-primary);
+}
+
+.schedule-info-tag--price i {
+  color: var(--public-success);
+}
+
+.schedule-service-card label {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--public-muted);
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.schedule-service-card input[type="date"] {
+  width: 100%;
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  border: 1px solid var(--public-border);
+  border-radius: var(--public-radius-md);
+  color: var(--public-text);
+  background: var(--public-input-bg);
+  font-size: 1rem;
+  outline: none;
+  transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.schedule-service-card input[type="date"]:focus {
+  border-color: var(--public-primary);
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.15);
+}
+
+.schedule-times h2 {
+  margin: 0 0 12px;
+  color: var(--public-muted);
+  font-size: 0.9rem;
+}
+
+.schedule-times-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.schedule-time-button {
+  padding: 12px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid var(--public-border);
+  border-radius: 14px;
+  color: var(--public-text);
+  background: var(--public-card-strong);
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.schedule-time-button small {
+  color: var(--public-muted);
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 1;
+}
+
+.schedule-time-button.is-selected {
+  border-color: var(--public-success);
+  color: var(--public-on-primary);
+  background: var(--public-success);
+  transform: scale(0.95);
+}
+
+.schedule-time-button.is-selected small {
+  color: inherit;
+}
+
+.schedule-state {
+  grid-column: 1 / -1;
+  padding: 20px;
+  border: 1px dashed var(--public-border);
+  border-radius: var(--public-radius-md);
+  color: var(--public-muted);
+  background: var(--public-card-hover);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.schedule-state--detailed p {
+  margin: 10px 0 0;
+}
+
+.schedule-state--detailed p + p {
+  margin-top: 8px;
+}
+
+.schedule-service-footer {
+  padding-top: 20px;
+  margin-top: 30px;
+  border-top: 1px solid var(--public-border);
+}
+
+.schedule-back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--public-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: color var(--transition-normal);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .schedule-time-button:hover {
+    border-color: var(--public-primary);
+    color: var(--public-on-primary);
+    background: var(--public-primary);
+    box-shadow: 0 8px 20px var(--color-primary-glow);
+    transform: translateY(-3px);
+  }
+
+  .schedule-time-button:hover small {
+    color: inherit;
+  }
+
+  .schedule-back-button:hover {
+    color: var(--public-text);
+  }
+}
+
+@media (max-width: 480px) {
+  .schedule-service-card {
+    padding: 24px;
+  }
+
+  .schedule-service-info {
+    flex-wrap: wrap;
+  }
+
+  .schedule-times-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash, current_app
 from .models import db, Usuario
+from .themes import normalizar_tema
 
 auth = Blueprint("auth", __name__)
 
@@ -13,6 +14,7 @@ def login():
         if user and user.check_password(request.form["password"]):
             session["user_id"] = user.id
             session["username"] = user.username
+            session["tema"] = normalizar_tema(user.tema)
 
             current_app.logger.info(f"Login realizado: {user.username}")
 

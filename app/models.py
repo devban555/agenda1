@@ -40,12 +40,73 @@ class Usuario(db.Model):
 
     configuracao_agenda = db.relationship('ConfiguracaoAgenda', backref='usuario', uselist=False, cascade='all, delete-orphan')
     excecoes_agenda = db.relationship('ExcecaoAgenda', backref='usuario', lazy=True, cascade='all, delete-orphan')
+    profissionais = db.relationship(
+        'Profissional',
+        backref='usuario',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
 
     def set_password(self, senha):
         self.password_hash = generate_password_hash(senha)
 
     def check_password(self, senha):
         return check_password_hash(self.password_hash, senha)
+
+
+# =========================
+# PROFISSIONAIS
+# =========================
+class Profissional(db.Model):
+    __tablename__ = 'profissional'
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(
+        db.Integer,
+        db.ForeignKey('usuario.id'),
+        nullable=False,
+        index=True
+    )
+    nome = db.Column(db.String(120), nullable=False)
+    slug = db.Column(db.String(120), nullable=False)
+    especialidade = db.Column(db.String(120), nullable=True)
+    foto_url = db.Column(db.String(255), nullable=True)
+    ativo = db.Column(db.Boolean, default=True, nullable=False)
+    principal = db.Column(db.Boolean, default=False, nullable=False)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            'usuario_id',
+            'slug',
+            name='uq_profissional_usuario_slug'
+        ),
+    )
+
+    servicos_vinculados = db.relationship(
+        'ProfissionalServico',
+        backref='profissional',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+    configuracao_agenda = db.relationship(
+        'ConfiguracaoProfissional',
+        backref='profissional',
+        uselist=False,
+        cascade='all, delete-orphan'
+    )
+    excecoes_agenda = db.relationship(
+        'ExcecaoProfissional',
+        backref='profissional',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+    agendamentos_vinculados = db.relationship(
+        'AgendamentoProfissional',
+        backref='profissional',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
 
 # =========================
 # CLIENTE
@@ -97,6 +158,13 @@ class Agendamento(db.Model):
 
     criado_em = db.Column(db.DateTime, default=datetime.utcnow)
 
+    vinculo_profissional = db.relationship(
+        'AgendamentoProfissional',
+        backref='agendamento',
+        uselist=False,
+        cascade='all, delete-orphan'
+    )
+
 
 
 # =========================
@@ -116,6 +184,13 @@ class Servico(db.Model):
     ativo = db.Column(db.Boolean, default=True)
 
     cor = db.Column(db.String(30), default='azul')
+
+    vinculo_profissional = db.relationship(
+        'ProfissionalServico',
+        backref='servico',
+        uselist=False,
+        cascade='all, delete-orphan'
+    )
 
     @property
     def tempo(self):
@@ -149,6 +224,86 @@ class Servico(db.Model):
             self.preco = None
         else:
             self.preco = value
+
+
+class ProfissionalServico(db.Model):
+    __tablename__ = 'profissional_servico'
+
+    id = db.Column(db.Integer, primary_key=True)
+    profissional_id = db.Column(
+        db.Integer,
+        db.ForeignKey('profissional.id'),
+        nullable=False,
+        index=True
+    )
+    servico_id = db.Column(
+        db.Integer,
+        db.ForeignKey('servico.id'),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class AgendamentoProfissional(db.Model):
+    __tablename__ = 'agendamento_profissional'
+
+    id = db.Column(db.Integer, primary_key=True)
+    profissional_id = db.Column(
+        db.Integer,
+        db.ForeignKey('profissional.id'),
+        nullable=False,
+        index=True
+    )
+    agendamento_id = db.Column(
+        db.Integer,
+        db.ForeignKey('agendamento.id'),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ConfiguracaoProfissional(db.Model):
+    __tablename__ = 'configuracao_profissional'
+
+    id = db.Column(db.Integer, primary_key=True)
+    profissional_id = db.Column(
+        db.Integer,
+        db.ForeignKey('profissional.id'),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+    dias_semana = db.Column(db.JSON, nullable=False, default=list)
+    horarios_base = db.Column(db.JSON, nullable=False, default=dict)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ExcecaoProfissional(db.Model):
+    __tablename__ = 'excecao_profissional'
+
+    id = db.Column(db.Integer, primary_key=True)
+    profissional_id = db.Column(
+        db.Integer,
+        db.ForeignKey('profissional.id'),
+        nullable=False,
+        index=True
+    )
+    data = db.Column(db.Date, nullable=False)
+    dia_ativo = db.Column(db.Boolean, default=True)
+    horarios_bloqueados = db.Column(db.JSON, default=list)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint(
+            'profissional_id',
+            'data',
+            name='uq_excecao_profissional_data'
+        ),
+    )
 
 # =========================
 # PRODUTO / ESTOQUE

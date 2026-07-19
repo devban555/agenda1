@@ -1,0 +1,284 @@
+:root {
+    --bg: #0b0f1a;
+    --card: rgba(30, 41, 59, 0.4);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --primary: #3b82f6;
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --border: rgba(255, 255, 255, 0.08);
+    --glass-input: rgba(255, 255, 255, 0.03);
+}
+
+* { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+
+body {
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg);
+    background-image:
+        radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
+    color: var(--text);
+    padding: 40px 20px;
+    min-height: 100vh;
+}
+
+.main-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+h1 {
+    text-align: center;
+    font-weight: 800;
+    font-size: 2rem;
+    margin-bottom: 40px;
+    background: linear-gradient(to right, #fff, var(--muted));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* FORMULÁRIO DE CRIAÇÃO */
+.form-card {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 30px;
+    margin-bottom: 40px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    align-items: end; /* Corrigido de flex-end para end (padrão Grid) */
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--muted);
+    margin-left: 4px;
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper i {
+    position: absolute;
+    left: 15px;
+    color: var(--primary);
+    font-size: 0.9rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px 15px 12px 40px;
+    background: var(--glass-input);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: #fff;
+    font-family: inherit;
+    transition: all 0.3s;
+}
+
+.form-group select {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 15px 12px 40px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--text);
+    background: var(--color-input);
+    font-family: inherit;
+}
+
+.service-admin-message {
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
+    border-radius: 14px;
+    color: var(--success);
+    background: color-mix(in srgb, var(--success) 10%, transparent);
+}
+
+.service-admin-message p { margin: 0; }
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background: rgba(255,255,255,0.07);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* Estilo específico para alinhar e limpar a aparência do input color */
+.form-group input[type="color"] {
+    padding: 5px 15px 5px 40px;
+    height: 48px;
+    cursor: pointer;
+}
+
+.btn-create {
+    padding: 12px 24px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    height: 48px;
+}
+
+.btn-create:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+    filter: brightness(1.1);
+}
+
+/* LISTAGEM (TABELA) */
+.table-container {
+    background: var(--card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    overflow: hidden;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: rgba(255,255,255,0.03);
+    padding: 18px 20px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+}
+
+td {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+tr:last-child td { border-bottom: none; }
+
+/* INPUTS DA TABELA */
+.table-input {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text);
+    padding: 8px;
+    border-radius: 8px;
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: all 0.2s;
+}
+
+.table-input:not([disabled]) {
+    background: var(--glass-input);
+    border-color: var(--border);
+}
+
+.table-select:disabled {
+    appearance: none;
+    opacity: 1;
+}
+
+/* Exibição melhorada de Cor na Tabela */
+.cor-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.cor-circulo {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+
+.table-input-color {
+    background: transparent;
+    border: none;
+    width: 40px;
+    height: 30px;
+    cursor: pointer;
+    padding: 0;
+}
+
+.table-input-color:disabled {
+    cursor: default;
+}
+
+/* BOTÕES DE AÇÃO */
+.acoes {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.action-btn {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: white;
+}
+
+.btn-edit { background: rgba(59, 130, 246, 0.1); color: var(--primary); }
+.btn-edit:hover { background: var(--primary); color: white; }
+
+.btn-save { background: var(--success); display: none; }
+.btn-delete { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
+.btn-delete:hover { background: var(--danger); color: white; }
+
+/* RODAPÉ */
+.voltar { text-align: center; margin-top: 40px; }
+.voltar a {
+    color: var(--muted);
+    text-decoration: none;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.3s;
+}
+.voltar a:hover { color: #fff; transform: translateX(-5px); }
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}

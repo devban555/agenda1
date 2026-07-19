@@ -1,143 +1,13 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base_admin.html" %}
 
-<title>Disponibilidade</title>
+{% block title %}Disponibilidade{% endblock %}
+{% block body_class %}admin-body disponibilidade-page{% endblock %}
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/disponibilidade.css') }}">
+{% endblock %}
 
-<style>
-:root{
-    --bg:#0b0f1a;
-    --card:rgba(30,41,59,.4);
-    --border:rgba(255,255,255,.08);
-    --primary:#3b82f6;
-    --danger:#ef4444;
-    --text:#f8fafc;
-    --muted:#94a3b8;
-}
-
-*{
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
-}
-
-body{
-    margin:0;
-    background:var(--bg);
-    color:var(--text);
-}
-
-.container{
-    max-width:1000px;
-    margin:40px auto;
-    padding:20px;
-}
-
-.card{
-    background:var(--card);
-    border:1px solid var(--border);
-    border-radius:24px;
-    padding:24px;
-}
-
-h1{
-    margin-top:0;
-    margin-bottom:25px;
-    text-align:center;
-}
-
-label{
-    display:block;
-    margin-bottom:10px;
-    color:var(--muted);
-    font-weight:600;
-}
-
-input[type="date"]{
-    width:100%;
-    padding:14px;
-    border-radius:12px;
-    border:1px solid var(--border);
-    background:#111827;
-    color:white;
-    margin-bottom:25px;
-}
-
-.horarios{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-    gap:12px;
-}
-
-.horario{
-    border:1px solid var(--border);
-    background:#111827;
-    border-radius:16px;
-    padding:18px;
-    text-align:center;
-    cursor:pointer;
-    transition:.2s;
-}
-
-.horario:hover{
-    transform:translateY(-2px);
-}
-
-.horario.disponivel{
-    border-color:#1d4ed8;
-}
-
-.horario.bloqueado{
-    background:rgba(239,68,68,.15);
-    border-color:var(--danger);
-}
-
-.hora{
-    font-size:18px;
-    font-weight:700;
-}
-
-.status{
-    margin-top:6px;
-    font-size:12px;
-    color:var(--muted);
-}
-
-.actions{
-    margin-top:30px;
-    display:flex;
-    gap:12px;
-}
-
-.btn{
-    flex:1;
-    border:none;
-    border-radius:14px;
-    padding:14px;
-    cursor:pointer;
-    font-weight:700;
-}
-
-.btn-salvar{
-    background:var(--primary);
-    color:white;
-}
-
-.btn-voltar{
-    background:#1f2937;
-    color:white;
-    text-decoration:none;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-</style>
-</head>
-<body>
+{% block body %}
 
 <div class="container">
 
@@ -148,7 +18,14 @@ input[type="date"]{
             Disponibilidade
         </h1>
 
-        <label>Selecione a data</label>
+        <label for="profissional">Profissional</label>
+        <select id="profissional" class="disponibilidade-select">
+            {% for profissional in profissionais %}
+              <option value="{{ profissional.id }}">{{ profissional.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="data">Selecione a data</label>
 
         <input type="date" id="data">
 
@@ -169,11 +46,16 @@ input[type="date"]{
     </div>
 
 </div>
+{% endblock %}
 
+{% block extra_js %}
 <script>
 
 const dataInput =
     document.getElementById('data');
+
+const profissionalInput =
+    document.getElementById('profissional');
 
 const btnSalvar =
     document.getElementById('salvar');
@@ -257,7 +139,8 @@ async function carregarDisponibilidade(){
                         'Content-Type':'application/json'
                     },
                     body:JSON.stringify({
-                        data:data
+                        data:data,
+                        profissional_id:profissionalInput.value
                     })
                 }
             );
@@ -311,6 +194,7 @@ async function salvarDisponibilidade(){
                     },
                     body:JSON.stringify({
                         data:data,
+                        profissional_id:profissionalInput.value,
                         horarios_bloqueados:
                             horariosBloqueados
                     })
@@ -351,12 +235,20 @@ dataInput.addEventListener(
     carregarDisponibilidade
 );
 
+profissionalInput.addEventListener('change', () => {
+    horariosAtuais = [];
+    horariosBloqueados = [];
+    if (dataInput.value) {
+        carregarDisponibilidade();
+    } else {
+        horariosContainer.innerHTML = '';
+    }
+});
+
 btnSalvar.addEventListener(
     'click',
     salvarDisponibilidade
 );
 
 </script>
-
-</body>
-</html>
+{% endblock %}

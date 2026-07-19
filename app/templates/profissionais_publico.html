@@ -1,0 +1,45 @@
+{% extends "base_public.html" %}
+
+{% block title %}Escolha o profissional | {{ usuario.nome_fantasia or usuario.username }}{% endblock %}
+{% block body_class %}public-body professionals-public-page{% endblock %}
+
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/profissionais-publico.css') }}">
+{% endblock %}
+
+{% block body %}
+<main class="professionals-public-shell">
+  <header class="professionals-public-header">
+    <p class="professionals-public-eyebrow">{{ usuario.nome_fantasia or usuario.username }}</p>
+    <h1>Escolha quem irá atender você</h1>
+    <p>Selecione um profissional para continuar e conhecer os serviços disponíveis.</p>
+  </header>
+
+  <section class="professionals-public-grid" aria-label="Profissionais disponíveis">
+    {% for profissional in profissionais %}
+      <a
+        class="professional-public-card"
+        href="{{ url_for('main.agenda_profissional_publica', slug=usuario.slug, profissional_slug=profissional.slug) }}"
+      >
+        <span class="professional-public-avatar">
+          {% if profissional.foto_url %}
+            <img src="{{ profissional.foto_url }}" alt="Foto de {{ profissional.nome }}">
+          {% else %}
+            <span aria-hidden="true">{{ profissional.nome[:1]|upper }}</span>
+          {% endif %}
+        </span>
+        <span class="professional-public-info">
+          <strong>{{ profissional.nome }}</strong>
+          <small>{{ profissional.especialidade or 'Profissional disponível' }}</small>
+        </span>
+        <i class="fa-solid fa-arrow-right professional-public-arrow" aria-hidden="true"></i>
+      </a>
+    {% endfor %}
+  </section>
+
+  <a class="professionals-public-consult" href="{{ url_for('main.consultar_publico', slug=usuario.slug) }}">
+    <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+    Consultar meus agendamentos
+  </a>
+</main>
+{% endblock %}

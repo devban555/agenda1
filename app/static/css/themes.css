@@ -1,0 +1,288 @@
+:root,
+html[data-theme="principal"] {
+  color-scheme: dark;
+  --color-background: #0b0f1a;
+  --color-surface: rgba(30, 41, 59, 0.4);
+  --color-surface-strong: #1e293b;
+  --color-surface-hover: rgba(255, 255, 255, 0.07);
+  --color-text: #f8fafc;
+  --color-muted: #94a3b8;
+  --color-primary: #3b82f6;
+  --color-primary-hover: #2563eb;
+  --color-primary-rgb: 59, 130, 246;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-focus: rgba(96, 165, 250, 0.95);
+}
+
+html[data-theme="esmeralda"] {
+  color-scheme: dark;
+  --color-background: #071410;
+  --color-surface: rgba(6, 78, 59, 0.34);
+  --color-surface-strong: #123b31;
+  --color-surface-hover: rgba(52, 211, 153, 0.11);
+  --color-text: #f0fdf8;
+  --color-muted: #9fbeb4;
+  --color-primary: #10b981;
+  --color-primary-hover: #059669;
+  --color-primary-rgb: 16, 185, 129;
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #f05252;
+  --color-border: rgba(52, 211, 153, 0.16);
+  --color-focus: #34d399;
+}
+
+html[data-theme="violeta"] {
+  color-scheme: dark;
+  --color-background: #100b1a;
+  --color-surface: rgba(76, 29, 149, 0.28);
+  --color-surface-strong: #2e1f47;
+  --color-surface-hover: rgba(167, 139, 250, 0.11);
+  --color-text: #faf7ff;
+  --color-muted: #b6a8ce;
+  --color-primary: #8b5cf6;
+  --color-primary-hover: #7c3aed;
+  --color-primary-rgb: 139, 92, 246;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #fb7185;
+  --color-border: rgba(167, 139, 250, 0.16);
+  --color-focus: #a78bfa;
+}
+
+html[data-theme="ambar"] {
+  color-scheme: dark;
+  --color-background: #171006;
+  --color-surface: rgba(120, 53, 15, 0.28);
+  --color-surface-strong: #422a15;
+  --color-surface-hover: rgba(251, 191, 36, 0.11);
+  --color-text: #fffbeb;
+  --color-muted: #c8b395;
+  --color-primary: #f59e0b;
+  --color-primary-hover: #d97706;
+  --color-primary-rgb: 245, 158, 11;
+  --color-success: #22c55e;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-border: rgba(251, 191, 36, 0.17);
+  --color-focus: #fbbf24;
+}
+
+html[data-theme="rose"] {
+  color-scheme: light;
+  --color-background: #fff7fb;
+  --color-surface: #ffffff;
+  --color-surface-strong: #ffffff;
+  --color-surface-hover: rgba(219, 95, 147, 0.09);
+  --color-text: #402b37;
+  --color-muted: #806b77;
+  --color-primary: #d85b91;
+  --color-primary-hover: #bd3f77;
+  --color-primary-rgb: 216, 91, 145;
+  --color-success: #27866d;
+  --color-warning: #b97820;
+  --color-danger: #c9465a;
+  --color-border: rgba(114, 63, 88, 0.15);
+  --color-focus: #b83270;
+  --color-input: rgba(255, 255, 255, 0.92);
+  --color-on-primary: #ffffff;
+  --color-overlay: rgba(65, 35, 51, 0.28);
+  --shadow-sm: 0 10px 24px rgba(104, 55, 79, 0.1);
+  --shadow-md: 0 20px 42px rgba(104, 55, 79, 0.15);
+}
+
+html[data-theme="lavanda"] {
+  color-scheme: light;
+  --color-background: #f8f6ff;
+  --color-surface: #ffffff;
+  --color-surface-strong: #ffffff;
+  --color-surface-hover: rgba(124, 95, 214, 0.09);
+  --color-text: #342d4a;
+  --color-muted: #746d88;
+  --color-primary: #7c5fd6;
+  --color-primary-hover: #6447bc;
+  --color-primary-rgb: 124, 95, 214;
+  --color-success: #36836d;
+  --color-warning: #ae7627;
+  --color-danger: #c24f68;
+  --color-border: rgba(77, 62, 122, 0.15);
+  --color-focus: #6547bd;
+  --color-input: rgba(255, 255, 255, 0.94);
+  --color-on-primary: #ffffff;
+  --color-overlay: rgba(47, 39, 73, 0.28);
+  --shadow-sm: 0 10px 24px rgba(73, 60, 116, 0.1);
+  --shadow-md: 0 20px 42px rgba(73, 60, 116, 0.15);
+}
+
+html[data-theme="clinica"] {
+  color-scheme: light;
+  --color-background: #f3fbfb;
+  --color-surface: #ffffff;
+  --color-surface-strong: #ffffff;
+  --color-surface-hover: rgba(22, 138, 145, 0.08);
+  --color-text: #243f42;
+  --color-muted: #627b7d;
+  --color-primary: #168a91;
+  --color-primary-hover: #0e7076;
+  --color-primary-rgb: 22, 138, 145;
+  --color-success: #27866d;
+  --color-warning: #b67a28;
+  --color-danger: #c84c5c;
+  --color-border: rgba(38, 91, 95, 0.14);
+  --color-focus: #0e7076;
+  --color-input: rgba(255, 255, 255, 0.95);
+  --color-on-primary: #ffffff;
+  --color-overlay: rgba(28, 61, 63, 0.25);
+  --shadow-sm: 0 10px 24px rgba(39, 91, 94, 0.09);
+  --shadow-md: 0 20px 42px rgba(39, 91, 94, 0.14);
+}
+
+html[data-theme="champagne"] {
+  color-scheme: light;
+  --color-background: #fffaf2;
+  --color-surface: #ffffff;
+  --color-surface-strong: #ffffff;
+  --color-surface-hover: rgba(183, 121, 75, 0.09);
+  --color-text: #46372d;
+  --color-muted: #806f63;
+  --color-primary: #b7794b;
+  --color-primary-hover: #975f38;
+  --color-primary-rgb: 183, 121, 75;
+  --color-success: #4b8066;
+  --color-warning: #ae7423;
+  --color-danger: #bf5260;
+  --color-border: rgba(104, 78, 59, 0.15);
+  --color-focus: #975f38;
+  --color-input: rgba(255, 255, 255, 0.94);
+  --color-on-primary: #ffffff;
+  --color-overlay: rgba(70, 55, 45, 0.25);
+  --shadow-sm: 0 10px 24px rgba(91, 67, 50, 0.09);
+  --shadow-md: 0 20px 42px rgba(91, 67, 50, 0.14);
+}
+
+/* Compatibilidade temporária com páginas que ainda usam os nomes antigos. */
+html[data-theme="rose"],
+html[data-theme="lavanda"],
+html[data-theme="clinica"],
+html[data-theme="champagne"] {
+  --bg: var(--color-background);
+  --bg-main: var(--color-background);
+  --bg-surface: var(--color-surface-strong);
+  --bg-card: var(--color-surface);
+  --card: var(--color-surface);
+  --glass: var(--color-surface);
+  --glass-bg: var(--color-surface);
+  --glass-border: var(--color-border);
+  --glass-focus: var(--color-surface-hover);
+  --text: var(--color-text);
+  --text-main: var(--color-text);
+  --text-light: var(--color-muted);
+  --text-muted: var(--color-muted);
+  --muted: var(--color-muted);
+  --primary: var(--color-primary);
+  --primary-hover: var(--color-primary-hover);
+  --primary-glow: var(--color-primary-glow);
+  --success: var(--color-success);
+  --warning: var(--color-warning);
+  --danger: var(--color-danger);
+  --red: var(--color-danger);
+  --green: var(--color-success);
+  --border: var(--color-border);
+  --border-color: var(--color-border);
+  --input-bg: var(--color-input);
+  --painel-card: var(--color-surface);
+  --bg-gradient: linear-gradient(135deg, var(--color-background), var(--color-surface-strong));
+}
+
+html[data-theme="rose"] body,
+html[data-theme="lavanda"] body,
+html[data-theme="clinica"] body,
+html[data-theme="champagne"] body {
+  background-color: var(--color-background);
+  background-image: none;
+}
+
+html[data-theme="rose"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+html[data-theme="lavanda"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+html[data-theme="clinica"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea),
+html[data-theme="champagne"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  color: var(--color-text);
+  background: var(--color-input);
+  border-color: var(--color-border);
+}
+
+html[data-theme="rose"] :is(h1, h2, h3, .titulo, .painel-title, .title),
+html[data-theme="lavanda"] :is(h1, h2, h3, .titulo, .painel-title, .title),
+html[data-theme="clinica"] :is(h1, h2, h3, .titulo, .painel-title, .title),
+html[data-theme="champagne"] :is(h1, h2, h3, .titulo, .painel-title, .title) {
+  color: var(--color-text);
+  background-image: none;
+  -webkit-text-fill-color: currentColor;
+}
+
+html[data-theme="rose"] :is(.card, .panel, .table-card, .table-wrapper, .controls-container, .search-box, .status-panel),
+html[data-theme="lavanda"] :is(.card, .panel, .table-card, .table-wrapper, .controls-container, .search-box, .status-panel),
+html[data-theme="clinica"] :is(.card, .panel, .table-card, .table-wrapper, .controls-container, .search-box, .status-panel),
+html[data-theme="champagne"] :is(.card, .panel, .table-card, .table-wrapper, .controls-container, .search-box, .status-panel) {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-sm);
+}
+
+html[data-theme="rose"] :is(td, .contact-name, .prod-name, .panel-title, .status-item .value, .ticket-info span:last-child, .card h3),
+html[data-theme="lavanda"] :is(td, .contact-name, .prod-name, .panel-title, .status-item .value, .ticket-info span:last-child, .card h3),
+html[data-theme="clinica"] :is(td, .contact-name, .prod-name, .panel-title, .status-item .value, .ticket-info span:last-child, .card h3),
+html[data-theme="champagne"] :is(td, .contact-name, .prod-name, .panel-title, .status-item .value, .ticket-info span:last-child, .card h3) {
+  color: var(--color-text);
+}
+
+html[data-theme="rose"] th,
+html[data-theme="lavanda"] th,
+html[data-theme="clinica"] th,
+html[data-theme="champagne"] th {
+  color: var(--color-muted);
+  background: var(--color-surface-hover);
+}
+
+html[data-theme="rose"] :is(.btn-secondary, .btn-outline, .btn-filter, .btn-action, .page-btn, .btn-voltar, .voltar a),
+html[data-theme="lavanda"] :is(.btn-secondary, .btn-outline, .btn-filter, .btn-action, .page-btn, .btn-voltar, .voltar a),
+html[data-theme="clinica"] :is(.btn-secondary, .btn-outline, .btn-filter, .btn-action, .page-btn, .btn-voltar, .voltar a),
+html[data-theme="champagne"] :is(.btn-secondary, .btn-outline, .btn-filter, .btn-action, .page-btn, .btn-voltar, .voltar a) {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+html[data-theme="rose"] .btn-campaign:not(.is-selected),
+html[data-theme="lavanda"] .btn-campaign:not(.is-selected),
+html[data-theme="clinica"] .btn-campaign:not(.is-selected),
+html[data-theme="champagne"] .btn-campaign:not(.is-selected) {
+  color: var(--color-text);
+  background: var(--color-surface);
+}
+
+html[data-theme="rose"] :is(.btn-primary, .btn-search, .btn-submit, .btn-create, .btn-choose, .btn-campaign.is-selected),
+html[data-theme="lavanda"] :is(.btn-primary, .btn-search, .btn-submit, .btn-create, .btn-choose, .btn-campaign.is-selected),
+html[data-theme="clinica"] :is(.btn-primary, .btn-search, .btn-submit, .btn-create, .btn-choose, .btn-campaign.is-selected),
+html[data-theme="champagne"] :is(.btn-primary, .btn-search, .btn-submit, .btn-create, .btn-choose, .btn-campaign.is-selected) {
+  color: var(--color-on-primary);
+}
+
+html[data-theme="rose"] :is(.painel-header, .service-card:hover, .agenda-card:hover),
+html[data-theme="lavanda"] :is(.painel-header, .service-card:hover, .agenda-card:hover),
+html[data-theme="clinica"] :is(.painel-header, .service-card:hover, .agenda-card:hover),
+html[data-theme="champagne"] :is(.painel-header, .service-card:hover, .agenda-card:hover) {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+html[data-theme="rose"] .painel-page,
+html[data-theme="lavanda"] .painel-page,
+html[data-theme="clinica"] .painel-page,
+html[data-theme="champagne"] .painel-page {
+  --painel-card: var(--color-surface);
+}

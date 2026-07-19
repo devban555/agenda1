@@ -1,141 +1,49 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Serviços Disponíveis</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', sans-serif;
-      background: #121212;
-      color: #e0e0e0;
-    }
+{% extends "base_public.html" %}
 
-    header {
-      background-color: #1f1f1f;
-      color: #ffffff;
-      padding: 20px;
-      text-align: center;
-      font-size: 22px;
-      border-bottom: 1px solid #333;
-    }
+{% block title %}Serviços Disponíveis{% endblock %}
+{% block body_class %}public-body services-index-page{% endblock %}
 
-    .container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 20px;
-      padding: 20px;
-      max-width: 1000px;
-      margin: auto;
-    }
+{% block extra_css %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/index.css') }}">
+{% endblock %}
 
-    .card {
-      background-color: #1e1e1e;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.05);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      transition: transform 0.2s;
-    }
+{% block body %}
+<header class="services-index-header">Agendamento de Serviços</header>
 
-    .card:hover {
-      transform: translateY(-5px);
-    }
+<nav class="services-index-actions" aria-label="Ações da agenda">
+  <a href="{{ url_for('main.consultar') }}">
+    <i class="fas fa-calendar-alt" aria-hidden="true"></i>
+    Consultar Agenda
+  </a>
+</nav>
 
-    .card i {
-      font-size: 40px;
-      color: #0d6efd;
-      margin-bottom: 10px;
-    }
+<main class="services-index-grid">
+  <article class="service-card">
+    <h2>Cabelo</h2>
+    <p><strong>Valor:</strong> R$ 45,00</p>
+    <p><strong>Tempo:</strong> 01:00</p>
+    <a href="/agendar/corte" class="btn-agendar">Agendar</a>
+  </article>
 
-    .card h3 {
-      margin: 10px 0 5px;
-      font-size: 20px;
-      color: #ffffff;
-    }
+  <article class="service-card">
+    <h2>Cabelo + Barba</h2>
+    <p><strong>Valor:</strong> R$ 65,00</p>
+    <p><strong>Tempo:</strong> 01:30</p>
+    <a href="/agendar/corte_barba" class="btn-agendar">Agendar</a>
+  </article>
 
-    .card p {
-      margin: 4px 0;
-      color: #cccccc;
-    }
+  <article class="service-card">
+    <h2>Cabelo + Sobrancelha</h2>
+    <p><strong>Valor:</strong> R$ 59,00</p>
+    <p><strong>Tempo:</strong> 01:00</p>
+    <a href="/agendar/corte_sobrancelha" class="btn-agendar">Agendar</a>
+  </article>
 
-    .btn-agendar {
-      margin-top: 10px;
-      padding: 10px 20px;
-      background-color: #198754;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .btn-agendar:hover {
-      background-color: #157347;
-    }
-
-    .top-btn {
-      text-align: center;
-      margin: 20px;
-    }
-
-    .top-btn a {
-      text-decoration: none;
-      background-color: #0d6efd;
-      color: white;
-      padding: 10px 16px;
-      border-radius: 6px;
-      display: inline-block;
-      transition: background-color 0.2s;
-    }
-
-    .top-btn a:hover {
-      background-color: #0b5ed7;
-    }
-  </style>
-</head>
-<body>
-
-  <header>Agendamento de Serviços</header>
-
-  <div class="top-btn">
-    <a href="/consultar"><i class="fas fa-calendar-alt"></i> Consultar Agenda</a>
-  </div>
-
-  <div class="container">
-    <div class="card">
-      <h3>Cabelo</h3>
-      <p><strong>Valor:</strong> R$ 45,00</p>
-      <p><strong>Tempo:</strong> 01:00</p>
-      <a href="/agendar/corte"><button class="btn-agendar">Agendar</button></a>
-    </div>
-
-    <div class="card">
-      <h3>Cabelo + Barba</h3>
-      <p><strong>Valor:</strong> R$ 65,00</p>
-      <p><strong>Tempo:</strong> 01:30</p>
-      <a href="/agendar/corte_barba"><button class="btn-agendar">Agendar</button></a>
-    </div>
-
-    <div class="card">
-      <h3>Cabelo + Sobrancelha</h3>
-      <p><strong>Valor:</strong> R$ 59,00</p>
-      <p><strong>Tempo:</strong> 01:00</p>
-      <a href="/agendar/corte_sobrancelha"><button class="btn-agendar">Agendar</button></a>
-    </div>
-
-    <div class="card">
-      <h3>Cabelo + Barba + Sobrancelha</h3>
-      <p><strong>Valor:</strong> R$ 70,00</p>
-      <p><strong>Tempo:</strong> 01:40</p>
-      <a href="/agendar/corte_barba_sobrancelha"><button class="btn-agendar">Agendar</button></a>
-    </div>
-  </div>
-
-</body>
-</html>
+  <article class="service-card">
+    <h2>Cabelo + Barba + Sobrancelha</h2>
+    <p><strong>Valor:</strong> R$ 70,00</p>
+    <p><strong>Tempo:</strong> 01:40</p>
+    <a href="/agendar/corte_barba_sobrancelha" class="btn-agendar">Agendar</a>
+  </article>
+</main>
+{% endblock %}
