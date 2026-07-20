@@ -1,7 +1,6 @@
 .service-page {
   background-image:
-    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(var(--color-primary-rgb), 0.1) 0, transparent 50%);
   line-height: 1.5;
 }
 
@@ -13,7 +12,7 @@
 .service-title {
   margin: 0;
   color: transparent;
-  background: linear-gradient(to right, #fff, var(--public-muted));
+  background: linear-gradient(to right, var(--public-text), var(--public-muted));
   background-clip: text;
   -webkit-background-clip: text;
   font-size: clamp(1.8rem, 5vw, 2.5rem);
@@ -80,7 +79,7 @@
   border: 1px solid var(--public-border);
   border-radius: 50px;
   color: var(--public-text);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--public-card-hover);
   text-decoration: none;
   font-size: 0.9rem;
   font-weight: 600;
@@ -160,7 +159,7 @@
   justify-content: center;
   gap: 10px;
   border-radius: var(--public-radius-md);
-  color: #fff;
+  color: var(--public-on-primary);
   background: linear-gradient(135deg, var(--public-primary), var(--public-primary-hover));
   text-decoration: none;
   font-weight: 700;
@@ -172,7 +171,7 @@
   border: 1px dashed var(--public-border);
   border-radius: var(--public-radius-lg);
   color: var(--public-muted);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--public-card-hover);
   text-align: center;
 }
 
@@ -189,20 +188,20 @@
 @media (hover: hover) and (pointer: fine) {
   .service-outline-button:hover {
     border-color: var(--public-primary);
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--public-card-hover);
     transform: translateY(-2px);
   }
 
   .service-card:hover {
-    border-color: rgba(59, 130, 246, 0.4);
-    background: rgba(30, 41, 59, 0.7);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    border-color: var(--public-primary);
+    background: var(--public-card-hover);
+    box-shadow: var(--public-shadow);
     transform: translateY(-8px);
   }
 
   .service-primary-button:hover {
     opacity: 0.9;
-    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 8px 20px var(--color-primary-glow);
   }
 }
 
