@@ -3,8 +3,7 @@
   display: grid;
   place-items: center;
   background-image:
-    radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.1) 0, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(var(--color-primary-rgb), 0.09) 0, transparent 50%);
 }
 
 .legacy-schedule-wrapper {
@@ -19,7 +18,7 @@
   background: var(--public-card);
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--public-shadow);
   animation: legacyScheduleFadeIn 0.6s ease-out;
 }
 
@@ -53,8 +52,8 @@
   padding: 14px 16px 14px 48px;
   border: 1px solid var(--public-border);
   border-radius: var(--public-radius-md);
-  color: #fff;
-  background: rgba(0, 0, 0, 0.2);
+  color: var(--public-text);
+  background: var(--public-input-bg);
   font-size: 1rem;
   outline: none;
   transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
@@ -62,7 +61,7 @@
 
 .legacy-schedule-field input:focus {
   border-color: var(--public-primary);
-  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+  box-shadow: 0 0 0 4px rgba(var(--color-primary-rgb), 0.12);
 }
 
 .legacy-schedule-submit {
@@ -70,9 +69,9 @@
   padding: 16px;
   border: 0;
   border-radius: var(--public-radius-md);
-  color: #fff;
+  color: var(--public-on-primary);
   background: var(--public-primary);
-  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 10px 20px var(--color-primary-glow);
   font-weight: 800;
   transition: transform var(--transition-normal), filter var(--transition-normal), box-shadow var(--transition-normal);
 }
@@ -80,7 +79,7 @@
 @media (hover: hover) and (pointer: fine) {
   .legacy-schedule-submit:hover {
     filter: brightness(1.1);
-    box-shadow: 0 15px 30px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 15px 30px var(--color-primary-glow);
     transform: translateY(-2px);
   }
 }
