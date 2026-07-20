@@ -19,7 +19,11 @@ from .models import (
     ExcecaoProfissional,
 )
 from app.models import Servico, Usuario, ConfiguracaoAgenda, ExcecaoAgenda
-from .themes import TEMAS_VALIDOS, normalizar_tema
+from .themes import (
+    TEMAS_VALIDOS,
+    normalizar_fonte_titulo,
+    normalizar_tema,
+)
 
 main = Blueprint('main', __name__)
 
@@ -1799,7 +1803,16 @@ def configuracoes():
         Profissional.principal.desc(),
         Profissional.nome
     ).all()
-    return render_template('setup.html', profissionais=profissionais)
+    tema_atual = normalizar_tema(usuario.tema)
+    fonte_atual = normalizar_fonte_titulo(usuario.fonte_titulo)
+
+    return render_template(
+        'setup.html',
+        profissionais=profissionais,
+        usuario=usuario,
+        tema_atual=tema_atual,
+        fonte_atual=fonte_atual,
+    )
 
 @main.route('/configuracao_base', methods=['GET'])
 @login_required
@@ -1920,7 +1933,9 @@ def salvar_identidade():
         usuario.nome_fantasia = str(data.get('nome_fantasia') or '').strip() or None
 
     if 'fonte_titulo' in data:
-        usuario.fonte_titulo = str(data.get('fonte_titulo') or 'padrao').strip()
+        usuario.fonte_titulo = normalizar_fonte_titulo(
+            data.get('fonte_titulo')
+        )
 
     if 'tema' in data:
         tema_recebido = str(data.get('tema') or '').strip().lower()
@@ -1933,6 +1948,8 @@ def salvar_identidade():
         usuario.tema = tema_recebido
         session['tema'] = tema_recebido
 
+    usuario.tema = normalizar_tema(usuario.tema)
+    session['tema'] = usuario.tema
     db.session.commit()
 
     tema_atual = normalizar_tema(usuario.tema)
@@ -2211,16 +2228,19 @@ def carregar_disponibilidade():
     ).first()
 
     bloqueados = []
+    dia_ativo = True
 
     if excecao:
         bloqueados = (
             excecao.horarios_bloqueados
             or []
         )
+        dia_ativo = excecao.dia_ativo
 
     return jsonify({
         'horarios': horarios,
-        'bloqueados': bloqueados
+        'bloqueados': bloqueados,
+        'dia_ativo': dia_ativo,
     })
 
 @main.route('/salvar_disponibilidade', methods=['POST'])

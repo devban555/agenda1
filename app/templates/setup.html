@@ -1,554 +1,228 @@
 {% extends "base_admin.html" %}
 
-{% block title %}Configurações | Painel Pro{% endblock %}
+{% block title %}Configurações | Agenda1{% endblock %}
 {% block body_class %}admin-body setup-page{% endblock %}
+
+{% block font_stylesheets %}
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Dancing+Script:wght@600;700&family=Lora:wght@600;700&family=Montserrat:wght@600;700&family=Playfair+Display:wght@600;700&family=Poppins:wght@400;500;600;700;800&family=Quicksand:wght@600;700&display=swap" rel="stylesheet">
+{% endblock %}
 
 {% block extra_css %}
   <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/setup.css') }}">
 {% endblock %}
 
 {% block body %}
-
-<header>
-  <h1><i class="fas fa-sliders"></i> Painel de Configurações</h1>
+<header class="setup-header">
+  <div>
+    <h1><i class="fa-solid fa-sliders" aria-hidden="true"></i> Configurações</h1>
+    <p>Personalize a aparência e organize os horários do sistema.</p>
+  </div>
 </header>
 
-<div class="container">
-
-  <div class="card">
-    <div class="card-header">
-      <i class="fas fa-paint-brush"></i>
-      <h2>Identidade Visual</h2>
-    </div>
-
-    <label><i class="fas fa-store"></i> Nome fantasia</label>
-    <input id="nomeFantasia" class="field" placeholder="Nome do negócio ou estabelecimento">
-
-    <label><i class="fas fa-font"></i> Estilo da tipografia</label>
-    <select id="fonteTitulo" class="field">
-      <option value="padrao">Padrão (Sistema)</option>
-      <option value="poppins">Elegante (Poppins)</option>
-      <option value="montserrat">Moderna (Montserrat)</option>
-      <option value="playfair">Clássica (Playfair)</option>
-    </select>
-
-    <button id="salvarIdentidade" class="btn btn-secondary">
-      <i class="fas fa-save"></i> Atualizar Identidade
+<main
+  class="setup-container"
+  id="setupApp"
+  data-config-url="{{ url_for('main.configuracao_base') }}"
+  data-save-base-url="{{ url_for('main.salvar_configuracao_base') }}"
+  data-save-identity-url="{{ url_for('main.salvar_identidade') }}"
+  data-save-exception-url="{{ url_for('main.salvar_excecao_agenda') }}"
+  data-load-availability-url="{{ url_for('main.carregar_disponibilidade') }}"
+  data-current-name="{{ (usuario.nome_fantasia or '')|e }}"
+  data-current-font="{{ fonte_atual|e }}"
+  data-current-theme="{{ tema_atual|e }}"
+>
+  <nav class="setup-tabs" role="tablist" aria-label="Áreas de configuração">
+    <button class="setup-tab" id="tab-aparencia" type="button" role="tab" aria-selected="false" aria-controls="panel-aparencia" data-tab="aparencia">
+      <i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i>
+      <span>Aparência</span>
     </button>
-  </div>
-
-  <div
-    class="card theme-card"
-    id="themeCard"
-    data-save-theme-url="{{ url_for('main.salvar_identidade') }}"
-  >
-    <div class="card-header">
-      <i class="fas fa-palette"></i>
-      <h2>Paleta do Sistema</h2>
-    </div>
-
-    <p class="card-description">
-      Escolha uma combinação de cores. A prévia é aplicada imediatamente e só será mantida após salvar.
-    </p>
-
-    <div class="theme-options" id="themeOptions" role="radiogroup" aria-label="Paletas disponíveis">
-      <button type="button" class="theme-option" data-theme-option="principal" role="radio" aria-checked="false">
-        <span class="theme-preview" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="theme-option-text">
-          <strong>Azul Noturno</strong>
-          <small>Paleta original</small>
-        </span>
-        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
-      </button>
-
-      <button type="button" class="theme-option" data-theme-option="esmeralda" role="radio" aria-checked="false">
-        <span class="theme-preview" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="theme-option-text">
-          <strong>Esmeralda</strong>
-          <small>Verde sofisticado</small>
-        </span>
-        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
-      </button>
-
-      <button type="button" class="theme-option" data-theme-option="violeta" role="radio" aria-checked="false">
-        <span class="theme-preview" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="theme-option-text">
-          <strong>Violeta</strong>
-          <small>Moderno e criativo</small>
-        </span>
-        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
-      </button>
-
-      <button type="button" class="theme-option" data-theme-option="ambar" role="radio" aria-checked="false">
-        <span class="theme-preview" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="theme-option-text">
-          <strong>Âmbar</strong>
-          <small>Quente e marcante</small>
-        </span>
-        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
-      </button>
-
-      <button type="button" class="theme-option" data-theme-option="rose" role="radio" aria-checked="false">
-        <span class="theme-preview" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="theme-option-text">
-          <strong>Rosé</strong>
-          <small>Feminino e delicado</small>
-        </span>
-        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
-      </button>
-
-      <button type="button" class="theme-option" data-theme-option="lavanda" role="radio" aria-checked="false">
-        <span class="theme-preview" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="theme-option-text">
-          <strong>Lavanda</strong>
-          <small>Suave e elegante</small>
-        </span>
-        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
-      </button>
-
-      <button type="button" class="theme-option" data-theme-option="clinica" role="radio" aria-checked="false">
-        <span class="theme-preview" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="theme-option-text">
-          <strong>Clínica Clean</strong>
-          <small>Limpo e profissional</small>
-        </span>
-        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
-      </button>
-
-      <button type="button" class="theme-option" data-theme-option="champagne" role="radio" aria-checked="false">
-        <span class="theme-preview" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="theme-option-text">
-          <strong>Champagne</strong>
-          <small>Bege sofisticado</small>
-        </span>
-        <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
-      </button>
-    </div>
-
-    <p class="theme-status" id="themeStatus" aria-live="polite"></p>
-
-    <button type="button" id="salvarTema" class="btn btn-primary">
-      <i class="fas fa-check"></i> Salvar Paleta
+    <button class="setup-tab is-active" id="tab-agenda" type="button" role="tab" aria-selected="true" aria-controls="panel-agenda" data-tab="agenda">
+      <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+      <span>Agenda</span>
     </button>
-  </div>
+    <button class="setup-tab" id="tab-excecoes" type="button" role="tab" aria-selected="false" aria-controls="panel-excecoes" data-tab="excecoes">
+      <i class="fa-regular fa-calendar-xmark" aria-hidden="true"></i>
+      <span>Exceções</span>
+    </button>
+  </nav>
 
-  <div class="card professional-schedule-card">
-    <div class="card-header">
-      <i class="fas fa-user-clock"></i>
-      <h2>Agenda do Profissional</h2>
+  <section class="professional-context" aria-labelledby="profissionalContextoTitulo">
+    <div class="professional-context__label">
+      <i class="fa-solid fa-user-clock" aria-hidden="true"></i>
+      <div>
+        <strong id="profissionalContextoTitulo">Agenda selecionada</strong>
+        <small>As alterações de horários e exceções serão aplicadas a este profissional.</small>
+      </div>
     </div>
-    <p class="card-description">
-      Selecione quem terá os dias e horários configurados abaixo.
-    </p>
-    <label for="profissionalAgenda">Profissional</label>
-    <select id="profissionalAgenda" class="field">
+    <select id="profissionalAgenda" class="field field--compact" aria-label="Profissional da agenda">
       {% for profissional in profissionais %}
         <option value="{{ profissional.id }}">{{ profissional.nome }}</option>
       {% endfor %}
     </select>
-  </div>
+  </section>
 
-  <div class="card">
-    <div class="card-header">
-      <i class="fas fa-calendar-week"></i>
-      <h2>Dias de Funcionamento</h2>
-    </div>
+  <section class="setup-panel" id="panel-aparencia" role="tabpanel" aria-labelledby="tab-aparencia" hidden>
+    <article class="card">
+      <div class="card-header">
+        <i class="fa-solid fa-paintbrush" aria-hidden="true"></i>
+        <div>
+          <h2>Identidade visual</h2>
+          <p>Nome e tipografia exibidos na página pública.</p>
+        </div>
+      </div>
 
-    <div class="options" id="diasSemana">
-      <label class="option"><input type="checkbox" value="0"> Seg</label>
-      <label class="option"><input type="checkbox" value="1"> Ter</label>
-      <label class="option"><input type="checkbox" value="2"> Qua</label>
-      <label class="option"><input type="checkbox" value="3"> Qui</label>
-      <label class="option"><input type="checkbox" value="4"> Sex</label>
-      <label class="option"><input type="checkbox" value="5"> Sáb</label>
-      <label class="option"><input type="checkbox" value="6"> Dom</label>
-    </div>
-  </div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="nomeFantasia"><i class="fa-solid fa-store" aria-hidden="true"></i> Nome fantasia</label>
+          <input id="nomeFantasia" class="field" placeholder="Nome do negócio ou estabelecimento">
+        </div>
+        <div class="form-group">
+          <label for="fonteTitulo"><i class="fa-solid fa-font" aria-hidden="true"></i> Tipografia do título</label>
+          <select id="fonteTitulo" class="field">
+            <option value="padrao">Padrão do sistema</option>
+            <option value="poppins">Poppins — elegante</option>
+            <option value="montserrat">Montserrat — moderna</option>
+            <option value="playfair">Playfair — clássica</option>
+            <option value="cormorant">Cormorant — delicada e editorial</option>
+            <option value="quicksand">Quicksand — suave e moderna</option>
+            <option value="dancing">Dancing Script — manuscrita</option>
+            <option value="lora">Lora — refinada e legível</option>
+          </select>
+        </div>
+      </div>
 
-  <div class="card">
-    <div class="card-header">
-      <i class="fas fa-clock"></i>
-      <h2>Horários de Funcionamento</h2>
-    </div>
-
-    <p class="card-description">
-      Gerencie os horários de atendimento clínico/comercial para os dias úteis e finais de semana.
-    </p>
-
-    <label class="section-label">
-      <i class="fas fa-calendar-days"></i> Segunda a Sexta
-    </label>
-
-    <div class="horarios-wrapper">
-      <div class="horarios-grid" id="gridSemana"></div>
-
-      <button type="button" class="btn-add-hora" onclick="addHorarioInput('gridSemana')">
-        <i class="fas fa-plus"></i> Adicionar Horário
+      <p class="font-preview" id="fontPreview">Prévia do nome do seu negócio</p>
+      <p class="form-status" id="identityStatus" aria-live="polite"></p>
+      <button id="salvarIdentidade" type="button" class="btn btn-secondary">
+        <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Salvar identidade
       </button>
-    </div>
+    </article>
 
-    <label class="section-label">
-      <i class="fas fa-calendar-day"></i> Sábado
-    </label>
+    <details class="card disclosure" id="themeDisclosure">
+      <summary>
+        <span class="summary-icon"><i class="fa-solid fa-palette" aria-hidden="true"></i></span>
+        <span class="summary-copy">
+          <strong>Paleta do sistema</strong>
+          <small id="themeSummary">Escolha as cores de toda a interface.</small>
+        </span>
+        <i class="fa-solid fa-chevron-down summary-chevron" aria-hidden="true"></i>
+      </summary>
 
-    <div class="horarios-wrapper">
-      <div class="horarios-grid" id="gridSabado"></div>
+      <div class="disclosure-content">
+        <p class="card-description">A prévia é aplicada imediatamente. Use “Salvar paleta” para mantê-la em outros dispositivos.</p>
+        <div class="theme-options" id="themeOptions" role="radiogroup" aria-label="Paletas disponíveis">
+          {% set paletas = [
+            ('principal', 'Azul Noturno', 'Original e contrastante'),
+            ('azul_claro', 'Azul & Branco', 'Claro, leve e profissional'),
+            ('neutra', 'Neve & Grafite', 'Neutro e versátil'),
+            ('rose', 'Rosé', 'Feminino e delicado'),
+            ('lavanda', 'Lavanda', 'Suave e elegante'),
+            ('clinica', 'Clínica Clean', 'Limpo e acolhedor'),
+            ('champagne', 'Champagne', 'Bege sofisticado')
+          ] %}
+          {% for codigo, nome, descricao in paletas %}
+            <button type="button" class="theme-option" data-theme-option="{{ codigo }}" role="radio" aria-checked="false">
+              <span class="theme-preview" aria-hidden="true"><span></span><span></span><span></span></span>
+              <span class="theme-option-text"><strong>{{ nome }}</strong><small>{{ descricao }}</small></span>
+              <i class="fa-solid fa-circle-check theme-option-check" aria-hidden="true"></i>
+            </button>
+          {% endfor %}
+        </div>
+        <p class="form-status" id="themeStatus" aria-live="polite"></p>
+        <button type="button" id="salvarTema" class="btn btn-primary">
+          <i class="fa-solid fa-check" aria-hidden="true"></i> Salvar paleta
+        </button>
+      </div>
+    </details>
+  </section>
 
-      <button type="button" class="btn-add-hora" onclick="addHorarioInput('gridSabado')">
-        <i class="fas fa-plus"></i> Adicionar Horário
+  <section class="setup-panel is-active" id="panel-agenda" role="tabpanel" aria-labelledby="tab-agenda">
+    <details class="card disclosure" open>
+      <summary>
+        <span class="summary-icon"><i class="fa-solid fa-calendar-week" aria-hidden="true"></i></span>
+        <span class="summary-copy"><strong>Dias de funcionamento</strong><small>Defina os dias habituais de atendimento.</small></span>
+        <i class="fa-solid fa-chevron-down summary-chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="disclosure-content">
+        <div class="options" id="diasSemana">
+          <label class="option"><input type="checkbox" value="0"><span>Seg</span></label>
+          <label class="option"><input type="checkbox" value="1"><span>Ter</span></label>
+          <label class="option"><input type="checkbox" value="2"><span>Qua</span></label>
+          <label class="option"><input type="checkbox" value="3"><span>Qui</span></label>
+          <label class="option"><input type="checkbox" value="4"><span>Sex</span></label>
+          <label class="option"><input type="checkbox" value="5"><span>Sáb</span></label>
+          <label class="option"><input type="checkbox" value="6"><span>Dom</span></label>
+        </div>
+      </div>
+    </details>
+
+    <details class="card disclosure">
+      <summary>
+        <span class="summary-icon"><i class="fa-regular fa-clock" aria-hidden="true"></i></span>
+        <span class="summary-copy"><strong>Horários de funcionamento</strong><small>Organize os horários padrão durante a semana e no sábado.</small></span>
+        <i class="fa-solid fa-chevron-down summary-chevron" aria-hidden="true"></i>
+      </summary>
+      <div class="disclosure-content">
+        <section class="schedule-group" aria-labelledby="semanaTitulo">
+          <div class="schedule-group__header">
+            <h3 id="semanaTitulo"><i class="fa-solid fa-calendar-days" aria-hidden="true"></i> Segunda a sexta</h3>
+            <button type="button" class="btn-add-hora" data-add-schedule="gridSemana"><i class="fa-solid fa-plus" aria-hidden="true"></i> Adicionar</button>
+          </div>
+          <div class="horarios-grid" id="gridSemana"></div>
+        </section>
+
+        <section class="schedule-group" aria-labelledby="sabadoTitulo">
+          <div class="schedule-group__header">
+            <h3 id="sabadoTitulo"><i class="fa-solid fa-calendar-day" aria-hidden="true"></i> Sábado</h3>
+            <button type="button" class="btn-add-hora" data-add-schedule="gridSabado"><i class="fa-solid fa-plus" aria-hidden="true"></i> Adicionar</button>
+          </div>
+          <div class="horarios-grid" id="gridSabado"></div>
+        </section>
+      </div>
+    </details>
+
+    <p class="form-status" id="baseStatus" aria-live="polite"></p>
+    <button id="salvarBase" type="button" class="btn btn-primary setup-save-button">
+      <i class="fa-solid fa-check-circle" aria-hidden="true"></i> Salvar agenda padrão
+    </button>
+  </section>
+
+  <section class="setup-panel" id="panel-excecoes" role="tabpanel" aria-labelledby="tab-excecoes" hidden>
+    <article class="card">
+      <div class="card-header">
+        <i class="fa-regular fa-calendar-xmark" aria-hidden="true"></i>
+        <div>
+          <h2>Exceção por data</h2>
+          <p>Configure feriados, folgas ou bloqueie apenas alguns horários.</p>
+        </div>
+      </div>
+
+      <label for="dataSelecionada">Data específica</label>
+      <input type="date" id="dataSelecionada" class="field">
+
+      <label class="day-toggle">
+        <input type="checkbox" id="diaAtivo" checked>
+        <span class="day-toggle__control" aria-hidden="true"></span>
+        <span><strong>Dia disponível para atendimento</strong><small>Desative para bloquear o dia inteiro.</small></span>
+      </label>
+
+      <div class="exception-schedule" id="exceptionSchedule">
+        <p class="exception-empty">Selecione uma data para carregar os horários.</p>
+      </div>
+
+      <p class="form-status" id="exceptionStatus" aria-live="polite"></p>
+      <button id="salvarExcecao" type="button" class="btn btn-secondary">
+        <i class="fa-solid fa-calendar-plus" aria-hidden="true"></i> Salvar exceção
       </button>
-    </div>
+    </article>
+  </section>
 
-    <button id="salvarBase" class="btn btn-primary" style="margin-top: 10px;">
-      <i class="fas fa-check-circle"></i> Salvar Configurações
-    </button>
-  </div>
-
-  <div class="card">
-    <div class="card-header">
-      <i class="fas fa-calendar-day"></i>
-      <h2>Exceções por Data</h2>
-    </div>
-
-    <label>Configurar dia específico (Feriados ou Folgas)</label>
-    <input type="date" id="dataSelecionada" class="field">
-
-    <div id="agenda"></div>
-
-    <button id="salvarExcecao" class="btn btn-secondary">
-      <i class="fas fa-calendar-plus"></i> Aplicar a esta data
-    </button>
-  </div>
-
-  <a href="/painel" class="btn-voltar">
-    <i class="fas fa-arrow-left"></i> Voltar ao painel administrativo
+  <a href="{{ url_for('main.painel') }}" class="btn-voltar">
+    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Voltar ao painel administrativo
   </a>
-
-</div>
+</main>
 {% endblock %}
 
 {% block extra_js %}
-<script>
-  /* =========================================================
-     CONFIGURAÇÃO PADRÃO
-     Usada apenas se ainda não existir configuração salva no backend.
-  ========================================================= */
-
-  const horariosPadraoSemana = [
-    "09:40", "10:20", "11:00", "13:00", "13:40", "14:20",
-    "15:00", "15:40", "16:20", "17:40", "19:00"
-  ];
-
-  const horariosPadraoSabado = [
-    "11:00", "11:40", "12:20", "13:00", "13:40", "14:20", "15:00"
-  ];
-
-  const diasPadrao = [0, 1, 2, 3, 4, 5];
-  const profissionalAgenda = document.getElementById("profissionalAgenda");
-
-
-  /* =========================================================
-     FUNÇÕES DE HORÁRIOS
-  ========================================================= */
-
-  function createHorarioItemHTML(valor = "") {
-    const item = document.createElement("div");
-    item.className = "horario-item";
-
-    item.innerHTML = `
-      <input type="time" value="${valor}">
-      <button type="button" class="btn-remove-hora" onclick="this.parentElement.remove()" title="Remover">
-        <i class="fas fa-times"></i>
-      </button>
-    `;
-
-    return item;
-  }
-
-  function addHorarioInput(gridId, valor = "") {
-    const grid = document.getElementById(gridId);
-    grid.appendChild(createHorarioItemHTML(valor));
-  }
-
-  function limparGrid(gridId) {
-    document.getElementById(gridId).innerHTML = "";
-  }
-
-  function renderHorarios(semana = [], sabado = []) {
-    limparGrid("gridSemana");
-    limparGrid("gridSabado");
-
-    const listaSemana = Array.isArray(semana) && semana.length ? semana : horariosPadraoSemana;
-    const listaSabado = Array.isArray(sabado) && sabado.length ? sabado : horariosPadraoSabado;
-
-    listaSemana.forEach(h => addHorarioInput("gridSemana", h));
-    listaSabado.forEach(h => addHorarioInput("gridSabado", h));
-  }
-
-  function aplicarDiasSelecionados(dias = []) {
-    const listaDias = Array.isArray(dias) && dias.length ? dias : diasPadrao;
-
-    document.querySelectorAll("#diasSemana input").forEach(cb => {
-      cb.checked = listaDias.includes(parseInt(cb.value));
-    });
-  }
-
-  function coletarHorarios(gridId) {
-    return [...document.querySelectorAll(`#${gridId} input[type="time"]`)]
-      .map(i => i.value)
-      .filter(Boolean)
-      .sort();
-  }
-
-
-  /* =========================================================
-     CARREGAR ÚLTIMA CONFIGURAÇÃO SALVA
-     IMPORTANTE:
-     Essa rota precisa existir no Flask:
-     GET /configuracao_base
-  ========================================================= */
-
-  async function carregarConfiguracaoBase() {
-    try {
-      const params = new URLSearchParams({
-        profissional_id: profissionalAgenda.value
-      });
-      const resposta = await fetch(`/configuracao_base?${params.toString()}`, {
-        method: "GET",
-        headers: {
-          "Accept": "application/json"
-        }
-      });
-
-      if (!resposta.ok) {
-        throw new Error("Rota /configuracao_base não respondeu corretamente.");
-      }
-
-      const data = await resposta.json();
-
-      aplicarDiasSelecionados(data.dias_semana || []);
-
-      renderHorarios(
-        data.horarios_base?.semana || [],
-        data.horarios_base?.sabado || []
-      );
-
-    } catch (err) {
-      console.warn("Usando configuração padrão porque não foi possível carregar a configuração salva:", err);
-
-      aplicarDiasSelecionados(diasPadrao);
-      renderHorarios(horariosPadraoSemana, horariosPadraoSabado);
-    }
-  }
-
-
-  /* =========================================================
-     IDENTIDADE VISUAL
-  ========================================================= */
-
-  const inputNome = document.getElementById("nomeFantasia");
-  const selectFonte = document.getElementById("fonteTitulo");
-  const btnIdentidade = document.getElementById("salvarIdentidade");
-
-  btnIdentidade.addEventListener("click", () => {
-    const nome = inputNome.value.trim();
-
-    if (!nome) {
-      alert("Informe o nome fantasia");
-      return;
-    }
-
-    fetch("/salvar_identidade", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        nome_fantasia: nome,
-        fonte_titulo: selectFonte.value
-      })
-    })
-    .then(r => r.json())
-    .then(() => {
-      alert("Identidade salva com sucesso!");
-    })
-    .catch(err => {
-      console.error("Erro:", err);
-      alert("Erro ao salvar identidade visual.");
-    });
-  });
-
-
-  /* =========================================================
-     PALETA DO SISTEMA
-  ========================================================= */
-
-  const temasValidos = new Set([
-    "principal", "esmeralda", "violeta", "ambar",
-    "rose", "lavanda", "clinica", "champagne"
-  ]);
-  const themeRoot = document.documentElement;
-  const themeCard = document.getElementById("themeCard");
-  const themeButtons = [...document.querySelectorAll("[data-theme-option]")];
-  const themeStatus = document.getElementById("themeStatus");
-  const btnSalvarTema = document.getElementById("salvarTema");
-  const themeSaveUrl = themeCard.dataset.saveThemeUrl;
-  let temaSelecionado = temasValidos.has(themeRoot.dataset.theme)
-    ? themeRoot.dataset.theme
-    : "principal";
-
-  function selecionarTema(tema, mostrarPrevia = false) {
-    if (!temasValidos.has(tema)) return;
-
-    temaSelecionado = tema;
-    themeRoot.dataset.theme = tema;
-
-    themeButtons.forEach(button => {
-      const selecionado = button.dataset.themeOption === tema;
-      button.classList.toggle("is-selected", selecionado);
-      button.setAttribute("aria-checked", String(selecionado));
-    });
-
-    if (mostrarPrevia) {
-      themeStatus.textContent = "Prévia aplicada. Clique em Salvar Paleta para confirmar.";
-      themeStatus.className = "theme-status is-preview";
-    }
-  }
-
-  themeButtons.forEach(button => {
-    button.addEventListener("click", () => {
-      selecionarTema(button.dataset.themeOption, true);
-    });
-  });
-
-  btnSalvarTema.addEventListener("click", async () => {
-    btnSalvarTema.disabled = true;
-    themeStatus.textContent = "Salvando paleta...";
-    themeStatus.className = "theme-status is-preview";
-
-    try {
-      const resposta = await fetch(themeSaveUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tema: temaSelecionado })
-      });
-      const resultado = await resposta.json();
-
-      if (!resposta.ok || resultado.status !== "ok") {
-        throw new Error(resultado.mensagem || "Não foi possível salvar a paleta.");
-      }
-
-      selecionarTema(resultado.tema || temaSelecionado);
-      themeStatus.textContent = "Paleta salva com sucesso!";
-      themeStatus.className = "theme-status is-success";
-    } catch (err) {
-      console.error("Erro ao salvar paleta:", err);
-      themeStatus.textContent = err.message || "Erro ao salvar a paleta.";
-      themeStatus.className = "theme-status is-error";
-    } finally {
-      btnSalvarTema.disabled = false;
-    }
-  });
-
-
-  /* =========================================================
-     SALVAR CONFIGURAÇÃO BASE
-  ========================================================= */
-
-  document.getElementById("salvarBase").addEventListener("click", () => {
-    const dias = [...document.querySelectorAll("#diasSemana input:checked")]
-      .map(cb => parseInt(cb.value));
-
-    const horariosSemana = coletarHorarios("gridSemana");
-    const horariosSabado = coletarHorarios("gridSabado");
-
-    if (!dias.length) {
-      alert("Selecione ao menos um dia de funcionamento.");
-      return;
-    }
-
-    if (!horariosSemana.length && !horariosSabado.length) {
-      alert("Adicione ao menos um horário de funcionamento.");
-      return;
-    }
-
-    fetch("/salvar_configuracao_base", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        profissional_id: profissionalAgenda.value,
-        dias_semana: dias,
-        horarios_base: {
-          semana: horariosSemana,
-          sabado: horariosSabado
-        }
-      })
-    })
-    .then(r => {
-      if (!r.ok) {
-        throw new Error("Erro ao salvar configuração.");
-      }
-
-      return r.json();
-    })
-    .then(() => {
-      /*
-        FIX VISUAL:
-        Após salvar, a tela passa a mostrar exatamente o que foi enviado.
-        Assim o usuário não fica com a impressão de que voltou ao horário antigo.
-      */
-      aplicarDiasSelecionados(dias);
-      renderHorarios(horariosSemana, horariosSabado);
-
-      alert("Configuração padrão salva!");
-    })
-    .catch(err => {
-      console.error("Erro:", err);
-      alert("Erro ao salvar configuração padrão.");
-    });
-  });
-
-
-  /* =========================================================
-     EXCEÇÕES POR DATA
-  ========================================================= */
-
-  document.getElementById("salvarExcecao").addEventListener("click", () => {
-    const data = document.getElementById("dataSelecionada").value;
-
-    if (!data) {
-      alert("Selecione uma data primeiro.");
-      return;
-    }
-
-    alert("Funcionalidade de exceção para " + data + " acionada.");
-  });
-
-
-  /* =========================================================
-     INICIALIZAÇÃO
-  ========================================================= */
-
-  profissionalAgenda.addEventListener("change", carregarConfiguracaoBase);
-  carregarConfiguracaoBase();
-  selecionarTema(temaSelecionado);
-</script>
+  <script src="{{ url_for('static', filename='js/pages/setup.js') }}" defer></script>
 {% endblock %}
