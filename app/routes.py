@@ -2,9 +2,10 @@ from flask import Blueprint, render_template, request, redirect, flash, url_for,
 from functools import wraps
 from datetime import datetime
 from copy import deepcopy
+from collections import Counter
 import re
 import unicodedata
-from sqlalchemy import extract, func
+from sqlalchemy import extract, func, or_
 from flask import current_app
 from . import db
 from .models import (
@@ -995,7 +996,7 @@ def verificar_horarios():
 @login_required
 def relatorio():
     from datetime import date, timedelta
-    from sqlalchemy import extract, func
+    from sqlalchemy import extract, func, or_
 
     user_id = session["user_id"]
 
@@ -1154,7 +1155,148 @@ def lista():
 @main.route("/suporte")
 @login_required
 def suporte():
-    return render_template("suporte.html")
+    import os
+    from urllib.parse import quote
+
+    from .master_billing import calcular_status_assinatura, garantir_planos_padrao
+    from .models import PagamentoAssinatura, PlanoSistema
+
+    usuario = db.session.get(Usuario, session["user_id"])
+    if not usuario:
+        return redirect(url_for("auth.login"))
+
+    if usuario.is_masteradm:
+        return redirect(url_for("main.masteradm"))
+
+    garantir_planos_padrao()
+
+    assinatura = usuario.assinatura_cobranca
+    status_financeiro = calcular_status_assinatura(assinatura)
+
+    planos = (
+        PlanoSistema.query
+        .filter_by(ativo=True)
+        .order_by(PlanoSistema.ordem, PlanoSistema.nome)
+        .all()
+    )
+
+    solicitacao_pendente = (
+        PagamentoAssinatura.query
+        .filter(
+            PagamentoAssinatura.usuario_id == usuario.id,
+            PagamentoAssinatura.status == "pendente",
+            PagamentoAssinatura.referencia_externa.like("troca-plano:%"),
+        )
+        .order_by(PagamentoAssinatura.criado_em.desc())
+        .first()
+    )
+
+    plano_solicitado = None
+    if solicitacao_pendente and solicitacao_pendente.referencia_externa:
+        try:
+            plano_id = int(solicitacao_pendente.referencia_externa.split(":")[1])
+            plano_solicitado = db.session.get(PlanoSistema, plano_id)
+        except (IndexError, TypeError, ValueError):
+            plano_solicitado = None
+
+    suporte_whatsapp = "".join(
+        caractere
+        for caractere in str(os.getenv("SUPPORT_WHATSAPP") or "")
+        if caractere.isdigit()
+    )
+    suporte_email = str(os.getenv("SUPPORT_EMAIL") or "").strip()
+    mensagem_suporte = quote(
+        f"Olá, preciso de suporte no Agenda1. Usuário: {usuario.username}."
+    )
+    suporte_whatsapp_url = (
+        f"https://wa.me/{suporte_whatsapp}?text={mensagem_suporte}"
+        if suporte_whatsapp else None
+    )
+
+    return render_template(
+        "suporte.html",
+        usuario=usuario,
+        assinatura=assinatura,
+        status_financeiro=status_financeiro,
+        planos=planos,
+        solicitacao_pendente=solicitacao_pendente,
+        plano_solicitado=plano_solicitado,
+        suporte_whatsapp_url=suporte_whatsapp_url,
+        suporte_email=suporte_email,
+    )
+
+
+@main.route("/suporte/solicitar-plano/<int:plano_id>", methods=["POST"])
+@login_required
+def solicitar_mudanca_plano(plano_id):
+    from datetime import date
+    from decimal import Decimal
+    from uuid import uuid4
+
+    from .models import AssinaturaUsuario, PagamentoAssinatura, PlanoSistema
+
+    usuario = db.session.get(Usuario, session["user_id"])
+    if not usuario or usuario.is_masteradm:
+        return redirect(url_for("auth.login"))
+
+    plano = PlanoSistema.query.filter_by(id=plano_id, ativo=True).first_or_404()
+    assinatura = usuario.assinatura_cobranca
+
+    if assinatura and assinatura.plano_id == plano.id:
+        flash("Este já é o seu plano atual.")
+        return redirect(url_for("main.suporte"))
+
+    if not assinatura:
+        assinatura = AssinaturaUsuario(
+            usuario_id=usuario.id,
+            status="ativa",
+            valor_mensal=Decimal("0"),
+            provedor="manual",
+        )
+        db.session.add(assinatura)
+        db.session.flush()
+
+    pendentes = (
+        PagamentoAssinatura.query
+        .filter(
+            PagamentoAssinatura.usuario_id == usuario.id,
+            PagamentoAssinatura.status == "pendente",
+            PagamentoAssinatura.referencia_externa.like("troca-plano:%"),
+        )
+        .all()
+    )
+    for pendente in pendentes:
+        pendente.status = "cancelado"
+        pendente.observacao = (
+            (pendente.observacao or "").strip()
+            + " Solicitação substituída por uma escolha mais recente."
+        ).strip()
+
+    ciclo_meses = max(int(plano.ciclo_meses or 1), 1)
+    valor_ciclo = Decimal(plano.valor_mensal or 0) * ciclo_meses
+
+    solicitacao = PagamentoAssinatura(
+        assinatura_id=assinatura.id,
+        usuario_id=usuario.id,
+        valor=valor_ciclo,
+        vencimento=date.today(),
+        status="pendente",
+        forma_pagamento="aguardando_checkout",
+        provedor="manual",
+        referencia_externa=f"troca-plano:{plano.id}:{uuid4().hex}",
+        observacao=(
+            f"Solicitação de mudança para {plano.nome}. "
+            "Aguardando confirmação do MASTER ADM ou geração de cobrança."
+        ),
+    )
+    db.session.add(solicitacao)
+    db.session.commit()
+
+    flash(
+        "Solicitação enviada. Seu plano atual permanece ativo até a confirmação "
+        "do pagamento e da mudança."
+    )
+    return redirect(url_for("main.suporte"))
 
 @main.route("/eventos")
 @login_required
@@ -1210,7 +1352,15 @@ def painel():
     # 🔥 busca no banco
     whatsapp = WhatsappSession.query.filter_by(user_id=user_id).first()
 
-    return render_template('painel.html', whatsapp=whatsapp)
+    from .master_billing import obter_aviso_assinatura
+
+    aviso_assinatura = obter_aviso_assinatura(user_id)
+
+    return render_template(
+        'painel.html',
+        whatsapp=whatsapp,
+        aviso_assinatura=aviso_assinatura
+    )
 
 
 @main.route('/admin', methods=['GET', 'POST'])
@@ -1961,14 +2111,12 @@ def salvar_identidade():
 @main.route('/masteradm')
 @master_required
 def masteradm():
-    return render_template('masteradm.html')
+    return redirect(url_for('master_financeiro.dashboard'))
 
 @main.route('/usuarios')
 @master_required
 def usuarios():
-    lista_usuarios = Usuario.query.all()
-    print(lista_usuarios)  # 🔥 DEBUG
-    return render_template('usuarios.html', usuarios=lista_usuarios)
+    return redirect(url_for('master_financeiro.usuarios'))
 
 @main.route('/logs')
 @master_required
@@ -2308,15 +2456,13 @@ def api_crm_dados():
     semana = request.args.get('semana')
     mes = request.args.get('mes')
 
-    hoje = date.today()
+    agora = datetime.now()
+    hoje = agora.date()
     limite_inativo = hoje - timedelta(days=60)
 
     # =========================
     # PERÍODO DA SEMANA
     # =========================
-    inicio_semana = None
-    fim_semana = None
-
     if semana:
         try:
             ano_str, semana_str = semana.split('-W')
@@ -2364,49 +2510,74 @@ def api_crm_dados():
         extract('month', Agendamento.data) == mes_num
     ).count()
 
-    # =========================
-    # ÚLTIMA VISITA E TOTAL POR CLIENTE
-    # =========================
-    resumo_agendamentos = (
-        db.session.query(
-            Agendamento.cliente_id.label('cliente_id'),
-            func.count(Agendamento.id).label('visitas'),
-            func.max(Agendamento.data).label('ultima_visita')
-        )
-        .filter(
-            Agendamento.usuario_id == user_id,
-            Agendamento.cliente_id.isnot(None)
-        )
-        .group_by(Agendamento.cliente_id)
-        .subquery()
-    )
+    # Carrega clientes e agendamentos uma única vez. A associação por telefone
+    # mantém compatibilidade com agendamentos antigos sem cliente_id.
+    clientes_ativos = Cliente.query.filter_by(
+        usuario_id=user_id,
+        ativo_crm=True
+    ).all()
 
-    query = (
-        db.session.query(
-            Cliente,
-            resumo_agendamentos.c.visitas,
-            resumo_agendamentos.c.ultima_visita
-        )
-        .outerjoin(
-            resumo_agendamentos,
-            Cliente.id == resumo_agendamentos.c.cliente_id
-        )
-        .filter(
-            Cliente.usuario_id == user_id,
-            Cliente.ativo_crm == True
-        )
-    )
+    clientes_por_id = {cliente.id: cliente for cliente in clientes_ativos}
+    clientes_por_telefone = {
+        ''.join(filter(str.isdigit, cliente.telefone or '')): cliente
+        for cliente in clientes_ativos
+    }
 
-    registros = query.all()
+    resumo_por_cliente = {
+        cliente.id: {
+            'realizados': [],
+            'futuros': [],
+            'todos': []
+        }
+        for cliente in clientes_ativos
+    }
+
+    agendamentos_usuario = Agendamento.query.filter_by(
+        usuario_id=user_id
+    ).all()
+
+    for agendamento in agendamentos_usuario:
+        cliente = clientes_por_id.get(agendamento.cliente_id)
+
+        if not cliente:
+            telefone = ''.join(filter(str.isdigit, agendamento.telefone or ''))
+            cliente = clientes_por_telefone.get(telefone)
+
+        if not cliente:
+            continue
+
+        agendamento_dt = datetime.combine(
+            agendamento.data,
+            agendamento.horario
+        )
+
+        resumo = resumo_por_cliente[cliente.id]
+        resumo['todos'].append((agendamento_dt, agendamento))
+
+        if agendamento_dt <= agora:
+            resumo['realizados'].append((agendamento_dt, agendamento))
+        else:
+            resumo['futuros'].append((agendamento_dt, agendamento))
 
     clientes_lista = []
     total_inativos = 0
 
-    for cliente, visitas, ultima_visita in registros:
-        visitas = int(visitas or 0)
+    for cliente in clientes_ativos:
+        resumo = resumo_por_cliente[cliente.id]
+        realizados = sorted(resumo['realizados'], key=lambda item: item[0])
+        futuros = sorted(resumo['futuros'], key=lambda item: item[0])
 
-        if ultima_visita:
-            status = 'inativo' if ultima_visita < limite_inativo else 'ativo'
+        ultima_visita_dt = realizados[-1][0] if realizados else None
+        proximo_dt = futuros[0][0] if futuros else None
+
+        if ultima_visita_dt:
+            status = (
+                'inativo'
+                if ultima_visita_dt.date() < limite_inativo
+                else 'ativo'
+            )
+        elif proximo_dt:
+            status = 'ativo'
         else:
             status = 'inativo'
 
@@ -2427,15 +2598,35 @@ def api_crm_dados():
             'nome': cliente.nome,
             'telefone': cliente.telefone,
             'recorrente': cliente.recorrente or 'nao',
-            'visitas': visitas,
-            'ultima_visita': ultima_visita.strftime('%Y-%m-%d') if ultima_visita else None,
-            'status': status
+            'visitas': len(realizados),
+            'total_agendamentos': len(resumo['todos']),
+            'ultima_visita': (
+                ultima_visita_dt.strftime('%Y-%m-%d')
+                if ultima_visita_dt else None
+            ),
+            'ultimo_horario': (
+                ultima_visita_dt.strftime('%H:%M')
+                if ultima_visita_dt else None
+            ),
+            'proximo_agendamento': (
+                proximo_dt.strftime('%Y-%m-%d')
+                if proximo_dt else None
+            ),
+            'proximo_horario': (
+                proximo_dt.strftime('%H:%M')
+                if proximo_dt else None
+            ),
+            'status': status,
+            '_ordenacao': ultima_visita_dt or proximo_dt or datetime.min
         })
 
     clientes_lista.sort(
-        key=lambda c: c['ultima_visita'] or '',
+        key=lambda cliente: cliente['_ordenacao'],
         reverse=True
     )
+
+    for cliente in clientes_lista:
+        cliente.pop('_ordenacao', None)
 
     return jsonify({
         'success': True,
@@ -2532,46 +2723,181 @@ def api_crm_historico(id):
         ativo_crm=True
     ).first_or_404()
 
-    hoje = date.today()
-    ano_atual = hoje.year
-    mes_atual = hoje.month
+    agora = datetime.now()
+    hoje = agora.date()
 
-    total_agendamentos = Agendamento.query.filter_by(
-        usuario_id=user_id,
-        cliente_id=cliente.id
-    ).count()
-
-    total_mes_atual = Agendamento.query.filter(
-        Agendamento.usuario_id == user_id,
-        Agendamento.cliente_id == cliente.id,
-        extract('year', Agendamento.data) == ano_atual,
-        extract('month', Agendamento.data) == mes_atual
-    ).count()
-
-    agendamentos_por_mes = (
-        db.session.query(
-            extract('year', Agendamento.data).label('ano'),
-            extract('month', Agendamento.data).label('mes'),
-            func.count(Agendamento.id).label('total')
-        )
+    # O telefone entra como compatibilidade para registros antigos que ainda
+    # não possuam cliente_id preenchido. Nenhum dado é alterado no banco.
+    agendamentos = (
+        Agendamento.query
         .filter(
             Agendamento.usuario_id == user_id,
-            Agendamento.cliente_id == cliente.id
+            or_(
+                Agendamento.cliente_id == cliente.id,
+                Agendamento.telefone == cliente.telefone
+            )
         )
-        .group_by('ano', 'mes')
-        .order_by('ano', 'mes')
+        .order_by(
+            Agendamento.data.asc(),
+            Agendamento.horario.asc()
+        )
         .all()
     )
 
-    meses = []
+    dias_semana = [
+        'Segunda-feira',
+        'Terça-feira',
+        'Quarta-feira',
+        'Quinta-feira',
+        'Sexta-feira',
+        'Sábado',
+        'Domingo'
+    ]
 
-    for item in agendamentos_por_mes:
-        meses.append({
-            'ano': int(item.ano),
-            'mes': int(item.mes),
-            'label': f"MES{int(item.mes):02d}",
-            'total': int(item.total)
+    meses_nomes = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ]
+
+    detalhes = []
+    historicos = []
+    futuros = []
+    contagem_dias = Counter()
+    contagem_horarios = Counter()
+    contagem_semanas = Counter()
+    contagem_servicos = Counter()
+    contagem_meses = Counter()
+    valor_total = 0.0
+
+    for agendamento in agendamentos:
+        agendamento_dt = datetime.combine(
+            agendamento.data,
+            agendamento.horario
+        )
+
+        semana_mes = ((agendamento.data.day - 1) // 7) + 1
+        dia_semana = dias_semana[agendamento.data.weekday()]
+        horario = agendamento.horario.strftime('%H:%M')
+
+        servico_nome = (
+            agendamento.servico.titulo
+            if agendamento.servico else 'Serviço não informado'
+        )
+        duracao = (
+            minutos_servico(agendamento.servico)
+            if agendamento.servico else None
+        )
+        preco = (
+            float(agendamento.servico.preco)
+            if agendamento.servico and agendamento.servico.preco is not None
+            else None
+        )
+        profissional = (
+            agendamento.vinculo_profissional.profissional.nome
+            if agendamento.vinculo_profissional
+            and agendamento.vinculo_profissional.profissional
+            else None
+        )
+
+        if agendamento.data == hoje:
+            periodo = 'hoje'
+            periodo_label = 'Hoje'
+        elif agendamento_dt < agora:
+            periodo = 'passado'
+            periodo_label = 'Realizado'
+        else:
+            periodo = 'futuro'
+            periodo_label = 'Agendado'
+
+        detalhes.append({
+            'id': agendamento.id,
+            'data_iso': agendamento.data.isoformat(),
+            'data_formatada': agendamento.data.strftime('%d/%m/%Y'),
+            'dia_semana': dia_semana,
+            'horario': horario,
+            'semana_mes': semana_mes,
+            'semana_mes_label': f'{semana_mes}ª semana do mês',
+            'servico': servico_nome,
+            'duracao_minutos': duracao,
+            'preco': preco,
+            'profissional': profissional,
+            'periodo': periodo,
+            'periodo_label': periodo_label
         })
+
+        if agendamento_dt <= agora:
+            historicos.append((agendamento_dt, agendamento))
+        else:
+            futuros.append((agendamento_dt, agendamento))
+
+        contagem_dias[dia_semana] += 1
+        contagem_horarios[horario] += 1
+        contagem_semanas[semana_mes] += 1
+        contagem_servicos[servico_nome] += 1
+        contagem_meses[(agendamento.data.year, agendamento.data.month)] += 1
+
+        if preco is not None:
+            valor_total += preco
+
+    historicos.sort(key=lambda item: item[0])
+    futuros.sort(key=lambda item: item[0])
+
+    primeira_visita_dt = historicos[0][0] if historicos else None
+    ultima_visita_dt = historicos[-1][0] if historicos else None
+    proximo_agendamento_dt = futuros[0][0] if futuros else None
+
+    intervalos = []
+    for anterior, atual in zip(historicos, historicos[1:]):
+        diferenca = (atual[0].date() - anterior[0].date()).days
+        if diferenca >= 0:
+            intervalos.append(diferenca)
+
+    media_intervalo_dias = (
+        round(sum(intervalos) / len(intervalos), 1)
+        if intervalos else None
+    )
+
+    def mais_frequente(contador):
+        return contador.most_common(1)[0][0] if contador else None
+
+    semana_preferida = mais_frequente(contagem_semanas)
+
+    agendamentos_por_mes = []
+    for (ano, mes_num), total in sorted(
+        contagem_meses.items(),
+        key=lambda item: item[0],
+        reverse=True
+    ):
+        agendamentos_por_mes.append({
+            'ano': ano,
+            'mes': mes_num,
+            'label': meses_nomes[mes_num - 1],
+            'total': total
+        })
+
+    # Mantém futuros primeiro (mais próximo), depois hoje e o histórico recente.
+    ordem_periodo = {'futuro': 0, 'hoje': 1, 'passado': 2}
+    detalhes.sort(
+        key=lambda item: (
+            ordem_periodo[item['periodo']],
+            item['data_iso'] if item['periodo'] != 'passado' else '',
+            item['horario']
+        )
+    )
+    futuros_detalhes = [item for item in detalhes if item['periodo'] == 'futuro']
+    hoje_detalhes = [item for item in detalhes if item['periodo'] == 'hoje']
+    passados_detalhes = sorted(
+        [item for item in detalhes if item['periodo'] == 'passado'],
+        key=lambda item: (item['data_iso'], item['horario']),
+        reverse=True
+    )
+    detalhes = futuros_detalhes + hoje_detalhes + passados_detalhes
+
+    total_mes_atual = sum(
+        1 for agendamento in agendamentos
+        if agendamento.data.year == hoje.year
+        and agendamento.data.month == hoje.month
+    )
 
     return jsonify({
         'success': True,
@@ -2580,14 +2906,38 @@ def api_crm_historico(id):
             'nome': cliente.nome,
             'telefone': cliente.telefone,
             'recorrente': cliente.recorrente or 'nao',
-            'total_agendamentos': total_agendamentos,
-            'mes_atual': f"MES{mes_atual:02d}",
+            'total_agendamentos': len(agendamentos),
+            'total_realizados': len(historicos),
+            'total_futuros': len(futuros),
             'total_mes_atual': total_mes_atual,
             'limite_mensal_referencia': 4,
             'passou_limite_mes': total_mes_atual > 4,
-            'agendamentos_por_mes': meses
+            'primeira_visita': (
+                primeira_visita_dt.strftime('%d/%m/%Y às %H:%M')
+                if primeira_visita_dt else None
+            ),
+            'ultima_visita': (
+                ultima_visita_dt.strftime('%d/%m/%Y às %H:%M')
+                if ultima_visita_dt else None
+            ),
+            'proximo_agendamento': (
+                proximo_agendamento_dt.strftime('%d/%m/%Y às %H:%M')
+                if proximo_agendamento_dt else None
+            ),
+            'dia_preferido': mais_frequente(contagem_dias),
+            'horario_preferido': mais_frequente(contagem_horarios),
+            'semana_mes_preferida': (
+                f'{semana_preferida}ª semana do mês'
+                if semana_preferida else None
+            ),
+            'servico_preferido': mais_frequente(contagem_servicos),
+            'media_intervalo_dias': media_intervalo_dias,
+            'valor_total_agendado': round(valor_total, 2),
+            'agendamentos_por_mes': agendamentos_por_mes,
+            'agendamentos': detalhes
         }
     })
+
 
 from collections import defaultdict
 from datetime import date

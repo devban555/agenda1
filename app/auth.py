@@ -12,6 +12,11 @@ def login():
         ).first()
 
         if user and user.check_password(request.form["password"]):
+            if not user.is_masteradm and user.status == 'inativo':
+                flash("Esta conta está temporariamente inativa. Entre em contato com o suporte.")
+                current_app.logger.warning(f"Login bloqueado para conta inativa: {user.username}")
+                return render_template("login.html")
+
             session["user_id"] = user.id
             session["username"] = user.username
             session["tema"] = normalizar_tema(user.tema)

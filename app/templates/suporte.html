@@ -1,6 +1,6 @@
 {% extends "base_admin.html" %}
 
-{% block title %}Upgrade de Plano | Suporte VIP{% endblock %}
+{% block title %}Plano e Suporte Técnico{% endblock %}
 {% block body_class %}admin-body suporte-page{% endblock %}
 
 {% block extra_css %}
@@ -8,83 +8,139 @@
 {% endblock %}
 
 {% block body %}
-
-  <header>
-    <h1>Upgrade de Plano</h1>
-    <p class="subtitle">Escolha a melhor vigência para o seu negócio e economize.</p>
+  <header class="support-header">
+    <span class="eyebrow">Conta e atendimento</span>
+    <h1>Plano e Suporte Técnico</h1>
+    <p class="subtitle">Consulte sua assinatura, compare os planos disponíveis e fale com o suporte quando precisar.</p>
   </header>
 
-  <div class="wrap">
-    <section class="status-panel">
-      <div class="status-info">
-        <div class="status-item">
-          <span class="label">Plano Atual</span>
-          <span class="value" id="plano-aderido">Nenhum Ativo</span>
+  <main class="wrap">
+    {% with mensagens = get_flashed_messages() %}
+      {% if mensagens %}
+        <div class="flash-stack" role="status" aria-live="polite">
+          {% for mensagem in mensagens %}
+            <div class="flash-message"><i class="fa-solid fa-circle-info"></i>{{ mensagem }}</div>
+          {% endfor %}
         </div>
-        <div class="status-item">
-          <span class="label">Expira em</span>
-          <span class="value">-- / -- / --</span>
+      {% endif %}
+    {% endwith %}
+
+    <section class="status-panel">
+      <div class="status-copy">
+        <span class="section-kicker">Sua assinatura</span>
+        <h2>{{ assinatura.plano.nome if assinatura and assinatura.plano else (usuario.plano or 'Sem plano configurado') }}</h2>
+        <div class="status-tags">
+          <span class="status-badge {{ status_financeiro.classe }}">{{ status_financeiro.rotulo }}</span>
+          {% if assinatura and assinatura.proximo_vencimento %}
+            <span><i class="fa-regular fa-calendar"></i> Próximo vencimento: {{ assinatura.proximo_vencimento.strftime('%d/%m/%Y') }}</span>
+          {% else %}
+            <span><i class="fa-regular fa-calendar"></i> Vencimento ainda não definido</span>
+          {% endif %}
         </div>
       </div>
-      <button class="btn-chat">
-        <i class="fa-solid fa-headset"></i> Suporte Prioritário
-      </button>
+
+      <div class="support-actions">
+        {% if suporte_whatsapp_url %}
+          <a class="btn-chat" href="{{ suporte_whatsapp_url }}" target="_blank" rel="noopener noreferrer">
+            <i class="fa-brands fa-whatsapp"></i> Abrir WhatsApp
+          </a>
+        {% endif %}
+        {% if suporte_email %}
+          <a class="btn-chat secondary" href="mailto:{{ suporte_email }}?subject=Suporte%20Agenda1">
+            <i class="fa-regular fa-envelope"></i> Enviar e-mail
+          </a>
+        {% endif %}
+        {% if not suporte_whatsapp_url and not suporte_email %}
+          <span class="support-unavailable"><i class="fa-solid fa-headset"></i> Canal de suporte ainda não configurado</span>
+        {% endif %}
+      </div>
     </section>
 
-    <div class="grid">
-      <article class="plan-card">
-        <div class="plan-name">Mensal</div>
-        <div class="plan-price">
-          <span class="currency">R$</span>
-          <span class="amount">29</span>
-          <span class="cents">,99</span>
+    {% if solicitacao_pendente and plano_solicitado %}
+      <section class="request-banner">
+        <div>
+          <span class="section-kicker">Solicitação em análise</span>
+          <h2>{{ plano_solicitado.nome }}</h2>
+          <p>Seu plano atual continua ativo. A mudança será aplicada somente após a confirmação do pagamento pelo MASTER ADM ou, futuramente, pelo retorno automático do Asaas.</p>
         </div>
-        <ul class="plan-features">
-          <li><i class="fa-solid fa-check"></i> Suporte contínuo</li>
-          <li><i class="fa-solid fa-check"></i> Renovação mensal</li>
-          <li><i class="fa-solid fa-check"></i> Sem fidelidade</li>
-        </ul>
-        <button class="btn-choose">Assinar Mensal</button>
-      </article>
+        <span class="request-status"><i class="fa-regular fa-clock"></i> Aguardando confirmação</span>
+      </section>
+    {% endif %}
 
-      <article class="plan-card">
-        <div class="off-badge">10% OFF</div>
-        <div class="plan-name">Trimestral</div>
-        <div class="plan-price">
-          <span class="currency">R$</span>
-          <span class="amount">80</span>
-          <span class="cents">,97</span>
+    <section class="plans-section">
+      <div class="section-heading">
+        <div>
+          <span class="section-kicker">Planos disponíveis</span>
+          <h2>Escolha a categoria adequada ao seu negócio</h2>
         </div>
-        <ul class="plan-features">
-          <li><i class="fa-solid fa-check"></i> 90 dias de acesso</li>
-          <li><i class="fa-solid fa-check"></i> Suporte prioritário</li>
-          <li><i class="fa-solid fa-check"></i> Economia trimestral</li>
-        </ul>
-        <button class="btn-choose">Assinar Trimestral</button>
-      </article>
+        <p>Os planos abaixo são administrados pelo MASTER ADM. Alterações feitas por ele aparecem automaticamente nesta página.</p>
+      </div>
 
-      <article class="plan-card featured">
-        <div class="off-badge" style="background: var(--primary); color: white;">10% OFF</div>
-        <div class="plan-name">Anual</div>
-        <div class="plan-price">
-          <span class="currency">R$</span>
-          <span class="amount">323</span>
-          <span class="cents">,89</span>
-        </div>
-        <ul class="plan-features">
-          <li><i class="fa-solid fa-crown"></i> 1 ano completo</li>
-          <li><i class="fa-solid fa-crown"></i> VIP Support 24/7</li>
-          <li><i class="fa-solid fa-crown"></i> Melhor custo benefício</li>
-          <li><i class="fa-solid fa-crown"></i> Acesso a Beta Features</li>
-        </ul>
-        <button class="btn-choose">Assinar Anual</button>
-      </article>
-    </div>
+      <div class="grid">
+        {% for plano in planos %}
+          {% set atual = assinatura and assinatura.plano_id == plano.id %}
+          {% set solicitado = plano_solicitado and plano_solicitado.id == plano.id and solicitacao_pendente %}
+          {% set total_ciclo = (plano.valor_mensal|float) * (plano.ciclo_meses or 1) %}
+          <article class="plan-card {{ 'current' if atual else '' }} {{ 'requested' if solicitado else '' }}">
+            {% if atual %}
+              <div class="plan-badge current-badge">Plano atual</div>
+            {% elif solicitado %}
+              <div class="plan-badge request-badge">Solicitado</div>
+            {% endif %}
+
+            <div class="plan-name">{{ plano.nome }}</div>
+            <p class="plan-description">{{ plano.descricao or 'Plano disponível para contratação.' }}</p>
+
+            <div class="plan-price">
+              <span class="currency">R$</span>
+              <span class="amount">{{ '%.2f'|format(total_ciclo)|replace('.', ',') }}</span>
+            </div>
+            <div class="plan-cycle">
+              {% if plano.ciclo_meses == 1 %}
+                cobrança mensal
+              {% else %}
+                a cada {{ plano.ciclo_meses }} meses · equivalente a R$ {{ '%.2f'|format(plano.valor_mensal|float)|replace('.', ',') }}/mês
+              {% endif %}
+            </div>
+
+            <ul class="plan-features">
+              <li><i class="fa-solid fa-check"></i> Ciclo de {{ plano.ciclo_meses or 1 }} {{ 'mês' if (plano.ciclo_meses or 1) == 1 else 'meses' }}</li>
+              <li><i class="fa-solid fa-check"></i> Gestão da assinatura pelo painel</li>
+              <li><i class="fa-solid fa-check"></i> Preparado para pagamento via Asaas</li>
+            </ul>
+
+            {% if atual %}
+              <button class="btn-choose" type="button" disabled><i class="fa-solid fa-circle-check"></i> Plano atual</button>
+            {% elif solicitado %}
+              <button class="btn-choose" type="button" disabled><i class="fa-regular fa-clock"></i> Solicitação enviada</button>
+            {% else %}
+              <form method="POST" action="{{ url_for('main.solicitar_mudanca_plano', plano_id=plano.id) }}">
+                <button class="btn-choose" type="submit" onclick="return confirm('Solicitar mudança para {{ plano.nome|e }}? O plano atual continuará ativo até a confirmação do pagamento.');">
+                  <i class="fa-solid fa-arrow-right-arrow-left"></i> Solicitar mudança
+                </button>
+              </form>
+            {% endif %}
+          </article>
+        {% else %}
+          <div class="empty-state">
+            <i class="fa-solid fa-layer-group"></i>
+            <h3>Nenhum plano disponível</h3>
+            <p>O MASTER ADM ainda não publicou categorias comerciais ativas.</p>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="integration-note">
+      <i class="fa-solid fa-shield-halved"></i>
+      <div>
+        <strong>Fluxo atual seguro</strong>
+        <p>A solicitação não troca o plano imediatamente. Até a integração do Asaas ficar disponível, o MASTER ADM confirma manualmente o pagamento e ativa a nova categoria.</p>
+      </div>
+    </section>
 
     <div class="voltar">
-      <a href="/painel">
-        <i class="fa-solid fa-arrow-left"></i> Painel de Controle
-      </a>
+      <a href="{{ url_for('main.painel') }}"><i class="fa-solid fa-arrow-left"></i> Painel de Controle</a>
     </div>
-  </div>
+  </main>
 {% endblock %}

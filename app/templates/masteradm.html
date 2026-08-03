@@ -1,94 +1,203 @@
 {% extends "base_admin.html" %}
+{% set menu_ativo = 'dashboard' %}
 
-{% block title %}MASTER ADM{% endblock %}
-{% block body_class %}admin-body masteradm-page{% endblock %}
-
-{% block icon_stylesheet %}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-{% endblock %}
+{% block title %}Dashboard MASTER | Agenda1{% endblock %}
+{% block body_class %}admin-body master-shell-page{% endblock %}
 
 {% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/masteradm.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/master_billing.css') }}">
 {% endblock %}
 
 {% block body %}
+<div class="master-shell">
+  {% include "includes/master_sidebar.html" %}
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
+  <main class="master-content">
+    <header class="master-page-header">
+      <div>
+        <span class="eyebrow">Controle central</span>
+        <h1>Dashboard MASTER</h1>
+        <p>Acompanhe usuários, assinaturas, avisos e recebimentos da plataforma.</p>
+      </div>
+      <a class="primary-action" href="{{ url_for('auth.register') }}">
+        <i class="fa-solid fa-plus"></i> Novo usuário
+      </a>
+    </header>
 
-    <div>
-      <div class="logo">
-        <h1>MASTER ADM</h1>
+    {% include "includes/master_flash.html" %}
+
+    {% if alertas_master.total_geral > 0 %}
+    <section class="master-alert-center" aria-labelledby="master-alert-title">
+      <div class="master-alert-center__header">
+        <div>
+          <span class="eyebrow">Atenção necessária</span>
+          <h2 id="master-alert-title">Central de avisos</h2>
+          <p>Pendências importantes que merecem análise no painel MASTER.</p>
+        </div>
+        <span class="master-alert-total">{{ alertas_master.total_geral }}</span>
       </div>
 
-      <div class="menu">
-
-        <a href="{{ url_for('auth.register') }}">
-          <i class="fa-solid fa-user-plus"></i> Criar Conta
+      <div class="master-alert-grid">
+        {% if alertas_master.solicitacoes_total > 0 %}
+        <a class="master-alert-card solicitacao" href="{{ url_for('master_financeiro.pagamentos') }}#solicitacoes-planos">
+          <span class="master-alert-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></span>
+          <div class="master-alert-content">
+            <div class="master-alert-title-row">
+              <strong>Mudanças de plano</strong>
+              <span>{{ alertas_master.solicitacoes_total }}</span>
+            </div>
+            <p>{{ alertas_master.solicitacoes_total }} {{ 'solicitação' if alertas_master.solicitacoes_total == 1 else 'solicitações' }} aguardando confirmação ou cancelamento.</p>
+            <ul>
+              {% for item in alertas_master.solicitacoes_recentes %}
+              <li>{{ item.usuario.nome or item.usuario.username }} → {{ item.plano.nome }}</li>
+              {% endfor %}
+            </ul>
+            {% if alertas_master.solicitacoes_total > alertas_master.solicitacoes_recentes|length %}
+            <small>Mais {{ alertas_master.solicitacoes_total - (alertas_master.solicitacoes_recentes|length) }} pendente{{ 's' if alertas_master.solicitacoes_total - (alertas_master.solicitacoes_recentes|length) != 1 else '' }}.</small>
+            {% endif %}
+            <span class="master-alert-link">Analisar solicitações <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
         </a>
+        {% endif %}
 
-        <a href="{{ url_for('main.usuarios') }}">
-          <i class="fa-solid fa-users"></i> Usuários
+        {% if alertas_master.vencidas_total > 0 %}
+        <a class="master-alert-card vencida" href="{{ url_for('master_financeiro.pagamentos', status='vencida') }}#assinaturas">
+          <span class="master-alert-icon"><i class="fa-solid fa-circle-exclamation"></i></span>
+          <div class="master-alert-content">
+            <div class="master-alert-title-row">
+              <strong>Assinaturas vencidas</strong>
+              <span>{{ alertas_master.vencidas_total }}</span>
+            </div>
+            <p>Contas com vencimento ultrapassado e fora do período de tolerância.</p>
+            <ul>
+              {% for item in alertas_master.vencidas_recentes %}
+              <li>{{ item.usuario.nome or item.usuario.username }} — {{ item.assinatura.proximo_vencimento.strftime('%d/%m/%Y') if item.assinatura and item.assinatura.proximo_vencimento else 'sem data' }}</li>
+              {% endfor %}
+            </ul>
+            {% if alertas_master.vencidas_total > alertas_master.vencidas_recentes|length %}
+            <small>Mais {{ alertas_master.vencidas_total - (alertas_master.vencidas_recentes|length) }} conta{{ 's' if alertas_master.vencidas_total - (alertas_master.vencidas_recentes|length) != 1 else '' }} vencida{{ 's' if alertas_master.vencidas_total - (alertas_master.vencidas_recentes|length) != 1 else '' }}.</small>
+            {% endif %}
+            <span class="master-alert-link">Ver cobranças vencidas <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
         </a>
+        {% endif %}
 
-        <a href="#">
-          <i class="fa-solid fa-layer-group"></i> Planos
+        {% if alertas_master.atencao_total > 0 %}
+        <a class="master-alert-card atencao" href="{{ url_for('master_financeiro.avisos') }}">
+          <span class="master-alert-icon"><i class="fa-solid fa-clock"></i></span>
+          <div class="master-alert-content">
+            <div class="master-alert-title-row">
+              <strong>Vencimentos em atenção</strong>
+              <span>{{ alertas_master.atencao_total }}</span>
+            </div>
+            <p>Assinaturas próximas do vencimento, vencendo hoje ou ainda em tolerância.</p>
+            <ul>
+              {% for item in alertas_master.atencao_recentes %}
+              <li>{{ item.usuario.nome or item.usuario.username }} — {{ item.financeiro.rotulo }}</li>
+              {% endfor %}
+            </ul>
+            {% if alertas_master.atencao_total > alertas_master.atencao_recentes|length %}
+            <small>Mais {{ alertas_master.atencao_total - (alertas_master.atencao_recentes|length) }} aviso{{ 's' if alertas_master.atencao_total - (alertas_master.atencao_recentes|length) != 1 else '' }}.</small>
+            {% endif %}
+            <span class="master-alert-link">Abrir central de vencimentos <i class="fa-solid fa-arrow-right"></i></span>
+          </div>
         </a>
-
-        <a href="#">
-          <i class="fa-solid fa-database"></i> Banco
-        </a>
-
-        <a href="#">
-          <i class="fa-solid fa-money-bill-wave"></i> Pagamentos
-        </a>
-
-        <a href="#">
-          <i class="fa-solid fa-bullhorn"></i> Avisos
-        </a>
-
-        <a href="#">
-          <i class="fa-solid fa-plug"></i> API
-        </a>
-
-        <a href="{{ url_for('main.logs') }}">
-          <i class="fa-solid fa-bug"></i> Logs
-        </a>
-
+        {% endif %}
       </div>
-    </div>
+    </section>
+    {% endif %}
 
-    <div class="logout">
-      <i class="fa-solid fa-right-from-bracket"></i> Sair
-    </div>
+    <section class="metric-grid" aria-label="Resumo da plataforma">
+      <article class="metric-card">
+        <span class="metric-icon blue"><i class="fa-solid fa-users"></i></span>
+        <div><small>Usuários</small><strong>{{ categorias.total }}</strong></div>
+      </article>
+      <article class="metric-card">
+        <span class="metric-icon green"><i class="fa-solid fa-circle-check"></i></span>
+        <div><small>Em dia</small><strong>{{ categorias.em_dia }}</strong></div>
+      </article>
+      <article class="metric-card">
+        <span class="metric-icon amber"><i class="fa-solid fa-clock"></i></span>
+        <div><small>Próximos do vencimento</small><strong>{{ categorias.avisos }}</strong></div>
+      </article>
+      <article class="metric-card">
+        <span class="metric-icon red"><i class="fa-solid fa-triangle-exclamation"></i></span>
+        <div><small>Vencidos</small><strong>{{ categorias.vencidos }}</strong></div>
+      </article>
+      <article class="metric-card wide">
+        <span class="metric-icon purple"><i class="fa-solid fa-wallet"></i></span>
+        <div>
+          <small>Recebido neste mês</small>
+          <strong>R$ {{ '%.2f'|format(total_recebido_mes|float)|replace('.', ',') }}</strong>
+        </div>
+      </article>
+    </section>
 
-  </div>
+    <section class="dashboard-grid">
+      <article class="panel-card">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">Categorias</span>
+            <h2>Situação dos usuários</h2>
+          </div>
+          <a href="{{ url_for('master_financeiro.usuarios') }}">Ver todos</a>
+        </div>
+        <div class="category-list">
+          <a href="{{ url_for('master_financeiro.usuarios', conta_status='ativo') }}"><span>Contas ativas</span><strong>{{ categorias.ativos }}</strong></a>
+          <a href="{{ url_for('master_financeiro.usuarios', conta_status='inativo') }}"><span>Contas inativas</span><strong>{{ categorias.inativos }}</strong></a>
+          <a href="{{ url_for('master_financeiro.usuarios', financeiro='sem_configuracao') }}"><span>Sem cobrança configurada</span><strong>{{ categorias.sem_configuracao }}</strong></a>
+          <a href="{{ url_for('master_financeiro.avisos') }}"><span>Precisam de atenção</span><strong>{{ categorias.avisos + categorias.vencidos }}</strong></a>
+        </div>
+      </article>
 
-  <!-- MAIN -->
-  <div class="main">
+      <article class="panel-card">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">Planos</span>
+            <h2>Categorias cadastradas</h2>
+          </div>
+          <a href="{{ url_for('master_financeiro.planos') }}">Gerenciar</a>
+        </div>
+        <div class="plan-summary">
+          {% for plano in planos %}
+          <div>
+            <span class="status-dot {{ 'online' if plano.ativo else 'offline' }}"></span>
+            <span>{{ plano.nome }}</span>
+            <strong>R$ {{ '%.2f'|format(plano.valor_mensal|float)|replace('.', ',') }}</strong>
+          </div>
+          {% endfor %}
+        </div>
+      </article>
+    </section>
 
-    <div class="title">Dashboard MASTER</div>
-
-    <div class="cards">
-      <div class="card">
-        <h3>Usuários</h3>
-        <p>0</p>
+    <section class="panel-card recent-users">
+      <div class="panel-heading">
+        <div>
+          <span class="eyebrow">Últimos cadastros</span>
+          <h2>Usuários recentes</h2>
+        </div>
+        <a href="{{ url_for('master_financeiro.pagamentos') }}">Controle financeiro</a>
       </div>
 
-      <div class="card">
-        <h3>Planos</h3>
-        <p>0</p>
+      <div class="responsive-table">
+        <table>
+          <thead><tr><th>Usuário</th><th>Plano</th><th>Conta</th><th>Financeiro</th><th></th></tr></thead>
+          <tbody>
+          {% for item in usuarios_recentes %}
+            <tr>
+              <td><strong>{{ item.usuario.nome or item.usuario.username }}</strong><small>{{ item.usuario.empresa or item.usuario.email or item.usuario.username }}</small></td>
+              <td>{{ item.usuario.plano or 'Sem plano' }}</td>
+              <td><span class="status-badge {{ 'ativo' if item.usuario.status == 'ativo' else 'inativo' }}">{{ item.usuario.status or 'inativo' }}</span></td>
+              <td><span class="status-badge {{ item.financeiro.classe }}">{{ item.financeiro.rotulo }}</span></td>
+              <td><a class="table-link" href="{{ url_for('master_financeiro.assinatura_usuario', usuario_id=item.usuario.id) }}">Abrir</a></td>
+            </tr>
+          {% else %}
+            <tr><td colspan="5" class="empty-cell">Nenhum usuário cadastrado.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
       </div>
-
-      <div class="card">
-        <h3>Pagamentos</h3>
-        <p>R$ 0</p>
-      </div>
-    </div>
-
-    <div class="area">
-      Área dinâmica futura (Flask / Jinja)
-    </div>
-
-  </div>
+    </section>
+  </main>
+</div>
 {% endblock %}

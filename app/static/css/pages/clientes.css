@@ -364,3 +364,305 @@ tbody tr:hover { background: rgba(59, 130, 246, 0.03); }
   .pesquisa-container { flex-direction: column; }
   .btn-search { padding: 14px; }
 }
+
+
+/* HISTÓRICO DETALHADO DO CLIENTE */
+.history-modal-content {
+  max-width: 1040px;
+  width: min(1040px, calc(100% - 28px));
+}
+
+.history-client-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 18px;
+  margin-bottom: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.history-client-header h3 {
+  margin: 2px 0 6px;
+  font-size: 1.35rem;
+}
+
+.history-client-header a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.history-client-header a:hover { color: var(--primary); }
+
+.history-eyebrow {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.history-neutral-status {
+  color: var(--muted);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.history-summary-grid,
+.history-dates-grid,
+.history-pattern-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.history-summary-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.history-dates-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 18px;
+}
+
+.history-pattern-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.history-summary-card,
+.history-info-card,
+.history-pattern-grid > div {
+  padding: 15px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.history-summary-card span,
+.history-info-card span,
+.history-pattern-grid span {
+  display: block;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.history-summary-card strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.6rem;
+}
+
+.history-summary-card small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.history-summary-card .history-summary-money {
+  font-size: 1.05rem;
+  color: var(--success);
+}
+
+.history-info-card strong,
+.history-pattern-grid strong {
+  display: block;
+  margin-top: 7px;
+  font-size: 0.9rem;
+}
+
+.history-next-card {
+  border-color: rgba(59, 130, 246, 0.28);
+  background: rgba(59, 130, 246, 0.07);
+}
+
+.history-section {
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.02);
+  margin-bottom: 16px;
+}
+
+.history-section-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 15px;
+}
+
+.history-section-title > i {
+  color: var(--primary);
+  margin-top: 3px;
+}
+
+.history-section-title h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.history-section-title p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.history-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(230px, 0.8fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.history-layout .history-section { margin-bottom: 0; }
+
+.history-appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.history-appointment {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 16px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.history-appointment-date {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  border-right: 1px solid var(--border);
+  padding-right: 14px;
+}
+
+.history-appointment-date span,
+.history-appointment-date small {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.history-appointment-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.history-appointment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.history-status {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.history-status-past {
+  color: var(--muted);
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.history-status-today {
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.history-status-future {
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.history-month-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-month-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+}
+
+.history-month-row:last-child { border-bottom: 0; }
+.history-month-row span { color: var(--muted); }
+
+.history-empty,
+.history-error {
+  text-align: center;
+  padding: 30px 15px;
+  color: var(--muted);
+}
+
+.history-empty i,
+.history-error i {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1.6rem;
+}
+
+.history-error { color: var(--danger); }
+.history-muted { color: var(--muted); font-size: 0.82rem; }
+
+@media (max-width: 900px) {
+  .history-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .history-pattern-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .history-layout { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .history-modal-content {
+    width: calc(100% - 18px);
+    padding: 20px 15px;
+    max-height: 92vh;
+  }
+
+  .history-client-header {
+    flex-direction: column;
+  }
+
+  .history-summary-grid,
+  .history-dates-grid,
+  .history-pattern-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .history-appointment {
+    grid-template-columns: 1fr;
+  }
+
+  .history-appointment-date {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    padding-right: 0;
+    padding-bottom: 10px;
+  }
+
+  .history-appointment-title {
+    align-items: flex-start;
+  }
+}

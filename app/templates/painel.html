@@ -57,6 +57,18 @@
 </header>
 
 <main class="painel-main">
+  {% if aviso_assinatura %}
+  <section class="subscription-notice subscription-notice--{{ aviso_assinatura.nivel }}" role="status">
+    <span class="subscription-notice__icon"><i class="fa-solid fa-receipt" aria-hidden="true"></i></span>
+    <div class="subscription-notice__content">
+      <strong>Informação sobre sua assinatura</strong>
+      <p>{{ aviso_assinatura.mensagem }}</p>
+    </div>
+    {% if aviso_assinatura.link_pagamento %}
+    <a href="{{ aviso_assinatura.link_pagamento }}" target="_blank" rel="noopener">Renovar</a>
+    {% endif %}
+  </section>
+  {% endif %}
   <nav class="painel-grid" aria-label="Módulos administrativos">
     <a href="{{ url_for('main.admin') }}" class="module-card">
       <i class="fa-solid fa-calendar-days" aria-hidden="true"></i>

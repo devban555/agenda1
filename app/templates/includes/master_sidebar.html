@@ -1,0 +1,42 @@
+<aside class="master-sidebar">
+  <div>
+    <a class="master-brand" href="{{ url_for('master_financeiro.dashboard') }}">
+      <span class="master-brand__icon"><i class="fa-solid fa-shield-halved"></i></span>
+      <span>
+        <strong>MASTER ADM</strong>
+        <small>Gestão da plataforma</small>
+      </span>
+    </a>
+
+    <nav class="master-menu" aria-label="Menu do administrador master">
+      <a href="{{ url_for('master_financeiro.dashboard') }}" class="{{ 'active' if menu_ativo == 'dashboard' else '' }}">
+        <i class="fa-solid fa-chart-pie"></i> Visão geral
+      </a>
+      <a href="{{ url_for('auth.register') }}">
+        <i class="fa-solid fa-user-plus"></i> Criar conta
+      </a>
+      <a href="{{ url_for('master_financeiro.usuarios') }}" class="{{ 'active' if menu_ativo == 'usuarios' else '' }}">
+        <i class="fa-solid fa-users"></i> Usuários
+      </a>
+      <a href="{{ url_for('master_financeiro.planos') }}" class="{{ 'active' if menu_ativo == 'planos' else '' }}">
+        <i class="fa-solid fa-layer-group"></i> Planos
+      </a>
+      <a href="{{ url_for('master_financeiro.pagamentos') }}" class="{{ 'active' if menu_ativo == 'pagamentos' else '' }}">
+        <i class="fa-solid fa-money-bill-wave"></i> Pagamentos
+      </a>
+      <a href="{{ url_for('master_financeiro.avisos') }}" class="{{ 'active' if menu_ativo == 'avisos' else '' }}">
+        <i class="fa-solid fa-bell"></i> Avisos
+      </a>
+      <a href="{{ url_for('master_financeiro.integracoes') }}" class="{{ 'active' if menu_ativo == 'integracoes' else '' }}">
+        <i class="fa-solid fa-plug"></i> Integrações
+      </a>
+      <a href="{{ url_for('main.logs') }}">
+        <i class="fa-solid fa-bug"></i> Logs
+      </a>
+    </nav>
+  </div>
+
+  <a class="master-logout" href="{{ url_for('auth.logout') }}">
+    <i class="fa-solid fa-right-from-bracket"></i> Sair
+  </a>
+</aside>

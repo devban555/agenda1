@@ -1,0 +1,58 @@
+{% extends "base_admin.html" %}
+{% set menu_ativo = 'pagamentos' %}
+{% block title %}Assinatura de {{ usuario.nome or usuario.username }}{% endblock %}
+{% block body_class %}admin-body master-shell-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/master_billing.css') }}">{% endblock %}
+{% block body %}
+<div class="master-shell">
+  {% include "includes/master_sidebar.html" %}
+  <main class="master-content">
+    <header class="master-page-header">
+      <div><a class="back-link" href="{{ url_for('master_financeiro.usuarios') }}"><i class="fa-solid fa-arrow-left"></i> Usuários</a><span class="eyebrow">Conta #{{ usuario.id }}</span><h1>{{ usuario.nome or usuario.username }}</h1><p>{{ usuario.empresa or usuario.email or '/' ~ usuario.slug }}</p></div>
+      <span class="status-badge {{ status_financeiro.classe }} large">{{ status_financeiro.rotulo }}</span>
+    </header>
+    {% include "includes/master_flash.html" %}
+
+    <section class="dashboard-grid dashboard-grid--form">
+      <article class="panel-card">
+        <div class="panel-heading"><div><span class="eyebrow">Configuração</span><h2>Assinatura</h2></div></div>
+        <form method="POST" class="master-form">
+          <label class="full">Plano<select name="plano_id" required><option value="">Selecione</option>{% for plano in planos %}<option value="{{ plano.id }}" {{ 'selected' if assinatura and assinatura.plano_id == plano.id else '' }}>{{ plano.nome }} — R$ {{ '%.2f'|format(plano.valor_mensal|float)|replace('.', ',') }}</option>{% endfor %}</select></label>
+          <label>Valor cobrado<input name="valor_mensal" value="{{ '%.2f'|format(assinatura.valor_mensal|float)|replace('.', ',') if assinatura else '' }}" placeholder="49,90"></label>
+          <label>Próximo vencimento<input type="date" name="proximo_vencimento" value="{{ assinatura.proximo_vencimento.isoformat() if assinatura and assinatura.proximo_vencimento else '' }}"></label>
+          <label>Avisar com antecedência<input type="number" min="0" name="dias_aviso" value="{{ assinatura.dias_aviso if assinatura else 5 }}"><small>Dias antes do vencimento</small></label>
+          <label>Tolerância<input type="number" min="0" name="dias_tolerancia" value="{{ assinatura.dias_tolerancia if assinatura else 0 }}"><small>Dias após o vencimento</small></label>
+          <label>Status<select name="status"><option value="ativa" {{ 'selected' if not assinatura or assinatura.status == 'ativa' else '' }}>Ativa</option><option value="pausada" {{ 'selected' if assinatura and assinatura.status == 'pausada' else '' }}>Pausada</option><option value="cancelada" {{ 'selected' if assinatura and assinatura.status == 'cancelada' else '' }}>Cancelada</option></select></label>
+          <label>Provedor<select name="provedor"><option value="manual" {{ 'selected' if not assinatura or assinatura.provedor == 'manual' else '' }}>Manual</option><option value="asaas" {{ 'selected' if assinatura and assinatura.provedor == 'asaas' else '' }}>Asaas (futuro)</option></select></label>
+          <label class="full">Link de pagamento<input type="url" name="checkout_url" value="{{ assinatura.checkout_url if assinatura else '' }}" placeholder="Será preenchido pela integração futura"></label>
+          <button class="primary-action" type="submit"><i class="fa-solid fa-floppy-disk"></i> Salvar assinatura</button>
+        </form>
+      </article>
+
+      <article class="panel-card">
+        <div class="panel-heading"><div><span class="eyebrow">Baixa manual</span><h2>Registrar pagamento</h2></div></div>
+        {% if assinatura and assinatura.proximo_vencimento %}
+        <form class="master-form" method="POST" action="{{ url_for('master_financeiro.registrar_pagamento', usuario_id=usuario.id) }}">
+          <label>Valor<input name="valor" value="{{ '%.2f'|format(assinatura.valor_mensal|float)|replace('.', ',') }}"></label>
+          <label>Vencimento<input type="date" name="vencimento" value="{{ assinatura.proximo_vencimento.isoformat() }}"></label>
+          <label>Pago em<input type="date" name="pago_em" value="{{ now_date|default('', true) }}"></label>
+          <label>Forma<select name="forma_pagamento"><option value="pix">Pix</option><option value="manual">Manual</option><option value="boleto">Boleto</option><option value="cartao">Cartão</option></select></label>
+          <label class="full">Referência externa<input name="referencia_externa" placeholder="ID do Asaas ou referência interna"></label>
+          <label class="full">Observação<input name="observacao" placeholder="Observação opcional"></label>
+          <label class="check-row full"><input type="checkbox" name="avancar_vencimento" value="1" checked> Avançar automaticamente o próximo vencimento</label>
+          <button type="submit" class="secondary-action"><i class="fa-solid fa-check"></i> Confirmar pagamento</button>
+        </form>
+        {% else %}<div class="info-note"><i class="fa-solid fa-circle-info"></i><p>Salve primeiro um plano e um próximo vencimento.</p></div>{% endif %}
+      </article>
+    </section>
+
+    <section class="panel-card">
+      <div class="panel-heading"><div><span class="eyebrow">Auditoria</span><h2>Histórico de pagamentos</h2></div></div>
+      <div class="responsive-table"><table><thead><tr><th>Vencimento</th><th>Pagamento</th><th>Valor</th><th>Forma</th><th>Provedor</th><th>Observação</th></tr></thead><tbody>
+      {% for pagamento in historico %}<tr><td>{{ pagamento.vencimento.strftime('%d/%m/%Y') }}</td><td>{{ pagamento.pago_em.strftime('%d/%m/%Y às %H:%M') if pagamento.pago_em else 'Pendente' }}</td><td>R$ {{ '%.2f'|format(pagamento.valor|float)|replace('.', ',') }}</td><td>{{ pagamento.forma_pagamento|upper }}</td><td>{{ pagamento.provedor|upper }}</td><td>{{ pagamento.observacao or pagamento.referencia_externa or '—' }}</td></tr>
+      {% else %}<tr><td colspan="6" class="empty-cell">Ainda não há pagamentos registrados.</td></tr>{% endfor %}
+      </tbody></table></div>
+    </section>
+  </main>
+</div>
+{% endblock %}

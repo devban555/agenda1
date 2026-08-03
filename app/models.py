@@ -410,3 +410,123 @@ class MovimentacaoProduto(db.Model):
     )
 
     produto = db.relationship("Produto")
+
+# =========================
+# PLANOS / ASSINATURAS DO SISTEMA
+# =========================
+class PlanoSistema(db.Model):
+    __tablename__ = 'plano_sistema'
+
+    id = db.Column(db.Integer, primary_key=True)
+    codigo = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    nome = db.Column(db.String(100), nullable=False)
+    descricao = db.Column(db.String(255), nullable=True)
+    valor_mensal = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    ciclo_meses = db.Column(db.Integer, nullable=False, default=1)
+    ativo = db.Column(db.Boolean, nullable=False, default=True)
+    ordem = db.Column(db.Integer, nullable=False, default=0)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    atualizado_em = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
+
+    assinaturas = db.relationship(
+        'AssinaturaUsuario',
+        back_populates='plano',
+        lazy=True
+    )
+
+
+class AssinaturaUsuario(db.Model):
+    __tablename__ = 'assinatura_usuario'
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(
+        db.Integer,
+        db.ForeignKey('usuario.id'),
+        nullable=False,
+        unique=True,
+        index=True
+    )
+    plano_id = db.Column(
+        db.Integer,
+        db.ForeignKey('plano_sistema.id'),
+        nullable=True,
+        index=True
+    )
+    valor_mensal = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    proximo_vencimento = db.Column(db.Date, nullable=True)
+    dias_aviso = db.Column(db.Integer, nullable=False, default=5)
+    dias_tolerancia = db.Column(db.Integer, nullable=False, default=0)
+    status = db.Column(db.String(30), nullable=False, default='ativa')
+    provedor = db.Column(db.String(30), nullable=False, default='manual')
+    provedor_cliente_id = db.Column(db.String(120), nullable=True)
+    provedor_assinatura_id = db.Column(db.String(120), nullable=True)
+    checkout_url = db.Column(db.String(500), nullable=True)
+    ultimo_pagamento_em = db.Column(db.DateTime, nullable=True)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    atualizado_em = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
+
+    usuario = db.relationship(
+        'Usuario',
+        backref=db.backref(
+            'assinatura_cobranca',
+            uselist=False
+        )
+    )
+    plano = db.relationship('PlanoSistema', back_populates='assinaturas')
+    pagamentos = db.relationship(
+        'PagamentoAssinatura',
+        back_populates='assinatura',
+        lazy=True,
+        cascade='all, delete-orphan'
+    )
+
+
+class PagamentoAssinatura(db.Model):
+    __tablename__ = 'pagamento_assinatura'
+
+    id = db.Column(db.Integer, primary_key=True)
+    assinatura_id = db.Column(
+        db.Integer,
+        db.ForeignKey('assinatura_usuario.id'),
+        nullable=False,
+        index=True
+    )
+    usuario_id = db.Column(
+        db.Integer,
+        db.ForeignKey('usuario.id'),
+        nullable=False,
+        index=True
+    )
+    valor = db.Column(db.Numeric(10, 2), nullable=False, default=0)
+    vencimento = db.Column(db.Date, nullable=False)
+    pago_em = db.Column(db.DateTime, nullable=True)
+    status = db.Column(db.String(30), nullable=False, default='pendente')
+    forma_pagamento = db.Column(db.String(30), nullable=False, default='manual')
+    provedor = db.Column(db.String(30), nullable=False, default='manual')
+    referencia_externa = db.Column(db.String(150), nullable=True, index=True)
+    link_pagamento = db.Column(db.String(500), nullable=True)
+    pix_copia_cola = db.Column(db.Text, nullable=True)
+    observacao = db.Column(db.String(255), nullable=True)
+    criado_em = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    atualizado_em = db.Column(
+        db.DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
+
+    assinatura = db.relationship(
+        'AssinaturaUsuario',
+        back_populates='pagamentos'
+    )
+    usuario = db.relationship('Usuario')

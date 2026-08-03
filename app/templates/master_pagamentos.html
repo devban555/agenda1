@@ -1,0 +1,74 @@
+{% extends "base_admin.html" %}
+{% set menu_ativo = 'pagamentos' %}
+{% block title %}Pagamentos | MASTER ADM{% endblock %}
+{% block body_class %}admin-body master-shell-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/master_billing.css') }}">{% endblock %}
+{% block body %}
+<div class="master-shell">
+  {% include "includes/master_sidebar.html" %}
+  <main class="master-content">
+    <header class="master-page-header"><div><span class="eyebrow">Cobranças</span><h1>Pagamentos e assinaturas</h1><p>Controle manual pronto para receber a integração futura com o Asaas.</p></div></header>
+    {% include "includes/master_flash.html" %}
+    <nav class="status-tabs">
+      <a class="{{ 'active' if not filtro else '' }}" href="{{ url_for('master_financeiro.pagamentos') }}">Todos</a>
+      <a class="{{ 'active' if filtro == 'em_dia' else '' }}" href="{{ url_for('master_financeiro.pagamentos', status='em_dia') }}">Em dia</a>
+      <a class="{{ 'active' if filtro == 'vence_em_breve' else '' }}" href="{{ url_for('master_financeiro.pagamentos', status='vence_em_breve') }}">Vencem em breve</a>
+      <a class="{{ 'active' if filtro == 'vencida' else '' }}" href="{{ url_for('master_financeiro.pagamentos', status='vencida') }}">Vencidos</a>
+      <a class="{{ 'active' if filtro == 'sem_configuracao' else '' }}" href="{{ url_for('master_financeiro.pagamentos', status='sem_configuracao') }}">Não configurados</a>
+    </nav>
+
+    <section class="panel-card" id="solicitacoes-planos">
+      <div class="panel-heading">
+        <div><span class="eyebrow">Solicitações</span><h2>Mudanças de plano aguardando confirmação</h2></div>
+      </div>
+      <div class="responsive-table"><table><thead><tr><th>Solicitado em</th><th>Usuário</th><th>Plano atual</th><th>Novo plano</th><th>Valor do ciclo</th><th>Ações</th></tr></thead><tbody>
+      {% for item in solicitacoes_planos %}
+        <tr>
+          <td>{{ item.pagamento.criado_em.strftime('%d/%m/%Y %H:%M') if item.pagamento.criado_em else '—' }}</td>
+          <td><strong>{{ item.usuario.nome or item.usuario.username }}</strong><small>{{ item.usuario.empresa or item.usuario.email or item.usuario.username }}</small></td>
+          <td>{{ item.assinatura.plano.nome if item.assinatura and item.assinatura.plano else (item.usuario.plano or 'Sem plano') }}</td>
+          <td><strong>{{ item.plano.nome }}</strong><small>Ciclo de {{ item.plano.ciclo_meses }} {{ 'mês' if item.plano.ciclo_meses == 1 else 'meses' }}</small></td>
+          <td>R$ {{ '%.2f'|format(item.pagamento.valor|float)|replace('.', ',') }}</td>
+          <td>
+            <div class="request-actions">
+              <form method="POST" action="{{ url_for('master_financeiro.confirmar_solicitacao_plano', pagamento_id=item.pagamento.id) }}" onsubmit="return confirm('Confirmar o recebimento e ativar {{ item.plano.nome|e }} para este usuário?');">
+                <input type="hidden" name="forma_pagamento" value="manual">
+                <button type="submit" class="request-button approve"><i class="fa-solid fa-check"></i> Confirmar e ativar</button>
+              </form>
+              <form method="POST" action="{{ url_for('master_financeiro.cancelar_solicitacao_plano', pagamento_id=item.pagamento.id) }}" onsubmit="return confirm('Cancelar esta solicitação de mudança?');">
+                <button type="submit" class="request-button cancel"><i class="fa-solid fa-xmark"></i> Cancelar</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+      {% else %}<tr><td colspan="6" class="empty-cell">Nenhuma mudança de plano aguardando confirmação.</td></tr>{% endfor %}
+      </tbody></table></div>
+    </section>
+
+    <section class="panel-card" id="assinaturas">
+      <div class="panel-heading"><div><span class="eyebrow">Assinaturas</span><h2>Controle por usuário</h2></div></div>
+      <div class="responsive-table"><table><thead><tr><th>Usuário</th><th>Plano</th><th>Valor</th><th>Próximo vencimento</th><th>Status</th><th></th></tr></thead><tbody>
+      {% for item in registros %}
+        <tr>
+          <td><strong>{{ item.usuario.nome or item.usuario.username }}</strong><small>{{ item.usuario.empresa or item.usuario.email or item.usuario.username }}</small></td>
+          <td>{{ item.assinatura.plano.nome if item.assinatura and item.assinatura.plano else (item.usuario.plano or 'Sem plano') }}</td>
+          <td>{{ ('R$ ' ~ ('%.2f'|format(item.assinatura.valor_mensal|float)|replace('.', ','))) if item.assinatura else '—' }}</td>
+          <td>{{ item.assinatura.proximo_vencimento.strftime('%d/%m/%Y') if item.assinatura and item.assinatura.proximo_vencimento else 'Não definido' }}</td>
+          <td><span class="status-badge {{ item.financeiro.classe }}">{{ item.financeiro.rotulo }}</span></td>
+          <td><a class="table-link" href="{{ url_for('master_financeiro.assinatura_usuario', usuario_id=item.usuario.id) }}">Gerenciar</a></td>
+        </tr>
+      {% else %}<tr><td colspan="6" class="empty-cell">Nenhuma assinatura nesta categoria.</td></tr>{% endfor %}
+      </tbody></table></div>
+    </section>
+
+    <section class="panel-card">
+      <div class="panel-heading"><div><span class="eyebrow">Histórico</span><h2>Últimos pagamentos registrados</h2></div></div>
+      <div class="responsive-table"><table><thead><tr><th>Data</th><th>Usuário</th><th>Valor</th><th>Forma</th><th>Referência</th></tr></thead><tbody>
+      {% for pagamento in pagamentos_recentes %}
+        <tr><td>{{ pagamento.pago_em.strftime('%d/%m/%Y') if pagamento.pago_em else '—' }}</td><td>{{ pagamento.usuario.nome or pagamento.usuario.username }}</td><td>R$ {{ '%.2f'|format(pagamento.valor|float)|replace('.', ',') }}</td><td>{{ pagamento.forma_pagamento|upper }}</td><td>{{ pagamento.referencia_externa or 'Registro manual' }}</td></tr>
+      {% else %}<tr><td colspan="5" class="empty-cell">Nenhum pagamento registrado.</td></tr>{% endfor %}
+      </tbody></table></div>
+    </section>
+  </main>
+</div>
+{% endblock %}

@@ -111,7 +111,7 @@
   </div>
 
   <div class="crm-modal" id="historico-modal">
-    <div class="crm-modal-content">
+    <div class="crm-modal-content history-modal-content">
       <div class="crm-modal-header">
         <h2>Histórico do Cliente</h2>
         <button class="crm-modal-close" onclick="fecharHistorico()">
@@ -188,6 +188,7 @@ function renderizarTabela(clientes) {
           <th>Recorrente</th>
           <th>Visitas Realizadas</th>
           <th>Última Visita</th>
+          <th>Próximo Agendamento</th>
           <th>Status (60d)</th>
           <th>Ações</th>
         </tr>
@@ -195,7 +196,12 @@ function renderizarTabela(clientes) {
       <tbody>`;
 
   filtrados.forEach(c => {
-    const dataFormatada = c.ultima_visita ? c.ultima_visita.split('-').reverse().join('/') : '—';
+    const dataFormatada = c.ultima_visita
+      ? `${c.ultima_visita.split('-').reverse().join('/')} ${c.ultimo_horario || ''}`.trim()
+      : '—';
+    const proximaDataFormatada = c.proximo_agendamento
+      ? `${c.proximo_agendamento.split('-').reverse().join('/')} ${c.proximo_horario || ''}`.trim()
+      : '—';
     const badgeRecorrente = c.recorrente === 'sim' ?
       `<span class="status status-ativo"><i class="fa-solid fa-rotate"></i> Sim</span>` :
       `<span class="status history" style="border:1px solid var(--border)">Não</span>`;
@@ -211,6 +217,7 @@ function renderizarTabela(clientes) {
         <td>${badgeRecorrente}</td>
         <td><span class="badge-count">${c.visitas}</span></td>
         <td style="color: var(--muted)">${dataFormatada}</td>
+        <td style="color: var(--muted)">${proximaDataFormatada}</td>
         <td>${statusTag}</td>
         <td>
           <div class="crm-actions">
@@ -301,6 +308,76 @@ async function excluirClienteBackend(id) {
 }
 
 // --- FUNÇÕES COMPLEMENTARES DE HISTÓRICO ---
+function escaparHtml(valor) {
+  return String(valor ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+}
+
+function formatarMoeda(valor) {
+  const numero = Number(valor || 0);
+  return numero.toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
+}
+
+function renderizarAgendamentosDetalhados(agendamentos) {
+  if (!agendamentos || agendamentos.length === 0) {
+    return `
+      <div class="history-empty">
+        <i class="fa-regular fa-calendar-xmark"></i>
+        <p>Nenhum agendamento encontrado para este cliente.</p>
+      </div>
+    `;
+  }
+
+  return agendamentos.map(item => {
+    const classePeriodo = item.periodo === 'passado'
+      ? 'history-status-past'
+      : item.periodo === 'hoje'
+        ? 'history-status-today'
+        : 'history-status-future';
+
+    const duracao = item.duracao_minutos
+      ? `${item.duracao_minutos} min`
+      : 'Duração não informada';
+
+    const preco = item.preco !== null && item.preco !== undefined
+      ? formatarMoeda(item.preco)
+      : 'Valor não informado';
+
+    const profissional = item.profissional
+      ? `<span><i class="fa-solid fa-user-tie"></i> ${escaparHtml(item.profissional)}</span>`
+      : '';
+
+    return `
+      <article class="history-appointment">
+        <div class="history-appointment-date">
+          <strong>${escaparHtml(item.data_formatada)}</strong>
+          <span>${escaparHtml(item.dia_semana)} · ${escaparHtml(item.horario)}</span>
+          <small>${escaparHtml(item.semana_mes_label)}</small>
+        </div>
+
+        <div class="history-appointment-main">
+          <div class="history-appointment-title">
+            <strong>${escaparHtml(item.servico)}</strong>
+            <span class="history-status ${classePeriodo}">${escaparHtml(item.periodo_label)}</span>
+          </div>
+          <div class="history-appointment-meta">
+            <span><i class="fa-regular fa-clock"></i> ${duracao}</span>
+            <span><i class="fa-solid fa-coins"></i> ${preco}</span>
+            ${profissional}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+}
+
 async function abrirHistorico(id) {
   const modal = document.getElementById('historico-modal');
   const content = document.getElementById('historico-content');
@@ -309,8 +386,8 @@ async function abrirHistorico(id) {
 
   content.innerHTML = `
     <div class="empty-state">
-      <i class="fa-solid fa-spinner"></i>
-      <p>Carregando histórico...</p>
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      <p>Carregando histórico detalhado...</p>
     </div>
   `;
 
@@ -318,52 +395,132 @@ async function abrirHistorico(id) {
     const resposta = await fetch(`/api/crm/historico/${id}`);
     const dados = await resposta.json();
 
-    if (!dados.success) {
-      content.innerHTML = `<p style="color: var(--danger)">Erro ao carregar histórico.</p>`;
+    if (!resposta.ok || !dados.success) {
+      content.innerHTML = `
+        <div class="history-error">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <p>Não foi possível carregar o histórico deste cliente.</p>
+        </div>
+      `;
       return;
     }
 
     const c = dados.cliente;
 
-    const alertaLimite = c.passou_limite_mes
-      ? `<span class="status status-inativo">Passou de 4 no mês</span>`
-      : `<span class="status status-ativo">Dentro do limite</span>`;
-
-    let mesesHtml = '';
-
-    c.agendamentos_por_mes.forEach(m => {
-      mesesHtml += `
-        <div style="display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
-          <span style="color:var(--muted)">${m.label}/${m.ano}</span>
-          <strong>${m.total}</strong>
-        </div>
-      `;
-    });
+    const mesesHtml = (c.agendamentos_por_mes || []).map(m => `
+      <div class="history-month-row">
+        <span>${escaparHtml(m.label)}/${m.ano}</span>
+        <strong>${m.total} agendamento${m.total === 1 ? '' : 's'}</strong>
+      </div>
+    `).join('');
 
     content.innerHTML = `
-      <div style="display:flex; flex-direction:column; gap:14px;">
-        <p><strong>Nome:</strong> ${c.nome}</p>
-        <p><strong>Telefone:</strong> ${c.telefone}</p>
-        <p><strong>Recorrente:</strong> ${c.recorrente === 'sim' ? 'SIM' : 'NÃO'}</p>
-        <p><strong>Total agendamentos:</strong> ${c.total_agendamentos}</p>
-
-        <div style="background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:14px; padding:16px;">
-          <p style="margin:0 0 8px;">
-            <strong>${c.mes_atual}:</strong> ${c.total_mes_atual} agendamento(s)
-          </p>
-          ${alertaLimite}
-        </div>
-
-        <h3 style="margin:12px 0 0; font-size:1rem;">Agendamentos por mês</h3>
+      <section class="history-client-header">
         <div>
-          ${mesesHtml || '<p style="color:var(--muted)">Sem histórico mensal.</p>'}
+          <span class="history-eyebrow">Cliente</span>
+          <h3>${escaparHtml(c.nome)}</h3>
+          <a href="tel:${escaparHtml(c.telefone)}">
+            <i class="fa-solid fa-phone"></i> ${escaparHtml(c.telefone)}
+          </a>
         </div>
-      </div>
+        <span class="status ${c.recorrente === 'sim' ? 'status-ativo' : 'history-neutral-status'}">
+          ${c.recorrente === 'sim' ? 'Cliente recorrente' : 'Cliente não recorrente'}
+        </span>
+      </section>
+
+      <section class="history-summary-grid">
+        <div class="history-summary-card">
+          <span>Total</span>
+          <strong>${c.total_agendamentos}</strong>
+          <small>agendamentos registrados</small>
+        </div>
+        <div class="history-summary-card">
+          <span>Realizados</span>
+          <strong>${c.total_realizados}</strong>
+          <small>até este momento</small>
+        </div>
+        <div class="history-summary-card">
+          <span>Futuros</span>
+          <strong>${c.total_futuros}</strong>
+          <small>já reservados</small>
+        </div>
+        <div class="history-summary-card">
+          <span>Valor agendado</span>
+          <strong class="history-summary-money">${formatarMoeda(c.valor_total_agendado)}</strong>
+          <small>soma dos serviços registrados</small>
+        </div>
+      </section>
+
+      <section class="history-dates-grid">
+        <div class="history-info-card">
+          <span>Primeira visita</span>
+          <strong>${escaparHtml(c.primeira_visita || 'Sem visita realizada')}</strong>
+        </div>
+        <div class="history-info-card">
+          <span>Última visita</span>
+          <strong>${escaparHtml(c.ultima_visita || 'Sem visita realizada')}</strong>
+        </div>
+        <div class="history-info-card history-next-card">
+          <span>Próximo agendamento</span>
+          <strong>${escaparHtml(c.proximo_agendamento || 'Nenhum agendamento futuro')}</strong>
+        </div>
+      </section>
+
+      <section class="history-section">
+        <div class="history-section-title">
+          <i class="fa-solid fa-chart-line"></i>
+          <div>
+            <h3>Padrão de agendamento</h3>
+            <p>Preferências calculadas com os registros existentes.</p>
+          </div>
+        </div>
+        <div class="history-pattern-grid">
+          <div><span>Dia preferido</span><strong>${escaparHtml(c.dia_preferido || 'Sem dados')}</strong></div>
+          <div><span>Horário preferido</span><strong>${escaparHtml(c.horario_preferido || 'Sem dados')}</strong></div>
+          <div><span>Semana preferida</span><strong>${escaparHtml(c.semana_mes_preferida || 'Sem dados')}</strong></div>
+          <div><span>Serviço mais usado</span><strong>${escaparHtml(c.servico_preferido || 'Sem dados')}</strong></div>
+          <div><span>Média entre visitas</span><strong>${c.media_intervalo_dias !== null ? `${c.media_intervalo_dias} dias` : 'Sem dados suficientes'}</strong></div>
+          <div><span>Agendamentos no mês</span><strong>${c.total_mes_atual}</strong></div>
+        </div>
+      </section>
+
+      <section class="history-layout">
+        <div class="history-section history-timeline-section">
+          <div class="history-section-title">
+            <i class="fa-solid fa-clock-rotate-left"></i>
+            <div>
+              <h3>Agenda completa do cliente</h3>
+              <p>Datas, horários, semanas do mês, serviços e situação.</p>
+            </div>
+          </div>
+          <div class="history-appointments-list">
+            ${renderizarAgendamentosDetalhados(c.agendamentos)}
+          </div>
+        </div>
+
+        <aside class="history-section history-months-section">
+          <div class="history-section-title">
+            <i class="fa-regular fa-calendar-days"></i>
+            <div>
+              <h3>Frequência mensal</h3>
+              <p>Quantidade de agendamentos por mês.</p>
+            </div>
+          </div>
+          <div class="history-month-list">
+            ${mesesHtml || '<p class="history-muted">Sem histórico mensal.</p>'}
+          </div>
+        </aside>
+      </section>
     `;
 
   } catch (erro) {
     console.error(erro);
-    content.innerHTML = `<p style="color: var(--danger)">Erro ao carregar histórico.</p>`;
+    content.innerHTML = `
+      <div class="history-error">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p>Erro ao carregar histórico. Tente novamente.</p>
+      </div>
+    `;
   }
 }
 

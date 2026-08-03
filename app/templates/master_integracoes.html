@@ -1,0 +1,24 @@
+{% extends "base_admin.html" %}
+{% set menu_ativo = 'integracoes' %}
+{% block title %}Integrações | MASTER ADM{% endblock %}
+{% block body_class %}admin-body master-shell-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/master_billing.css') }}">{% endblock %}
+{% block body %}
+<div class="master-shell">
+  {% include "includes/master_sidebar.html" %}
+  <main class="master-content">
+    <header class="master-page-header"><div><span class="eyebrow">Preparação técnica</span><h1>Integrações de pagamento</h1><p>A estrutura interna já aceita referências externas, links de cobrança e Pix. Nenhuma chamada ao Asaas é feita nesta etapa.</p></div></header>
+    <section class="integration-grid">
+      <article class="panel-card integration-card">
+        <div class="integration-logo"><i class="fa-solid fa-building-columns"></i></div>
+        <div><span class="eyebrow">Asaas</span><h2>Conector preparado</h2><p>A chave deve permanecer no arquivo <code>.env</code>, nunca no banco ou no Git.</p></div>
+        <dl><div><dt>API key</dt><dd><span class="status-badge {{ 'ativo' if asaas_api_key_configurada else 'neutro' }}">{{ 'Configurada' if asaas_api_key_configurada else 'Aguardando acesso' }}</span></dd></div><div><dt>Ambiente</dt><dd>{{ asaas_ambiente|upper }}</dd></div><div><dt>Assinaturas vinculadas</dt><dd>{{ assinaturas_asaas }}</dd></div></dl>
+      </article>
+      <article class="panel-card">
+        <div class="panel-heading"><div><span class="eyebrow">Próximas etapas</span><h2>Quando o acesso estiver disponível</h2></div></div>
+        <ol class="step-list"><li>Cadastrar ou localizar o cliente no provedor.</li><li>Criar cobrança Pix ou assinatura recorrente.</li><li>Salvar somente IDs e links retornados.</li><li>Receber confirmação por webhook.</li><li>Dar baixa e avançar o vencimento automaticamente.</li></ol>
+      </article>
+    </section>
+  </main>
+</div>
+{% endblock %}

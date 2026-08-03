@@ -1,0 +1,52 @@
+{% extends "base_admin.html" %}
+{% set menu_ativo = 'planos' %}
+{% block title %}Planos | MASTER ADM{% endblock %}
+{% block body_class %}admin-body master-shell-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/master_billing.css') }}">{% endblock %}
+{% block body %}
+<div class="master-shell">
+  {% include "includes/master_sidebar.html" %}
+  <main class="master-content">
+    <header class="master-page-header"><div><span class="eyebrow">Categorias comerciais</span><h1>Planos</h1><p>Cadastre valores e ciclos sem alterar os usuários existentes.</p></div></header>
+    {% include "includes/master_flash.html" %}
+
+    <section class="dashboard-grid dashboard-grid--form">
+      <article class="panel-card">
+        <div class="panel-heading"><div><span class="eyebrow">Novo</span><h2>Criar plano</h2></div></div>
+        <form class="master-form" method="POST">
+          <label>Nome<input name="nome" required placeholder="Plano Profissional"></label>
+          <label>Código<input name="codigo" placeholder="profissional"></label>
+          <label>Valor mensal<input name="valor_mensal" inputmode="decimal" placeholder="49,90"></label>
+          <label>Ciclo<select name="ciclo_meses"><option value="1">Mensal</option><option value="3">Trimestral</option><option value="6">Semestral</option><option value="12">Anual</option></select></label>
+          <label>Ordem<input type="number" name="ordem" value="0"></label>
+          <label class="full">Descrição<textarea name="descricao" rows="3" placeholder="Descrição interna do plano"></textarea></label>
+          <button class="primary-action" type="submit"><i class="fa-solid fa-plus"></i> Criar plano</button>
+        </form>
+      </article>
+
+      <article class="panel-card">
+        <div class="panel-heading"><div><span class="eyebrow">Orientação</span><h2>Como usar</h2></div></div>
+        <div class="info-note"><i class="fa-solid fa-circle-info"></i><p>Os planos são categorias comerciais. O valor cobrado de um usuário pode ser personalizado na assinatura dele.</p></div>
+        <div class="info-note"><i class="fa-solid fa-shield"></i><p>Desativar um plano impede novos vínculos, mas preserva assinaturas e pagamentos antigos.</p></div>
+      </article>
+    </section>
+
+    <section class="plan-card-grid">
+      {% for plano in planos %}
+      <article class="panel-card plan-editor">
+        <form method="POST" action="{{ url_for('master_financeiro.editar_plano', plano_id=plano.id) }}" class="master-form">
+          <div class="plan-editor__header"><span class="status-dot {{ 'online' if plano.ativo else 'offline' }}"></span><strong>{{ plano.codigo }}</strong></div>
+          <label>Nome<input name="nome" value="{{ plano.nome }}" required></label>
+          <label>Valor mensal<input name="valor_mensal" value="{{ '%.2f'|format(plano.valor_mensal|float)|replace('.', ',') }}"></label>
+          <label>Ciclo<select name="ciclo_meses">{% for meses, label in [(1,'Mensal'),(3,'Trimestral'),(6,'Semestral'),(12,'Anual')] %}<option value="{{ meses }}" {{ 'selected' if plano.ciclo_meses == meses else '' }}>{{ label }}</option>{% endfor %}</select></label>
+          <label>Ordem<input type="number" name="ordem" value="{{ plano.ordem }}"></label>
+          <label class="full">Descrição<textarea name="descricao" rows="3">{{ plano.descricao or '' }}</textarea></label>
+          <label class="check-row"><input type="checkbox" name="ativo" value="1" {{ 'checked' if plano.ativo else '' }}> Plano ativo</label>
+          <button type="submit" class="secondary-action"><i class="fa-solid fa-floppy-disk"></i> Salvar</button>
+        </form>
+      </article>
+      {% endfor %}
+    </section>
+  </main>
+</div>
+{% endblock %}

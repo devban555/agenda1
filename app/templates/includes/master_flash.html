@@ -1,0 +1,7 @@
+{% with mensagens = get_flashed_messages() %}
+  {% if mensagens %}
+    <div class="flash-stack" role="status">
+      {% for mensagem in mensagens %}<div class="flash-message">{{ mensagem }}</div>{% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}

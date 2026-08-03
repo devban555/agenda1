@@ -1,0 +1,21 @@
+{% extends "base_admin.html" %}
+{% set menu_ativo = 'avisos' %}
+{% block title %}Avisos | MASTER ADM{% endblock %}
+{% block body_class %}admin-body master-shell-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/master_billing.css') }}">{% endblock %}
+{% block body %}
+<div class="master-shell">
+  {% include "includes/master_sidebar.html" %}
+  <main class="master-content">
+    <header class="master-page-header"><div><span class="eyebrow">Acompanhamento</span><h1>Avisos de renovação</h1><p>Usuários próximos do vencimento ou já vencidos. O aviso ao usuário é exibido de forma discreta no painel dele.</p></div></header>
+    <section class="notice-list">
+      {% for item in registros %}
+      <article class="notice-card {{ item.financeiro.classe }}">
+        <div><span class="status-badge {{ item.financeiro.classe }}">{{ item.financeiro.rotulo }}</span><h2>{{ item.usuario.nome or item.usuario.username }}</h2><p>{{ item.usuario.empresa or item.usuario.email or '/' ~ item.usuario.slug }}</p></div>
+        <div class="notice-meta"><span>Plano<strong>{{ item.assinatura.plano.nome if item.assinatura.plano else item.usuario.plano or 'Sem plano' }}</strong></span><span>Vencimento<strong>{{ item.assinatura.proximo_vencimento.strftime('%d/%m/%Y') }}</strong></span><a class="table-link" href="{{ url_for('master_financeiro.assinatura_usuario', usuario_id=item.usuario.id) }}">Gerenciar</a></div>
+      </article>
+      {% else %}<article class="panel-card empty-state"><i class="fa-solid fa-circle-check"></i><h2>Nenhum aviso pendente</h2><p>Não há assinaturas próximas do vencimento ou vencidas.</p></article>{% endfor %}
+    </section>
+  </main>
+</div>
+{% endblock %}

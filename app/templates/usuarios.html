@@ -1,102 +1,73 @@
 {% extends "base_admin.html" %}
+{% set menu_ativo = 'usuarios' %}
 
-{% block title %}Gerenciar Usuários | Admin Pro{% endblock %}
-{% block body_class %}admin-body usuarios-page{% endblock %}
-
-{% block font_stylesheets %}
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-{% endblock %}
-
-{% block icon_stylesheet %}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-{% endblock %}
-
-{% block extra_css %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/usuarios.css') }}">
-{% endblock %}
+{% block title %}Usuários | MASTER ADM{% endblock %}
+{% block body_class %}admin-body master-shell-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/master_billing.css') }}">{% endblock %}
 
 {% block body %}
+<div class="master-shell">
+  {% include "includes/master_sidebar.html" %}
+  <main class="master-content">
+    <header class="master-page-header">
+      <div><span class="eyebrow">Contas da plataforma</span><h1>Usuários por categoria</h1><p>Filtre por plano, situação de acesso e situação financeira.</p></div>
+      <a class="primary-action" href="{{ url_for('auth.register') }}"><i class="fa-solid fa-user-plus"></i> Novo usuário</a>
+    </header>
 
-<div class="container">
+    {% include "includes/master_flash.html" %}
 
-    <div class="header-flex">
-        <h2><i class="fa-solid fa-users-gear" style="color: var(--primary); margin-right: 10px;"></i>Usuários</h2>
+    <form class="filter-bar" method="GET">
+      <label class="search-field"><i class="fa-solid fa-magnifying-glass"></i><input name="q" value="{{ filtros.q }}" placeholder="Nome, usuário, empresa ou e-mail"></label>
+      <select name="plano">
+        <option value="">Todos os planos</option>
+        {% for plano in planos %}<option value="{{ plano.codigo }}" {{ 'selected' if filtros.plano == plano.codigo else '' }}>{{ plano.nome }}</option>{% endfor %}
+      </select>
+      <select name="conta_status">
+        <option value="">Todos os acessos</option>
+        <option value="ativo" {{ 'selected' if filtros.conta_status == 'ativo' else '' }}>Ativos</option>
+        <option value="inativo" {{ 'selected' if filtros.conta_status == 'inativo' else '' }}>Inativos</option>
+      </select>
+      <select name="financeiro">
+        <option value="">Todas as cobranças</option>
+        <option value="em_dia" {{ 'selected' if filtros.financeiro == 'em_dia' else '' }}>Em dia</option>
+        <option value="vence_em_breve" {{ 'selected' if filtros.financeiro == 'vence_em_breve' else '' }}>Vence em breve</option>
+        <option value="vence_hoje" {{ 'selected' if filtros.financeiro == 'vence_hoje' else '' }}>Vence hoje</option>
+        <option value="vencida" {{ 'selected' if filtros.financeiro == 'vencida' else '' }}>Vencidos</option>
+        <option value="sem_configuracao" {{ 'selected' if filtros.financeiro == 'sem_configuracao' else '' }}>Não configurados</option>
+      </select>
+      <button type="submit"><i class="fa-solid fa-filter"></i> Filtrar</button>
+      <a href="{{ url_for('master_financeiro.usuarios') }}">Limpar</a>
+    </form>
 
-        <div class="search-box">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" placeholder="Buscar por nome ou slug...">
-        </div>
-
-        <button class="btn-add"><i class="fa-solid fa-plus"></i> Novo Usuário</button>
-    </div>
-
-    <div class="table-wrapper">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Usuário</th>
-                    <th>Slug</th>
-                    <th>Status</th>
-                    <th style="text-align: right;">Ações</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                {% for user in usuarios %}
-                <tr>
-                    <td data-label="ID">#{{ user.id }}</td>
-                    <td data-label="Usuário">
-                        <div class="user-info">
-                            <div class="avatar">{{ user.username[:2] | upper }}</div>
-                            <span>{{ user.username }}</span>
-                        </div>
-                    </td>
-                    <td data-label="Slug"><span class="slug-text">/{{ user.slug }}</span></td>
-                    <td data-label="Status">
-                        {% if user.is_active %}
-                        <span class="badge ativo">Ativo</span>
-                        {% else %}
-                        <span class="badge inativo">Inativo</span>
-                        {% endif %}
-                    </td>
-                    <td data-label="Ações">
-                        <div class="actions" style="justify-content: flex-end;">
-
-                            <button class="btn-action" title="Plano">
-                                <i class="fa-solid fa-layer-group"></i>
-                            </button>
-
-                            <button class="btn-action" title="Editar">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
-
-                            <button class="btn-action" title="Relatório">
-                                <i class="fa-solid fa-chart-simple"></i>
-                            </button>
-
-                            <button class="btn-action" title="Backup">
-                                <i class="fa-solid fa-database"></i>
-                            </button>
-
-                            <button class="btn-action btn-delete" title="Desativar">
-                                <i class="fa-solid fa-ban"></i>
-                            </button>
-
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-
-                {% if not usuarios %}
-                <tr>
-                    <td colspan="5" style="text-align: center; padding: 40px; color: var(--muted);">
-                        Nenhum usuário encontrado.
-                    </td>
-                </tr>
-                {% endif %}
-            </tbody>
+    <section class="panel-card">
+      <div class="panel-heading"><div><span class="eyebrow">Resultado</span><h2>{{ registros|length }} usuário(s)</h2></div></div>
+      <div class="responsive-table">
+        <table>
+          <thead><tr><th>Usuário</th><th>Categoria</th><th>Acesso</th><th>Vencimento</th><th>Financeiro</th><th>Ações</th></tr></thead>
+          <tbody>
+            {% for item in registros %}
+            <tr>
+              <td>
+                <div class="user-cell"><span class="avatar">{{ (item.usuario.nome or item.usuario.username)[:2]|upper }}</span><div><strong>{{ item.usuario.nome or item.usuario.username }}</strong><small>{{ item.usuario.empresa or item.usuario.email or '/' ~ item.usuario.slug }}</small></div></div>
+              </td>
+              <td><strong>{{ item.assinatura.plano.nome if item.assinatura and item.assinatura.plano else (item.usuario.plano or 'Sem plano') }}</strong></td>
+              <td><span class="status-badge {{ 'ativo' if item.usuario.status == 'ativo' else 'inativo' }}">{{ item.usuario.status or 'inativo' }}</span></td>
+              <td>{{ item.assinatura.proximo_vencimento.strftime('%d/%m/%Y') if item.assinatura and item.assinatura.proximo_vencimento else 'Não definido' }}</td>
+              <td><span class="status-badge {{ item.financeiro.classe }}">{{ item.financeiro.rotulo }}</span></td>
+              <td>
+                <div class="table-actions">
+                  <a title="Gerenciar assinatura" href="{{ url_for('master_financeiro.assinatura_usuario', usuario_id=item.usuario.id) }}"><i class="fa-solid fa-wallet"></i></a>
+                  <form method="POST" action="{{ url_for('master_financeiro.alternar_status_usuario', usuario_id=item.usuario.id) }}" onsubmit="return confirm('Alterar o status de acesso deste usuário?')">
+                    <button title="{{ 'Desativar' if item.usuario.status == 'ativo' else 'Ativar' }}" type="submit"><i class="fa-solid {{ 'fa-ban' if item.usuario.status == 'ativo' else 'fa-circle-check' }}"></i></button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% else %}<tr><td colspan="6" class="empty-cell">Nenhum usuário encontrado para os filtros selecionados.</td></tr>{% endfor %}
+          </tbody>
         </table>
-    </div>
+      </div>
+    </section>
+  </main>
 </div>
 {% endblock %}
