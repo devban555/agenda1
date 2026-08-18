@@ -8,10 +8,9 @@
 {% endblock %}
 
 {% block body %}
-
   <header>
     <h1>Marketing Hub</h1>
-    <div class="subtitle">Selecione uma campanha para impulsionar seu negócio.</div>
+    <div class="subtitle">Campanhas para reativar clientes, premiar fidelidade e ocupar horários vagos.</div>
   </header>
 
   <div class="wrap">
@@ -21,48 +20,39 @@
       </div>
 
       <div class="grid">
-        <button class="btn-campaign" data-action="descontaco" type="button">
+        <a class="btn-campaign" data-action="descontaco" href="{{ url_for('marketing.descontaco') }}">
           <i class="fa-solid fa-percent"></i>
-          <span>Descontaco</span>
-        </button>
+          <span>Descontaço</span>
+          <small>Desconto segmentado</small>
+        </a>
 
-        <button class="btn-campaign" data-action="sorteio" type="button">
+        <a class="btn-campaign" data-action="sorteio" href="{{ url_for('marketing.sorteio') }}">
           <i class="fa-solid fa-ticket"></i>
           <span>Sorteio</span>
-        </button>
+          <small>Sorteio real entre clientes</small>
+        </a>
 
-        <button class="btn-campaign" data-action="fidelidade" type="button">
+        <a class="btn-campaign" data-action="fidelidade" href="{{ url_for('marketing.fidelidade') }}">
           <i class="fa-solid fa-star"></i>
           <span>Fidelidade</span>
-        </button>
+          <small>Ranking dos mais frequentes</small>
+        </a>
 
-        <button class="btn-campaign" data-action="oferta" type="button">
+        <a class="btn-campaign" data-action="oferta" href="{{ url_for('marketing.oferta_flash') }}">
           <i class="fa-solid fa-bolt-lightning"></i>
           <span>Oferta Flash</span>
-        </button>
+          <small>Serviços e produtos em oferta</small>
+        </a>
       </div>
 
       <div class="hint">
-        <i class="fa-solid fa-circle-info"></i> Selecione um modelo para configurar os detalhes da promoção.
+        <i class="fa-solid fa-circle-info"></i>
+        Os públicos usam os mesmos dados reais do CRM. Cliente inativo = sem visita nos últimos 60 dias e sem agendamento futuro.
       </div>
     </section>
   </div>
 
   <div class="voltar">
-    <a href="/painel">
-      <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel ADM
-    </a>
+    <a href="/painel"><i class="fa-solid fa-arrow-left"></i> Voltar ao Painel ADM</a>
   </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-const buttons = document.querySelectorAll('.btn-campaign');
-buttons.forEach(btn => {
-  btn.addEventListener('click', () => {
-    buttons.forEach(b => b.classList.remove('is-selected'));
-    btn.classList.add('is-selected');
-  });
-});
-</script>
 {% endblock %}

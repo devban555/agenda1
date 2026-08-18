@@ -1,0 +1,13 @@
+{% extends "base_admin.html" %}
+{% block title %}Fidelidade | Marketing{% endblock %}
+{% block body_class %}admin-body eventos-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/marketing_eventos.css') }}">{% endblock %}
+{% block body %}
+<div class="marketing-wrap">
+  <div class="marketing-head"><div><span class="eyebrow">Marketing</span><h1>Fidelidade</h1><p>Ranking calculado pelo histórico real de visitas realizadas.</p></div><a class="btn-secondary" href="{{ url_for('main.eventos') }}">← Eventos</a></div>
+  <section class="marketing-card">
+    <div class="section-title"><div><h2>Clientes mais frequentes</h2><p>Use a frequência para decidir quem merece bônus, brindes ou condições especiais.</p></div><div class="metric-box"><span>Com histórico</span><strong>{{ ranking|length }}</strong></div></div>
+    {% if ranking %}<div class="ranking-list">{% for c in ranking %}<article class="ranking-row {% if loop.index <= 3 %}top{% endif %}"><div class="rank">#{{ loop.index }}</div><div class="rank-main"><strong>{{ c.nome }}</strong><span>{{ c.telefone }}</span><small>Última visita: {{ c.ultima_visita or '—' }}</small></div><div class="visitas"><strong>{{ c.visitas }}</strong><span>visitas</span></div>{% if c.visitas >= 3 %}<span class="loyal-badge">Fidelizado</span>{% endif %}</article>{% endfor %}</div>{% else %}<div class="empty">Ainda não há visitas suficientes para formar o ranking.</div>{% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base_admin.html" %}
+{% block title %}Oferta Flash | Marketing{% endblock %}
+{% block body_class %}admin-body eventos-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/marketing_eventos.css') }}">{% endblock %}
+{% block body %}
+<div class="marketing-wrap">
+  <div class="marketing-head"><div><span class="eyebrow">Marketing</span><h1>Oferta Flash</h1><p>Transforme um horário vago ou produto em estoque em uma oferta de curta duração.</p></div><a class="btn-secondary" href="{{ url_for('main.eventos') }}">← Eventos</a></div>
+  <div id="feedback-envio" class="campaign-feedback hidden" role="status" aria-live="polite"></div>
+  <section class="marketing-card">
+    <div class="form-grid">
+      <label>Tipo<select id="tipo"><option value="servico">Serviço</option><option value="produto">Produto</option></select></label>
+      <label>Item<select id="item"></select></label>
+      <label>Valor da oferta (R$)<input id="valor" type="number" min="0" step="0.01" placeholder="0,00"></label>
+      <label>Público<select id="publico"><option value="todos">Todos</option><option value="ativos">Ativos</option><option value="inativos">Inativos</option><option value="recorrentes">Recorrentes</option><option value="fidelizados">Fidelizados</option></select></label>
+    </div>
+    <label>Mensagem editável<textarea id="mensagem" rows="6"></textarea></label>
+    <p class="field-help">Use <strong>{nome}</strong> para personalizar cada envio.</p>
+  </section>
+  <section class="marketing-card"><div class="section-title"><div><h2>Destinatários</h2><p id="contador"></p></div><button id="todos" class="btn-secondary" type="button">Selecionar todos</button></div><div id="lista" class="client-list"></div></section>
+  <div class="send-bar"><span id="selecionados">0 selecionado(s)</span><button id="enviar" class="btn-primary" type="button">Disparar Oferta Flash</button></div>
+</div>
+<script id="dados-servicos" type="application/json">{{ servicos_json|safe }}</script>
+<script id="dados-produtos" type="application/json">{{ produtos_json|safe }}</script>
+{% endblock %}
+{% block extra_js %}
+<script>
+const servicos=JSON.parse(document.getElementById('dados-servicos').textContent);
+const produtos=JSON.parse(document.getElementById('dados-produtos').textContent);
+const tipo=document.getElementById('tipo');
+const item=document.getElementById('item');
+const valor=document.getElementById('valor');
+const publico=document.getElementById('publico');
+const mensagem=document.getElementById('mensagem');
+const lista=document.getElementById('lista');
+const feedback=document.getElementById('feedback-envio');
+const btnEnviar=document.getElementById('enviar');
+const btnTodos=document.getElementById('todos');
+let marcar=false;
+let envioEmAndamento=false;
+
+function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+function itens(){return tipo.value==='servico'?servicos:produtos;}
+function selecionado(){return itens().find(x=>String(x.id)===item.value);}
+function mostrarFeedback(tipoFeedback,texto){feedback.className=`campaign-feedback ${tipoFeedback}`;feedback.textContent=texto;feedback.classList.remove('hidden');}
+function contar(){document.getElementById('selecionados').textContent=`${document.querySelectorAll('.cliente-check:checked').length} selecionado(s)`;}
+function atualizarMensagem(){const x=selecionado();if(!x)return mensagem.value='';const nome=x.nome;const v=Number(valor.value||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});mensagem.value=`Olá {nome}! ⚡ Oferta Flash: ${nome} por ${v}. Condição especial por tempo limitado. Responda esta mensagem para aproveitar!`;}
+function carregarItens(){const d=itens();item.innerHTML=d.map(x=>`<option value="${x.id}">${esc(x.nome)}${x.estoque!==undefined?` · estoque ${x.estoque}`:''}</option>`).join('');if(d[0])valor.value=Number(d[0].valor||0).toFixed(2);else valor.value='';atualizarMensagem();}
+
+async function carregarPublico(){
+  const r=await fetch(`/api/marketing/publico?publico=${encodeURIComponent(publico.value)}`);const d=await r.json();
+  document.getElementById('contador').textContent=`${d.total} cliente(s)`;
+  lista.innerHTML=d.clientes.map(c=>`<label class="client-row"><input class="cliente-check" type="checkbox" value="${c.id}"><span><strong>${esc(c.nome)}</strong><small>${esc(c.telefone)} · ${c.status}</small></span></label>`).join('')||'<div class="empty">Nenhum cliente.</div>';
+  document.querySelectorAll('.cliente-check').forEach(e=>e.addEventListener('change',contar));
+  contar();
+  marcar=false;
+  btnTodos.textContent='Selecionar todos';
+}
+
+async function resetarEstadoInicial(){
+  tipo.value='servico';
+  publico.value='todos';
+  marcar=false;
+  carregarItens();
+  await carregarPublico();
+}
+
+async function acompanharEnvio(envioId){
+  while(true){
+    await new Promise(resolve=>setTimeout(resolve,1000));
+    const r=await fetch(`/api/marketing/envio/${encodeURIComponent(envioId)}`,{cache:'no-store'});
+    const d=await r.json();
+    if(!r.ok || !d.success) throw new Error(d.error || 'Não foi possível acompanhar o envio.');
+    const e=d.envio;
+    if(e.status==='processando'){
+      mostrarFeedback('info',`Enviando... ${e.processados}/${e.total} processado(s) · ${e.enviados} enviado(s) · ${e.falhas} falha(s).`);
+      continue;
+    }
+    if(e.status==='erro') throw new Error(e.erro || 'O envio foi interrompido por um erro.');
+    if(e.status==='concluido') return e;
+  }
+}
+
+tipo.addEventListener('change',carregarItens);
+item.addEventListener('change',()=>{const x=selecionado();if(x)valor.value=Number(x.valor||0).toFixed(2);atualizarMensagem();});
+valor.addEventListener('input',atualizarMensagem);
+publico.addEventListener('change',carregarPublico);
+btnTodos.addEventListener('click',()=>{marcar=!marcar;document.querySelectorAll('.cliente-check').forEach(e=>e.checked=marcar);btnTodos.textContent=marcar?'Desmarcar todos':'Selecionar todos';contar();});
+
+btnEnviar.addEventListener('click',async()=>{
+  if(envioEmAndamento)return;
+  const ids=[...document.querySelectorAll('.cliente-check:checked')].map(e=>Number(e.value));
+  if(!ids.length)return alert('Selecione clientes.');
+  if(!confirm(`Enviar Oferta Flash para ${ids.length} cliente(s)?`))return;
+
+  envioEmAndamento=true;
+  btnEnviar.disabled=true;
+  btnTodos.disabled=true;
+  btnEnviar.textContent='Iniciando envio...';
+  mostrarFeedback('info',`Preparando Oferta Flash para ${ids.length} cliente(s)...`);
+
+  try{
+    const r=await fetch('/api/marketing/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clientes_ids:ids,mensagem:mensagem.value})});
+    const d=await r.json();
+    if(!r.ok||!d.success)throw new Error(d.error||'Não foi possível iniciar o envio.');
+
+    btnEnviar.textContent='Enviando...';
+    const resultado=await acompanharEnvio(d.envio_id);
+
+    if(resultado.falhas===0){
+      mostrarFeedback('success',`Oferta Flash concluída: ${resultado.enviados}/${resultado.total} mensagem(ns) enviada(s) com sucesso.`);
+    }else{
+      mostrarFeedback('warning',`Oferta Flash concluída: ${resultado.enviados} enviada(s) e ${resultado.falhas} falha(s), de ${resultado.total} destinatário(s).`);
+    }
+
+    await resetarEstadoInicial();
+  }catch(err){
+    console.error(err);
+    mostrarFeedback('error',`Falha no envio: ${err.message}`);
+  }finally{
+    envioEmAndamento=false;
+    btnEnviar.disabled=false;
+    btnTodos.disabled=false;
+    btnEnviar.textContent='Disparar Oferta Flash';
+  }
+});
+
+carregarItens();
+carregarPublico();
+</script>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends "base_admin.html" %}
+{% block title %}Descontaço | Marketing{% endblock %}
+{% block body_class %}admin-body eventos-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/marketing_eventos.css') }}">{% endblock %}
+{% block body %}
+<div class="marketing-wrap">
+  <div class="marketing-head">
+    <div><span class="eyebrow">Marketing</span><h1>Descontaço</h1><p>Escolha o público, selecione os clientes e envie uma oferta personalizada pelo WhatsApp.</p></div>
+    <a class="btn-secondary" href="{{ url_for('main.eventos') }}">← Eventos</a>
+  </div>
+
+  <div id="feedback-envio" class="campaign-feedback hidden" role="status" aria-live="polite"></div>
+
+  <section class="marketing-card">
+    <div class="form-grid">
+      <label>Público
+        <select id="publico">
+          <option value="todos">Todos os clientes</option>
+          <option value="inativos">Clientes inativos</option>
+          <option value="ativos">Clientes ativos</option>
+          <option value="recorrentes">Clientes recorrentes</option>
+          <option value="fidelizados">Clientes fidelizados (3+ visitas)</option>
+        </select>
+      </label>
+      <label>Desconto (%)<input id="desconto" type="number" min="1" max="100" value="20"></label>
+    </div>
+
+    <label>Mensagem editável
+      <textarea id="mensagem" rows="6">Olá {nome}! 🎉 Você ganhou 20% de desconto no seu próximo atendimento. Aproveite e agende seu horário conosco!</textarea>
+    </label>
+    <p class="field-help">Use <strong>{nome}</strong> para inserir automaticamente o nome do cliente.</p>
+  </section>
+
+  <section class="marketing-card">
+    <div class="section-title"><div><h2>Destinatários</h2><p id="contador">Carregando...</p></div><button id="selecionar-todos" class="btn-secondary" type="button">Selecionar todos</button></div>
+    <div id="lista-clientes" class="client-list"></div>
+  </section>
+
+  <div class="send-bar">
+    <span id="selecionados">0 selecionado(s)</span>
+    <button id="enviar" class="btn-primary" type="button">Enviar pelo WhatsApp</button>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const publico = document.getElementById('publico');
+const desconto = document.getElementById('desconto');
+const mensagem = document.getElementById('mensagem');
+const lista = document.getElementById('lista-clientes');
+const contador = document.getElementById('contador');
+const selecionados = document.getElementById('selecionados');
+const feedback = document.getElementById('feedback-envio');
+const btnEnviar = document.getElementById('enviar');
+const btnSelecionarTodos = document.getElementById('selecionar-todos');
+let todosSelecionados = false;
+let envioEmAndamento = false;
+
+function esc(v){ return String(v ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'); }
+function atualizarContagem(){ const n=document.querySelectorAll('.cliente-check:checked').length; selecionados.textContent=`${n} selecionado(s)`; }
+function mensagemPadrao(){ return `Olá {nome}! 🎉 Você ganhou ${desconto.value || 'X'}% de desconto no seu próximo atendimento. Aproveite e agende seu horário conosco!`; }
+function mostrarFeedback(tipo, texto){ feedback.className=`campaign-feedback ${tipo}`; feedback.textContent=texto; feedback.classList.remove('hidden'); }
+
+async function carregar(){
+  const r=await fetch(`/api/marketing/publico?publico=${encodeURIComponent(publico.value)}`); const d=await r.json();
+  contador.textContent=`${d.total} cliente(s) neste público`;
+  lista.innerHTML=d.clientes.length?d.clientes.map(c=>`<label class="client-row"><input class="cliente-check" type="checkbox" value="${c.id}"><span><strong>${esc(c.nome)}</strong><small>${esc(c.telefone)} · ${c.visitas} visita(s) · ${c.status}</small></span></label>`).join(''):'<div class="empty">Nenhum cliente neste público.</div>';
+  document.querySelectorAll('.cliente-check').forEach(el=>el.addEventListener('change', atualizarContagem));
+  atualizarContagem();
+  todosSelecionados=false;
+  btnSelecionarTodos.textContent='Selecionar todos';
+}
+
+async function resetarEstadoInicial(){
+  publico.value='todos';
+  desconto.value='20';
+  mensagem.value=mensagemPadrao();
+  todosSelecionados=false;
+  await carregar();
+}
+
+async function acompanharEnvio(envioId){
+  while(true){
+    await new Promise(resolve=>setTimeout(resolve,1000));
+    const r=await fetch(`/api/marketing/envio/${encodeURIComponent(envioId)}`,{cache:'no-store'});
+    const d=await r.json();
+    if(!r.ok || !d.success) throw new Error(d.error || 'Não foi possível acompanhar o envio.');
+    const e=d.envio;
+    if(e.status==='processando'){
+      mostrarFeedback('info',`Enviando... ${e.processados}/${e.total} processado(s) · ${e.enviados} enviado(s) · ${e.falhas} falha(s).`);
+      continue;
+    }
+    if(e.status==='erro') throw new Error(e.erro || 'O envio foi interrompido por um erro.');
+    if(e.status==='concluido') return e;
+  }
+}
+
+publico.addEventListener('change', carregar);
+desconto.addEventListener('input', ()=>{ mensagem.value=mensagemPadrao(); });
+btnSelecionarTodos.addEventListener('click', ()=>{
+  todosSelecionados=!todosSelecionados;
+  document.querySelectorAll('.cliente-check').forEach(el=>el.checked=todosSelecionados);
+  btnSelecionarTodos.textContent=todosSelecionados?'Desmarcar todos':'Selecionar todos';
+  atualizarContagem();
+});
+
+btnEnviar.addEventListener('click', async ()=>{
+  if(envioEmAndamento) return;
+  const ids=[...document.querySelectorAll('.cliente-check:checked')].map(el=>Number(el.value));
+  if(!ids.length) return alert('Selecione ao menos um cliente.');
+  if(!confirm(`Confirmar envio desta campanha para ${ids.length} cliente(s)?`)) return;
+
+  envioEmAndamento=true;
+  btnEnviar.disabled=true;
+  btnSelecionarTodos.disabled=true;
+  btnEnviar.textContent='Iniciando envio...';
+  mostrarFeedback('info',`Preparando envio para ${ids.length} cliente(s)...`);
+
+  try{
+    const r=await fetch('/api/marketing/enviar',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({clientes_ids:ids,mensagem:mensagem.value})});
+    const d=await r.json();
+    if(!r.ok || !d.success) throw new Error(d.error || 'Não foi possível iniciar o envio.');
+
+    btnEnviar.textContent='Enviando...';
+    const resultado=await acompanharEnvio(d.envio_id);
+
+    if(resultado.falhas===0){
+      mostrarFeedback('success',`Envio concluído com sucesso: ${resultado.enviados}/${resultado.total} mensagem(ns) enviada(s).`);
+    }else{
+      mostrarFeedback('warning',`Envio concluído: ${resultado.enviados} enviada(s) e ${resultado.falhas} falha(s), de ${resultado.total} destinatário(s).`);
+    }
+
+    await resetarEstadoInicial();
+  }catch(err){
+    console.error(err);
+    mostrarFeedback('error',`Falha no envio: ${err.message}`);
+  }finally{
+    envioEmAndamento=false;
+    btnEnviar.disabled=false;
+    btnSelecionarTodos.disabled=false;
+    btnEnviar.textContent='Enviar pelo WhatsApp';
+  }
+});
+
+carregar();
+</script>
+{% endblock %}

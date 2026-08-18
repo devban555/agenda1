@@ -4,6 +4,7 @@ from .models import db
 import logging
 import os
 
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -48,10 +49,12 @@ def create_app():
     from .routes import main
     from .auth import auth
     from .master_billing import master_financeiro
+    from .marketing_events import marketing
 
     app.register_blueprint(main)
     app.register_blueprint(auth)
     app.register_blueprint(master_financeiro)
+    app.register_blueprint(marketing)
 
     # O service worker precisa ser servido na raiz para controlar o painel
     # inteiro. Nesta primeira versão ele não mantém páginas ou dados em cache.

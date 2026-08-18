@@ -48,105 +48,377 @@
 <script>
     window.SESSION_ID = "{{ session_id }}";
 
-    // 🔥 AGORA USA O FLASK (PROXY)
-    const API_URL = "";
     const sessionId = window.SESSION_ID;
+
     let ultimaStatus = null;
 
-    const statusText = document.getElementById("statusText");
-    const statusPulse = document.getElementById("statusPulse");
-    const qrWrapper = document.getElementById("qrWrapper");
-    const btnConnect = document.getElementById("btnConnect");
-    const btnLogout = document.getElementById("btnLogout");
+    const statusText =
+        document.getElementById("statusText");
+
+    const statusPulse =
+        document.getElementById("statusPulse");
+
+    const qrWrapper =
+        document.getElementById("qrWrapper");
+
+    const qrImage =
+        document.getElementById("qr");
+
+    const btnConnect =
+        document.getElementById("btnConnect");
+
+    const btnLogout =
+        document.getElementById("btnLogout");
+
+
+    function mostrarBotaoConectar(texto) {
+        btnConnect.disabled = false;
+        btnConnect.style.display = "flex";
+        btnConnect.innerHTML =
+            `<i class="fa-solid fa-qrcode"></i> ${texto}`;
+    }
+
+
+    function ocultarQR() {
+        qrWrapper.style.display = "none";
+        qrImage.src = "";
+    }
+
+
+    function mostrarStatus(
+        texto,
+        cor = "var(--primary)",
+        pulso = false
+    ) {
+        statusText.innerText = texto;
+        statusText.style.color = cor;
+
+        statusPulse.style.display =
+            pulso ? "block" : "none";
+    }
+
 
     async function iniciar() {
+        if (ultimaStatus === "service_offline") {
+            mostrarStatus(
+                "Serviço WhatsApp indisponível. Baileys está desligado.",
+                "var(--danger, #dc2626)"
+            );
+            return;
+        }
+
         btnConnect.disabled = true;
-        btnConnect.innerHTML = '<i class="fa-solid fa-circle-notch spinner"></i> Conectando...';
-        statusText.innerText = "Solicitando QR...";
+        btnConnect.innerHTML =
+            '<i class="fa-solid fa-circle-notch spinner"></i> Conectando...';
+
+        mostrarStatus("Preparando conexão...");
+
+        let endpoint =
+            `/api/session/${sessionId}`;
+
+        let options = {};
+
+        if (
+            ultimaStatus === "logged_out" ||
+            ultimaStatus === "error"
+        ) {
+            endpoint =
+                `/api/session/${sessionId}/reset`;
+
+            options = {
+                method: "POST"
+            };
+        }
 
         try {
-            await fetch(`/api/session/${sessionId}`);
-        } catch {
-            statusText.innerText = "❌ Erro de Conexão";
-            btnConnect.disabled = false;
-            btnConnect.innerHTML = '<i class="fa-solid fa-qrcode"></i> Gerar QR Code';
+            const resposta = await fetch(
+                endpoint,
+                options
+            );
+
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+                throw new Error(
+                    dados.error ||
+                    dados.reason ||
+                    "Falha ao iniciar sessão"
+                );
+            }
+
+            ultimaStatus = null;
+
+            setTimeout(atualizar, 300);
+
+        } catch (erro) {
+            console.error(
+                "Erro ao iniciar sessão:",
+                erro
+            );
+
+            mostrarStatus(
+                "Não foi possível iniciar o WhatsApp",
+                "var(--danger, #dc2626)"
+            );
+
+            mostrarBotaoConectar(
+                "Tentar novamente"
+            );
         }
     }
 
+
     async function logout() {
-        if(!confirm("Encerrar conexão com o WhatsApp?")) return;
-        await fetch(`/api/logout/${sessionId}`);
-        resetUI();
+        if (
+            !confirm(
+                "Encerrar conexão com o WhatsApp?"
+            )
+        ) {
+            return;
+        }
+
+        try {
+            const resposta = await fetch(
+                `/api/logout/${sessionId}`
+            );
+
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+                throw new Error(
+                    dados.error ||
+                    "Falha ao desconectar"
+                );
+            }
+
+            ultimaStatus = "logged_out";
+            ocultarQR();
+
+            mostrarStatus(
+                "WhatsApp desconectado",
+                "var(--danger, #dc2626)"
+            );
+
+            btnLogout.style.display = "none";
+
+            mostrarBotaoConectar(
+                "Reconectar WhatsApp"
+            );
+
+        } catch (erro) {
+            console.error(
+                "Erro no logout:",
+                erro
+            );
+
+            mostrarStatus(
+                "Erro ao desconectar WhatsApp",
+                "var(--danger, #dc2626)"
+            );
+        }
     }
 
-    function resetUI() {
-        statusText.innerText = "Sessão encerrada";
-        statusText.style.color = "var(--primary)";
-        statusPulse.style.display = "none";
-        qrWrapper.style.display = "none";
-        btnConnect.disabled = false;
-        btnConnect.style.display = "flex";
-        btnConnect.innerHTML = '<i class="fa-solid fa-qrcode"></i> Gerar QR Code';
-        btnLogout.style.display = "none";
-    }
 
     async function atualizar() {
         try {
-            const resStatus = await fetch(`/api/status/${sessionId}`);
-            const statusData = await resStatus.json();
+            const resposta = await fetch(
+                `/api/status/${sessionId}`,
+                {
+                    cache: "no-store"
+                }
+            );
 
-            if (ultimaStatus === statusData.status) return;
-            ultimaStatus = statusData.status;
+            const statusData =
+                await resposta.json();
 
-            // 🔥 READY
-            if (statusData.status === "ready") {
-                statusText.innerText = "WhatsApp Conectado";
-                statusText.style.color = "var(--success)";
-                statusPulse.style.display = "block";
-                qrWrapper.style.display = "none";
+            const status =
+                statusData.status || "error";
+
+            if (ultimaStatus === status) {
+                return;
+            }
+
+            ultimaStatus = status;
+
+
+            if (status === "service_offline") {
+                ocultarQR();
+
+                mostrarStatus(
+                    "Serviço WhatsApp indisponível — Baileys desligado",
+                    "var(--danger, #dc2626)"
+                );
+
+                btnLogout.style.display = "none";
+
+                btnConnect.style.display = "flex";
+                btnConnect.disabled = true;
+                btnConnect.innerHTML =
+                    '<i class="fa-solid fa-triangle-exclamation"></i> Serviço indisponível';
+
+                return;
+            }
+
+
+            if (status === "ready") {
+                ocultarQR();
+
+                mostrarStatus(
+                    "WhatsApp conectado",
+                    "var(--success)",
+                    true
+                );
+
                 btnLogout.style.display = "flex";
                 btnConnect.style.display = "none";
+
                 return;
             }
 
-            // ⚠️ sincronizando
-            if (statusData.status === "connected") {
-                statusText.innerText = "Sincronizando...";
-                statusText.style.color = "var(--primary)";
-                statusPulse.style.display = "none";
+
+            if (status === "connected") {
+                ocultarQR();
+
+                mostrarStatus(
+                    "WhatsApp conectado — sincronizando..."
+                );
+
+                btnConnect.style.display = "none";
+
                 return;
             }
 
-            // 📲 QR
-            if (statusData.status === "qr") {
-                const resQR = await fetch(`/api/qr/${sessionId}`);
-                const qrData = await resQR.json();
 
-                if (qrData.qr) {
-                    document.getElementById("qr").src = qrData.qr;
-                    qrWrapper.style.display = "flex";
-                    statusText.innerText = "Escaneie o código";
-                    statusText.style.color = "var(--primary)";
-                    statusPulse.style.display = "none";
-                    btnConnect.style.display = "none";
-                    btnLogout.style.display = "flex";
+            if (status === "connecting") {
+                ocultarQR();
+
+                mostrarStatus(
+                    "Conectando ao WhatsApp..."
+                );
+
+                btnConnect.style.display = "none";
+
+                return;
+            }
+
+
+            if (status === "qr") {
+                const respostaQR = await fetch(
+                    `/api/qr/${sessionId}`,
+                    {
+                        cache: "no-store"
+                    }
+                );
+
+                const dadosQR =
+                    await respostaQR.json();
+
+                if (dadosQR.qr) {
+                    qrImage.src = dadosQR.qr;
+
+                    qrWrapper.style.display =
+                        "flex";
+
+                    mostrarStatus(
+                        "Escaneie o QR Code para conectar"
+                    );
+
+                    btnConnect.style.display =
+                        "none";
+
+                    btnLogout.style.display =
+                        "flex";
                 }
+
                 return;
             }
 
-            if (statusData.status === "disconnected") {
-                resetUI();
+
+            if (status === "logged_out") {
+                ocultarQR();
+
+                mostrarStatus(
+                    "WhatsApp desconectado — reconecte o dispositivo",
+                    "var(--danger, #dc2626)"
+                );
+
+                btnLogout.style.display = "none";
+
+                mostrarBotaoConectar(
+                    "Reconectar WhatsApp"
+                );
+
                 return;
             }
 
-            statusText.innerText = "Aguardando...";
-            statusPulse.style.display = "none";
 
-        } catch (err) {
-            console.error("Erro no polling:", err);
+            if (status === "disconnected") {
+                ocultarQR();
+
+                mostrarStatus(
+                    "Conexão interrompida — tentando reconectar...",
+                    "var(--warning, #d97706)"
+                );
+
+                btnLogout.style.display = "none";
+                btnConnect.style.display = "none";
+
+                return;
+            }
+
+
+            if (status === "error") {
+                ocultarQR();
+
+                mostrarStatus(
+                    statusData.reason ||
+                    "Erro na integração com WhatsApp",
+                    "var(--danger, #dc2626)"
+                );
+
+                btnLogout.style.display = "none";
+
+                mostrarBotaoConectar(
+                    "Reconectar WhatsApp"
+                );
+
+                return;
+            }
+
+
+            ocultarQR();
+
+            mostrarStatus(
+                "WhatsApp ainda não conectado"
+            );
+
+            btnLogout.style.display = "none";
+
+            mostrarBotaoConectar(
+                "Gerar QR Code"
+            );
+
+        } catch (erro) {
+            console.error(
+                "Erro no polling:",
+                erro
+            );
+
+            ultimaStatus = null;
+
+            mostrarStatus(
+                "Erro ao consultar serviço WhatsApp",
+                "var(--danger, #dc2626)"
+            );
         }
     }
 
-    setInterval(atualizar, 2000);
+
+    atualizar();
+
+    setInterval(
+        atualizar,
+        2000
+    );
 </script>
 {% endblock %}

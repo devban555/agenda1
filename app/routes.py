@@ -461,7 +461,7 @@ def salvar_agendamento():
     # 🚀 ENVIO WHATSAPP (BACKGROUND)
     # ==============================
     try:
-        # 🔥 número já limpo
+        #  número já limpo
         numero = telefone
 
         if numero.startswith("0"):
@@ -592,7 +592,7 @@ Seu horário foi cancelado com sucesso.
 ⏰ {hora}
 """
 
-        # 🔥 THREAD ÚNICA (SEQUENCIAL DENTRO)
+        #  THREAD ÚNICA (SEQUENCIAL DENTRO)
         threading.Thread(
             target=envio_cancelamento_background,
             args=(
@@ -1346,10 +1346,10 @@ def painel():
 
     user_id = session["user_id"]
 
-    # 🔥 atualiza status do WhatsApp
+    #  atualiza status do WhatsApp
     atualizar_status(user_id)
 
-    # 🔥 busca no banco
+    #  busca no banco
     whatsapp = WhatsappSession.query.filter_by(user_id=user_id).first()
 
     from .master_billing import obter_aviso_assinatura
@@ -2063,7 +2063,7 @@ def salvar_excecao_agenda():
 
     db.session.commit()
 
-    # 🔥 LOG AQUI (após salvar)
+    #  LOG AQUI (após salvar)
     current_app.logger.info(
         f"ExcecaoProfissional | profissional_id={profissional.id} | data={data_obj} | ativo={excecao.dia_ativo} | bloqueados={excecao.horarios_bloqueados}"
     )
@@ -2146,39 +2146,99 @@ def whatsapp():
 
     user_id = session["user_id"]
 
-    # 🔥 session única por usuário
+    #  session única por usuário
     session_id = f"user_{user_id}"
 
     return render_template("conectar.html", session_id=session_id)
 
 
+import os
 import requests
+from flask import current_app, jsonify, session as flask_session
 from app.models import WhatsappSession
 
 
-def atualizar_status(user_id):
-    import requests
+def _baileys_url():
+    return os.getenv(
+        "BAILEYS_URL",
+        "http://127.0.0.1:3000"
+    ).rstrip("/")
 
-    session_id = f"user_{user_id}"
 
+def _baileys_timeout():
     try:
-        res = requests.get(
-            f"http://localhost:3000/status/{session_id}",
-            timeout=10  # 🔥 aumentei
+        return float(os.getenv("BAILEYS_TIMEOUT", "5"))
+    except (TypeError, ValueError):
+        return 5.0
+
+
+def _baileys_request(method, path, timeout=None, **kwargs):
+    url = f"{_baileys_url()}{path}"
+
+    return requests.request(
+        method,
+        url,
+        timeout=timeout or _baileys_timeout(),
+        **kwargs
+    )
+
+
+def _baileys_proxy(method, path, timeout=None, **kwargs):
+    try:
+        response = _baileys_request(
+            method,
+            path,
+            timeout=timeout,
+            **kwargs
         )
 
-        if res.status_code == 200:
-            status = res.json().get("status", "none")
-        else:
-            status = "offline"
+        try:
+            data = response.json()
+        except ValueError:
+            data = {
+                "status": "error",
+                "error": "Resposta inválida do serviço Baileys",
+                "detail": response.text[:300]
+            }
 
-    except Exception as e:
-        print("Erro ao consultar Node:", e)
-        status = "offline"
+        return data, response.status_code
 
-    print("STATUS ATUAL DO NODE:", status)  # 🔥 debug importante
+    except requests.RequestException as exc:
+        return {
+            "ok": False,
+            "service": "offline",
+            "status": "service_offline",
+            "reason": "Serviço Baileys indisponível",
+            "detail": str(exc)
+        }, 503
 
-    session_db = WhatsappSession.query.filter_by(user_id=user_id).first()
+
+def _sessao_whatsapp_autorizada(session_id):
+    user_id = flask_session.get("user_id")
+
+    if not user_id:
+        return False
+
+    return session_id == f"user_{user_id}"
+
+
+def atualizar_status(user_id):
+    session_id = f"user_{user_id}"
+
+    data, codigo = _baileys_proxy(
+        "GET",
+        f"/status/{session_id}",
+        timeout=3
+    )
+
+    if codigo == 503:
+        status = "service_offline"
+    else:
+        status = data.get("status", "error")
+
+    session_db = WhatsappSession.query.filter_by(
+        user_id=user_id
+    ).first()
 
     if not session_db:
         session_db = WhatsappSession(
@@ -2192,54 +2252,102 @@ def atualizar_status(user_id):
 
     db.session.commit()
 
-    return status  # 🔥 AGORA RETORNA
+    print(
+        f"WhatsApp {session_id}: "
+        f"status={status} "
+        f"baileys={_baileys_url()}"
+    )
+
+    return status
+
 
 def enviar_whatsapp(user_id, numero, mensagem):
-    import requests
     import time
 
     session_id = f"user_{user_id}"
-    url_status = f"http://localhost:3000/status/{session_id}"
-    url_send = "http://localhost:3000/send"
 
-    numero = str(numero)
-    if not numero.startswith("55") and "@g.us" not in numero:
-        numero = "55" + numero
+    numero = str(numero).strip()
+
+    if (
+        not numero.endswith("@g.us")
+        and not numero.endswith("@s.whatsapp.net")
+    ):
+        numero = "".join(
+            caractere
+            for caractere in numero
+            if caractere.isdigit()
+        )
+
+        if not numero.startswith("55"):
+            numero = "55" + numero
 
     print("SESSION_ID:", session_id)
     print("ENVIANDO PARA:", numero)
 
-    # 🔁 tenta até 3 vezes
     for tentativa in range(3):
-        print(f"TENTATIVA {tentativa+1}")
+        print(f"TENTATIVA {tentativa + 1}")
 
-        # 🔥 espera ficar ready
         status_ok = False
-        for i in range(10):
+
+        for _ in range(10):
             try:
-                status = requests.get(url_status, timeout=5).json()
+                resposta_status = _baileys_request(
+                    "GET",
+                    f"/status/{session_id}",
+                    timeout=3
+                )
+
+                if resposta_status.status_code != 200:
+                    print(
+                        "Status Baileys retornou HTTP",
+                        resposta_status.status_code
+                    )
+                    break
+
+                dados_status = resposta_status.json()
+                status = dados_status.get("status", "none")
+
                 print("STATUS ATUAL:", status)
 
-                if status.get("status") == "ready":
+                if status == "ready":
                     status_ok = True
                     break
 
-            except Exception as e:
-                print("Erro ao consultar status:", e)
+                if status in {
+                    "logged_out",
+                    "qr",
+                    "none",
+                    "error"
+                }:
+                    print(
+                        "WhatsApp não disponível para envio:",
+                        status
+                    )
+                    return False
+
+            except requests.RequestException as exc:
+                print(
+                    "Serviço Baileys indisponível:",
+                    exc
+                )
+                return False
 
             time.sleep(0.5)
 
         if not status_ok:
-            print("Ainda não pronto, tentando novamente...")
+            print(
+                "Sessão ainda não pronta; "
+                "nova tentativa em 2 segundos."
+            )
             time.sleep(2)
             continue
 
-        # 🔥 pequeno delay anti flood
         time.sleep(1)
 
         try:
-            res = requests.post(
-                url_send,
+            resposta = _baileys_request(
+                "POST",
+                "/send",
                 json={
                     "sessionId": session_id,
                     "number": numero,
@@ -2248,55 +2356,186 @@ def enviar_whatsapp(user_id, numero, mensagem):
                 timeout=7
             )
 
-            print("RESPOSTA NODE:", res.text)
-            return True
+            print(
+                "RESPOSTA NODE:",
+                resposta.status_code,
+                resposta.text
+            )
+
+            if 200 <= resposta.status_code < 300:
+                try:
+                    dados = resposta.json()
+                except ValueError:
+                    dados = {}
+
+                if dados.get("status") == "enviado":
+                    return True
+
+            print(
+                "Baileys recusou o envio; "
+                "nova tentativa será realizada."
+            )
 
         except requests.exceptions.ReadTimeout:
-            print("Timeout (normal)")
+            print(
+                "Timeout após o envio. "
+                "A mensagem não será repetida "
+                "para evitar duplicidade."
+            )
             return True
 
-        except Exception as e:
-            print("Erro ao enviar, tentando novamente:", e)
-            time.sleep(2)
+        except requests.RequestException as exc:
+            print(
+                "Erro de comunicação com Baileys:",
+                exc
+            )
 
-    print("❌ Falha após várias tentativas")
+        time.sleep(2)
+
+    print("Falha após várias tentativas.")
     return False
-from flask import current_app
+
 
 def enviar_whatsapp_thread(app, user_id, numero, mensagem):
     with app.app_context():
-        enviar_whatsapp(user_id, numero, mensagem)
+        enviar_whatsapp(
+            user_id,
+            numero,
+            mensagem
+        )
 
-def envio_whatsapp_background(user_id, numero, mensagem_cliente, grupo_id, mensagem_grupo):
+
+def envio_whatsapp_background(
+    user_id,
+    numero,
+    mensagem_cliente,
+    grupo_id,
+    mensagem_grupo
+):
     import time
 
-    enviar_whatsapp(user_id, numero, mensagem_cliente)
+    enviar_whatsapp(
+        user_id,
+        numero,
+        mensagem_cliente
+    )
 
     time.sleep(2)
 
-    enviar_whatsapp(user_id, grupo_id, mensagem_grupo)
+    enviar_whatsapp(
+        user_id,
+        grupo_id,
+        mensagem_grupo
+    )
 
 
-import requests
+@main.route('/api/baileys/health')
+@login_required
+def api_baileys_health():
+    data, codigo = _baileys_proxy(
+        "GET",
+        "/health",
+        timeout=3
+    )
 
-@main.route('/api/status/<session>')
-def api_status(session):
-    return requests.get(f"http://localhost:3000/status/{session}").json()
-
-
-@main.route('/api/qr/<session>')
-def api_qr(session):
-    return requests.get(f"http://localhost:3000/qr/{session}").json()
-
-
-@main.route('/api/session/<session>')
-def api_session(session):
-    return requests.get(f"http://localhost:3000/session/{session}").json()
+    return jsonify(data), codigo
 
 
-@main.route('/api/logout/<session>')
-def api_logout(session):
-    return requests.get(f"http://localhost:3000/logout/{session}").json()
+@main.route('/api/status/<session_id>')
+@login_required
+def api_status(session_id):
+    if not _sessao_whatsapp_autorizada(session_id):
+        return jsonify({
+            "status": "forbidden",
+            "error": "Sessão não autorizada"
+        }), 403
+
+    data, codigo = _baileys_proxy(
+        "GET",
+        f"/status/{session_id}",
+        timeout=3
+    )
+
+    if codigo == 503:
+        return jsonify(data), 200
+
+    if codigo >= 400:
+        data.setdefault("status", "error")
+
+    return jsonify(data), 200
+
+
+@main.route('/api/qr/<session_id>')
+@login_required
+def api_qr(session_id):
+    if not _sessao_whatsapp_autorizada(session_id):
+        return jsonify({
+            "status": "forbidden",
+            "error": "Sessão não autorizada"
+        }), 403
+
+    data, codigo = _baileys_proxy(
+        "GET",
+        f"/qr/{session_id}",
+        timeout=5
+    )
+
+    return jsonify(data), codigo
+
+
+@main.route('/api/session/<session_id>')
+@login_required
+def api_session(session_id):
+    if not _sessao_whatsapp_autorizada(session_id):
+        return jsonify({
+            "status": "forbidden",
+            "error": "Sessão não autorizada"
+        }), 403
+
+    data, codigo = _baileys_proxy(
+        "POST",
+        f"/session/{session_id}",
+        timeout=10
+    )
+
+    return jsonify(data), codigo
+
+
+@main.route('/api/session/<session_id>/reset', methods=['POST'])
+@login_required
+def api_session_reset(session_id):
+    if not _sessao_whatsapp_autorizada(session_id):
+        return jsonify({
+            "status": "forbidden",
+            "error": "Sessão não autorizada"
+        }), 403
+
+    data, codigo = _baileys_proxy(
+        "POST",
+        f"/session/{session_id}/reset",
+        timeout=15
+    )
+
+    return jsonify(data), codigo
+
+
+@main.route('/api/logout/<session_id>')
+@login_required
+def api_logout(session_id):
+    if not _sessao_whatsapp_autorizada(session_id):
+        return jsonify({
+            "status": "forbidden",
+            "error": "Sessão não autorizada"
+        }), 403
+
+    data, codigo = _baileys_proxy(
+        "POST",
+        f"/logout/{session_id}",
+        timeout=10
+    )
+
+    return jsonify(data), codigo
+
 
 @main.route('/disponibilidade')
 @login_required

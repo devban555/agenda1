@@ -1,0 +1,25 @@
+{% extends "base_admin.html" %}
+{% block title %}Sorteio | Marketing{% endblock %}
+{% block body_class %}admin-body eventos-page{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/marketing_eventos.css') }}">{% endblock %}
+{% block body %}
+<div class="marketing-wrap">
+  <div class="marketing-head"><div><span class="eyebrow">Marketing</span><h1>Sorteio</h1><p>Defina o grupo participante e deixe o sistema sortear um cliente de forma aleatória.</p></div><a class="btn-secondary" href="{{ url_for('main.eventos') }}">← Eventos</a></div>
+  <section class="marketing-card">
+    <div class="form-grid"><label>Público<select id="publico"><option value="todos">Todos</option><option value="ativos">Ativos</option><option value="inativos">Inativos</option><option value="recorrentes">Recorrentes</option><option value="fidelizados">Fidelizados (3+ visitas)</option></select></label><div class="metric-box"><span>Participantes</span><strong id="total">0</strong></div></div>
+    <p class="field-help">Você pode excluir participantes desmarcando nomes antes do sorteio.</p>
+  </section>
+  <section class="marketing-card"><div class="section-title"><h2>Participantes</h2><button id="todos" class="btn-secondary" type="button">Selecionar todos</button></div><div id="lista" class="client-list"></div></section>
+  <section id="resultado" class="winner-card hidden"><span class="eyebrow">Vencedor</span><i class="fa-solid fa-trophy"></i><h2 id="vencedor-nome"></h2><p id="vencedor-tel"></p><small id="participantes-final"></small></section>
+  <div class="send-bar"><span>Sorteio feito no servidor usando seleção aleatória criptograficamente segura.</span><button id="sortear" class="btn-primary" type="button">Sortear agora</button></div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const publico=document.getElementById('publico'), lista=document.getElementById('lista'), total=document.getElementById('total'); let marcar=true;
+function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');}
+async function carregar(){const r=await fetch(`/api/marketing/publico?publico=${publico.value}`);const d=await r.json();total.textContent=d.total;lista.innerHTML=d.clientes.map(c=>`<label class="client-row"><input class="cliente-check" type="checkbox" value="${c.id}" checked><span><strong>${esc(c.nome)}</strong><small>${esc(c.telefone)} · ${c.visitas} visita(s)</small></span></label>`).join('')||'<div class="empty">Nenhum participante.</div>';marcar=false;}
+publico.addEventListener('change',carregar);document.getElementById('todos').addEventListener('click',()=>{marcar=!marcar;document.querySelectorAll('.cliente-check').forEach(e=>e.checked=marcar);});
+document.getElementById('sortear').addEventListener('click',async()=>{const ids=[...document.querySelectorAll('.cliente-check:checked')].map(e=>Number(e.value));if(!ids.length)return alert('Selecione participantes.');if(!confirm(`Realizar sorteio entre ${ids.length} participante(s)?`))return;const r=await fetch('/api/marketing/sorteio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({publico:publico.value,clientes_ids:ids})});const d=await r.json();if(!d.success)return alert(d.error);document.getElementById('resultado').classList.remove('hidden');document.getElementById('vencedor-nome').textContent=d.vencedor.nome;document.getElementById('vencedor-tel').textContent=d.vencedor.telefone;document.getElementById('participantes-final').textContent=`Sorteado entre ${d.participantes} participante(s)`;});carregar();
+</script>
+{% endblock %}
