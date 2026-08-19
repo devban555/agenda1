@@ -4,6 +4,8 @@ from functools import wraps
 import secrets
 import threading
 import json
+import os
+import random
 import time
 
 from flask import Blueprint, current_app, jsonify, redirect, render_template, request, session, url_for
@@ -154,6 +156,49 @@ def _normalizar_numero(numero):
     return digitos
 
 
+def _env_float(nome, padrao):
+    try:
+        return float(os.getenv(nome, padrao))
+    except (TypeError, ValueError):
+        return float(padrao)
+
+
+def _env_int(nome, padrao):
+    try:
+        return int(os.getenv(nome, padrao))
+    except (TypeError, ValueError):
+        return int(padrao)
+
+
+def _calcular_pausa_envio(processados):
+    minimo = max(
+        1.0,
+        _env_float("MARKETING_DELAY_MIN", 4.0),
+    )
+    maximo = max(
+        minimo,
+        _env_float("MARKETING_DELAY_MAX", 8.0),
+    )
+
+    lote = max(
+        1,
+        _env_int("MARKETING_BATCH_SIZE", 10),
+    )
+
+    if processados > 0 and processados % lote == 0:
+        pausa_min = max(
+            maximo,
+            _env_float("MARKETING_BATCH_PAUSE_MIN", 25.0),
+        )
+        pausa_max = max(
+            pausa_min,
+            _env_float("MARKETING_BATCH_PAUSE_MAX", 45.0),
+        )
+        return random.uniform(pausa_min, pausa_max), "lote"
+
+    return random.uniform(minimo, maximo), "normal"
+
+
 def _worker_envio(app, usuario_id, clientes_ids, mensagem, envio_id):
     with app.app_context():
         from .routes import enviar_whatsapp
@@ -195,7 +240,21 @@ def _worker_envio(app, usuario_id, clientes_ids, mensagem, envio_id):
                 )
 
                 if indice < len(clientes) - 1:
-                    time.sleep(1.2)
+                    pausa, tipo_pausa = _calcular_pausa_envio(
+                        processados
+                    )
+
+                    app.logger.info(
+                        "Marketing rate limit | usuario_id=%s | "
+                        "processados=%s/%s | tipo=%s | pausa=%.1fs",
+                        usuario_id,
+                        processados,
+                        len(clientes),
+                        tipo_pausa,
+                        pausa,
+                    )
+
+                    time.sleep(pausa)
 
             _atualizar_envio(
                 envio_id,
