@@ -96,6 +96,7 @@
         <table>
           <thead>
             <tr>
+              <th>Foto</th>
               <th>Nome do Produto</th>
               <th>Quantidade</th>
               <th>Val. Compra</th>
@@ -109,6 +110,31 @@
           <tbody>
             {% for produto in produtos %}
             <tr>
+              <td>
+                {% if produto.foto_url %}
+                  <a
+                    href="{{ produto.foto_url }}"
+                    target="_blank"
+                    rel="noopener"
+                    class="product-thumb-link"
+                    title="Abrir foto"
+                  >
+                    <img
+                      src="{{ produto.foto_url }}"
+                      alt="Foto de {{ produto.nome }}"
+                      class="product-thumb"
+                      loading="lazy"
+                    >
+                  </a>
+                {% else %}
+                  <div
+                    class="product-thumb-placeholder"
+                    title="Produto sem foto"
+                  >
+                    <i class="fa-regular fa-image"></i>
+                  </div>
+                {% endif %}
+              </td>
               <td class="prod-name">{{ produto.nome }}</td>
               <td class="numeric-bold">{{ produto.quantidade }}</td>
               <td class="numeric-bold">R$ {{ "%.2f"|format(produto.valor_compra) }}</td>
@@ -139,7 +165,7 @@
             </tr>
             {% else %}
             <tr>
-              <td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 32px 0;">
+              <td colspan="9" style="text-align: center; color: var(--text-muted); font-style: italic; padding: 32px 0;">
                 Nenhum produto cadastrado no estoque.
               </td>
             </tr>
@@ -197,11 +223,23 @@
       <h2>Novo Produto</h2>
       <i class="fa-solid fa-xmark modal-close" onclick="closeModal('modalAdd')"></i>
     </div>
-    <form method="POST" action="{{ url_for('main.estoque') }}">
+    <form method="POST" action="{{ url_for('main.estoque') }}" enctype="multipart/form-data">
       <div class="modal-body">
         <div class="form-group">
           <label>Nome do Produto</label>
           <input type="text" name="nome" class="input-field" style="padding-left: 16px;" placeholder="Ex: Gel Cola Forte 500g" required>
+        </div>
+        <div class="form-group">
+          <label>Foto do Produto</label>
+          <input
+            type="file"
+            name="foto"
+            class="input-field product-file-input"
+            accept="image/jpeg,image/png,image/webp"
+          >
+          <small class="upload-hint">
+            Opcional. JPG, PNG ou WEBP — máximo 5 MB.
+          </small>
         </div>
         <div class="form-group">
           <label>Quantidade Inicial</label>
@@ -270,12 +308,25 @@
       <h2>Editar Produto</h2>
       <i class="fa-solid fa-xmark modal-close" onclick="closeModal('modalEdit')"></i>
     </div>
-    <form id="formEditProduct" method="POST" action="">
+    <form id="formEditProduct" method="POST" action="" enctype="multipart/form-data">
       <div class="modal-body">
         <div class="form-group">
           <label>Nome do Produto</label>
           <input type="text" id="edit_nome" name="nome" class="input-field" style="padding-left: 16px;" required>
         </div>
+        <div class="form-group">
+          <label>Foto do Produto</label>
+          <input
+            type="file"
+            name="foto"
+            class="input-field product-file-input"
+            accept="image/jpeg,image/png,image/webp"
+          >
+          <small class="upload-hint">
+            Deixe vazio para manter a foto atual.
+          </small>
+        </div>
+
         <div class="form-group">
           <label>Quantidade Atual</label>
           <input type="number" id="edit_quantidade" name="quantidade" class="input-field" style="padding-left: 16px;" min="0" required>

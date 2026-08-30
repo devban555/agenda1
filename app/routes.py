@@ -1,10 +1,12 @@
-from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session
+from flask import Blueprint, render_template, request, redirect, flash, url_for, jsonify, session, send_from_directory
 from functools import wraps
 from datetime import datetime
 from copy import deepcopy
 from collections import Counter
 import re
 import unicodedata
+from pathlib import Path
+from uuid import uuid4
 from sqlalchemy import extract, func, or_
 from flask import current_app
 from . import db
@@ -3333,6 +3335,149 @@ def financeiro():
         movimentacoes=movimentacoes
     )
 
+
+# ============================================================
+# FOTOS DOS PRODUTOS
+# ============================================================
+
+FOTO_PRODUTO_MAX_BYTES = 5 * 1024 * 1024
+
+
+def _diretorio_fotos_produtos():
+    diretorio = (
+        Path(current_app.root_path).parent
+        / "agendamento"
+        / "instance"
+        / "uploads"
+        / "produtos"
+    )
+
+    diretorio.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    return diretorio
+
+
+def _detectar_extensao_foto(conteudo):
+    if conteudo.startswith(b"\xff\xd8\xff"):
+        return "jpg"
+
+    if conteudo.startswith(
+        b"\x89PNG\r\n\x1a\n"
+    ):
+        return "png"
+
+    if (
+        len(conteudo) >= 12
+        and conteudo[0:4] == b"RIFF"
+        and conteudo[8:12] == b"WEBP"
+    ):
+        return "webp"
+
+    return None
+
+
+def _salvar_foto_produto(arquivo):
+    if not arquivo or not arquivo.filename:
+        return None
+
+    conteudo = arquivo.stream.read(
+        FOTO_PRODUTO_MAX_BYTES + 1
+    )
+
+    if not conteudo:
+        raise ValueError(
+            "A foto enviada está vazia."
+        )
+
+    if len(conteudo) > FOTO_PRODUTO_MAX_BYTES:
+        raise ValueError(
+            "A foto deve possuir no máximo 5 MB."
+        )
+
+    extensao = _detectar_extensao_foto(
+        conteudo
+    )
+
+    if not extensao:
+        raise ValueError(
+            "Formato de foto inválido. "
+            "Utilize JPG, PNG ou WEBP."
+        )
+
+    nome_arquivo = (
+        f"user_{session['user_id']}_"
+        f"{uuid4().hex}.{extensao}"
+    )
+
+    destino = (
+        _diretorio_fotos_produtos()
+        / nome_arquivo
+    )
+
+    destino.write_bytes(conteudo)
+
+    return nome_arquivo
+
+
+def _remover_foto_produto(nome_arquivo):
+    if not nome_arquivo:
+        return
+
+    diretorio = (
+        _diretorio_fotos_produtos()
+        .resolve()
+    )
+
+    destino = (
+        diretorio
+        / nome_arquivo
+    ).resolve()
+
+    if destino.parent != diretorio:
+        return
+
+    try:
+        destino.unlink(missing_ok=True)
+    except Exception:
+        current_app.logger.exception(
+            "Não foi possível remover foto antiga "
+            "de produto."
+        )
+
+
+@main.route(
+    "/estoque/produto/<int:id>/foto"
+)
+@login_required
+def foto_produto_estoque(id):
+    produto = Produto.query.filter_by(
+        id=id,
+        usuario_id=session["user_id"],
+        ativo=True
+    ).first()
+
+    # Retorno explícito porque o Agenda1 possui um
+    # errorhandler global que converte HTTPException em 500.
+    if not produto or not produto.foto_arquivo:
+        return "", 404
+
+    diretorio = _diretorio_fotos_produtos()
+    caminho = diretorio / produto.foto_arquivo
+
+    if not caminho.is_file():
+        return "", 404
+
+    return send_from_directory(
+        diretorio,
+        produto.foto_arquivo,
+        conditional=True,
+        max_age=3600
+    )
+
+
 @main.route("/estoque", methods=["GET", "POST"])
 @login_required
 def estoque():
@@ -3361,30 +3506,72 @@ def estoque():
             flash("A quantidade não pode ser negativa.")
             return redirect(url_for("main.estoque"))
 
-        novo_produto = Produto(
-            usuario_id=user_id,
-            nome=nome,
-            quantidade_atual=quantidade,
-            valor_compra=valor_compra,
-            valor_venda=valor_venda,
-            estoque_minimo=5,
-            ativo=True
-        )
+        foto_arquivo = None
 
-        db.session.add(novo_produto)
-        db.session.commit()
+        try:
+            foto_arquivo = _salvar_foto_produto(
+                request.files.get("foto")
+            )
 
-        movimentacao = MovimentacaoProduto(
-            produto_id=novo_produto.id,
-            usuario_id=user_id,
-            tipo="ENTRADA",
-            quantidade=quantidade,
-            valor_unitario=valor_compra,
-            observacao="Cadastro inicial"
-        )
+            novo_produto = Produto(
+                usuario_id=user_id,
+                nome=nome,
+                quantidade_atual=quantidade,
+                valor_compra=valor_compra,
+                valor_venda=valor_venda,
+                foto_arquivo=foto_arquivo,
+                estoque_minimo=5,
+                ativo=True
+            )
 
-        db.session.add(movimentacao)
-        db.session.commit()
+            db.session.add(novo_produto)
+            db.session.flush()
+
+            movimentacao = MovimentacaoProduto(
+                produto_id=novo_produto.id,
+                usuario_id=user_id,
+                tipo="ENTRADA",
+                quantidade=quantidade,
+                valor_unitario=valor_compra,
+                observacao="Cadastro inicial"
+            )
+
+            db.session.add(movimentacao)
+            db.session.commit()
+
+        except ValueError as exc:
+            db.session.rollback()
+
+            if foto_arquivo:
+                _remover_foto_produto(
+                    foto_arquivo
+                )
+
+            flash(str(exc))
+            return redirect(
+                url_for("main.estoque")
+            )
+
+        except Exception:
+            db.session.rollback()
+
+            if foto_arquivo:
+                _remover_foto_produto(
+                    foto_arquivo
+                )
+
+            current_app.logger.exception(
+                "Erro ao cadastrar produto."
+            )
+
+            flash(
+                "Não foi possível cadastrar "
+                "o produto."
+            )
+
+            return redirect(
+                url_for("main.estoque")
+            )
 
         flash("Produto cadastrado com sucesso.")
         return redirect(url_for("main.estoque"))
@@ -3415,6 +3602,14 @@ def estoque():
             "quantidade": quantidade,
             "valor_compra": valor_compra,
             "valor_venda": valor_venda,
+            "foto_url": (
+                url_for(
+                    "main.foto_produto_estoque",
+                    id=p.id
+                )
+                if p.foto_arquivo
+                else None
+            ),
             "total_estoque": total_estoque,
             "lucro": lucro,
             "status": (
@@ -3487,12 +3682,75 @@ def editar_produto_estoque(id):
         flash("A quantidade não pode ser negativa.")
         return redirect(url_for("main.estoque"))
 
-    produto.nome = nome
-    produto.quantidade_atual = quantidade
-    produto.valor_compra = valor_compra
-    produto.valor_venda = valor_venda
+    foto_antiga = produto.foto_arquivo
+    foto_nova = None
 
-    db.session.commit()
+    try:
+        arquivo_foto = request.files.get(
+            "foto"
+        )
+
+        if (
+            arquivo_foto
+            and arquivo_foto.filename
+        ):
+            foto_nova = _salvar_foto_produto(
+                arquivo_foto
+            )
+
+        produto.nome = nome
+        produto.quantidade_atual = quantidade
+        produto.valor_compra = valor_compra
+        produto.valor_venda = valor_venda
+
+        if foto_nova:
+            produto.foto_arquivo = foto_nova
+
+        db.session.commit()
+
+    except ValueError as exc:
+        db.session.rollback()
+
+        if foto_nova:
+            _remover_foto_produto(
+                foto_nova
+            )
+
+        flash(str(exc))
+
+        return redirect(
+            url_for("main.estoque")
+        )
+
+    except Exception:
+        db.session.rollback()
+
+        if foto_nova:
+            _remover_foto_produto(
+                foto_nova
+            )
+
+        current_app.logger.exception(
+            "Erro ao atualizar produto."
+        )
+
+        flash(
+            "Não foi possível atualizar "
+            "o produto."
+        )
+
+        return redirect(
+            url_for("main.estoque")
+        )
+
+    if (
+        foto_nova
+        and foto_antiga
+        and foto_antiga != foto_nova
+    ):
+        _remover_foto_produto(
+            foto_antiga
+        )
 
     flash("Produto atualizado com sucesso.")
     return redirect(url_for("main.estoque"))

@@ -326,6 +326,11 @@ class Produto(db.Model):
     valor_compra = db.Column(db.Numeric(10, 2), nullable=False, default=0)
     valor_venda = db.Column(db.Numeric(10, 2), nullable=False, default=0)
 
+    foto_arquivo = db.Column(
+        db.String(255),
+        nullable=True
+    )
+
     estoque_minimo = db.Column(db.Integer, default=5)
 
     ativo = db.Column(db.Boolean, default=True)

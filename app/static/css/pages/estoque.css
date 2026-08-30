@@ -412,3 +412,66 @@ tbody tr:hover {
   display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
 }
 .footer-nav a:hover { color: #fff; transform: translateX(-4px); }
+
+
+/* =========================================================
+   FOTO DOS PRODUTOS
+   ========================================================= */
+
+.product-thumb-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.product-thumb {
+  width: 58px;
+  height: 58px;
+  display: block;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  background: rgba(255, 255, 255, 0.03);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.product-thumb:hover {
+  transform: scale(1.06);
+  border-color: rgba(59, 130, 246, 0.55);
+}
+
+.product-thumb-placeholder {
+  width: 58px;
+  height: 58px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px dashed var(--border-color);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  font-size: 1.15rem;
+}
+
+.product-file-input {
+  padding-left: 16px;
+}
+
+.product-file-input::file-selector-button {
+  border: 0;
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin-right: 10px;
+  background: rgba(59, 130, 246, 0.14);
+  color: #93c5fd;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.upload-hint {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
